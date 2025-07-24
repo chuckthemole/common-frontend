@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
     const [authState, setAuthState] = useState({
         isLoading: true,
         isAuthenticated: false,
+        roles: null,
         user: null,
     });
 
@@ -17,6 +18,7 @@ export const AuthProvider = ({ children }) => {
             setAuthState({
                 isLoading: false,
                 isAuthenticated: res.authenticated,
+                roles: res.roles ?? null,
                 user: res.username ?? null,
             });
         } catch (err) {
@@ -24,6 +26,7 @@ export const AuthProvider = ({ children }) => {
             setAuthState({
                 isLoading: false,
                 isAuthenticated: false,
+                roles: null,
                 user: null,
             });
         }

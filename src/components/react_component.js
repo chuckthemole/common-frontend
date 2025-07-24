@@ -4,6 +4,7 @@ import SignupModal from './modal/signup_modal';
 import LoginModal from './modal/login_modal';
 import LogoutButton from './ui/logout_button';
 import Admin from './admin';
+import AdminButton from './ui/admin_button';
 
 /**
  * 
@@ -22,7 +23,7 @@ export default function ReactComponent({ component_name }) {
     } else if (component_name === 'UserIcon') {
         return (<UserIcon />);
     } else if (component_name === 'Admin') {
-        return (<Admin />);
+        return (<AdminButton />);
     } else {
         console.log('No component match found for ' + component_name);
     }

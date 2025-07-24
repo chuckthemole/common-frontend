@@ -31,6 +31,14 @@ export { default as UserInfo } from './components/user_info';
 export { AuthProvider, useAuth } from './components/auth_context';
 export { default as AuthRoot } from './components/auth_root';
 
+export { default as ControlButton } from './components/dashboard-elements/control-button/control-button';
+export { default as LiveValueDisplay } from './components/dashboard-elements/live-value-display/live-value-display';
+export { default as ProgressMeter } from './components/dashboard-elements/progress-meter/progress-meter';
+export { default as Slider } from './components/dashboard-elements/slider/slider';
+export { default as ToggleSwitch } from './components/dashboard-elements/toggle-switch';
+export { default as NumberStepper } from './components/dashboard-elements/number-stepper/number-stepper';
+export { default as DashboardTemplate } from './components/dashboard/dashboard-template';
+
 export { default as api } from './api';
 export { createApiClient } from './api'
 export { getApi } from './api'

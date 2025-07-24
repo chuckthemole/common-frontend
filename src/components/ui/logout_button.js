@@ -13,7 +13,6 @@ export default function LogoutButton({
     redirectTo = null,
     ...props
 }) {
-    // const { authIsLoading, isAuthenticated, refetch } = useAuthStatus();
     const { isAuthLoading, isAuthenticated, refreshAuth } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
