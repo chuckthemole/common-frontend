@@ -40,9 +40,13 @@ export { default as NumberStepper } from './components/dashboard-elements/number
 export { default as DashboardTemplate } from './components/dashboard/dashboard-template';
 
 export { default as api } from './api';
-export { createApiClient } from './api'
-export { getApi } from './api'
-export { setApi } from './api'
+export { createApiClient } from './api';
+export { getApi } from './api';
+export { setApi } from './api';
+
+export { default as currentEnv } from './logger';
+export { getEnv } from './logger';
+export { setEnv } from './logger';
 
 export * as Common from './components/common'
 // export * as Client from './client'

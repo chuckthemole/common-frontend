@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './toggle-switch.css';
+import { getApi } from '../../../api';
 
 /**
  * ToggleSwitch
@@ -10,18 +11,45 @@ import './toggle-switch.css';
  * @component
  * @param {Object} props
  * @param {string} props.label - Text label displayed below the switch.
- * @param {boolean} props.checked - Current toggle state.
- * @param {function} props.onChange - Callback called with new boolean state on toggle.
+ * @param {string} props.apiBase - Base API URL (e.g., '/api/items').
+ * @param {string|number} props.resourceId - ID of the resource to update.
  * @param {string} [props.color='is-info'] - Bulma color class for active state.
  * @param {string} [props.id] - Optional id for the input element.
  *
  * @returns {JSX.Element}
  */
-function ToggleSwitch({ label, checked, onChange, color = 'is-info', id }) {
+function ToggleSwitch({ label, apiBase, resourceId, color = 'is-info', id }) {
+
+    const [checked, setChecked] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+
     const inputId = id || `toggle-${label.replace(/\s+/g, '-').toLowerCase()}`;
 
-    const handleToggle = () => {
-        onChange(!checked);
+    // Load state from server
+    useEffect(() => {
+        const fetchState = async () => {
+            try {
+                const response = await fetch(apiBase);
+                if (response.ok) {
+                    const data = await response.json();
+                    setChecked(data.state);
+                } else {
+                    console.error('Failed to load toggle state');
+                }
+            } catch (err) {
+                console.error('Error fetching toggle state:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchState();
+    }, [resourceId]);
+
+    const handleToggle = async () => {
+        const newState = !checked;
+        setChecked(newState);
     };
 
     const handleKeyDown = (e) => {
