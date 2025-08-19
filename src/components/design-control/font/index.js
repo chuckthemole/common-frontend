@@ -1,0 +1,1 @@
+export { default as FontSettingsModal } from './font_settings_modal';

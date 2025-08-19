@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Modal from "react-modal";
-import { isModalActive, modal_style, setModalActive, setModalInactive } from "./modal_manager";
-import { google_fonts, system_fonts, custom_fonts } from "../constants/fonts";
+import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
+import { google_fonts, system_fonts, custom_fonts } from "../../../constants/fonts";
 
-export default function FontSwitcherModal({ preview = false, secondaryFont = false }) {
+export default function FontSettingsModal({ preview = false, secondaryFont = false }) {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [enabledSources, setEnabledSources] = useState({
         google: true,
