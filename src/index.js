@@ -30,6 +30,7 @@ export { default as UserIcon } from './components/user_icon';
 export { default as UserInfo } from './components/user_info';
 export { AuthProvider, useAuth } from './components/auth_context';
 export { default as AuthRoot } from './components/auth_root';
+export { default as FontSwitcherModal } from './components/font_switcher';
 
 export { default as ControlButton } from './components/dashboard-elements/control-button/control-button';
 export { default as LiveValueDisplay } from './components/dashboard-elements/live-value-display/live-value-display';
