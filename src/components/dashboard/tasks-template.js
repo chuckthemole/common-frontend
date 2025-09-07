@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Toggle from "../dashboard-elements/toggle-switch/toggle-switch";
 
 /**
  * Layout modes
@@ -9,7 +10,7 @@ export const TaskLayout = {
 };
 
 /**
- * Generic reusable TasksTemplate (Bulma version, with default checkbox toggle)
+ * Generic reusable TasksTemplate (Bulma version, using Toggle)
  *
  * @param {Array} tasks - List of task objects [{ id, title, description, assignedTo, completed }]
  * @param {Object} currentUser - The logged-in user object { id, name }
@@ -61,12 +62,8 @@ export default function TasksTemplate({
                     const isOpen = expanded[task.id] || false;
 
                     return (
-                        <div
-                            key={task.id}
-                            className="box mb-3"
-                            style={boxStyle}
-                        >
-                            {/* Top section: title + checkbox */}
+                        <div key={task.id} className="box mb-3" style={boxStyle}>
+                            {/* Top section: title + toggle */}
                             <div className="is-flex is-align-items-center is-justify-content-space-between">
                                 <div
                                     className="is-flex-grow-1 pr-4"
@@ -76,15 +73,13 @@ export default function TasksTemplate({
                                 </div>
 
                                 <div className="is-flex-shrink-0">
-                                    <label className="checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={task.completed}
-                                            onChange={(e) =>
-                                                onToggleComplete?.(task.id, e.target.checked)
-                                            }
-                                        />
-                                    </label>
+                                    <Toggle
+                                        label=""
+                                        checked={task.completed}
+                                        onChange={(checked) =>
+                                            onToggleComplete?.(task.id, checked)
+                                        }
+                                    />
                                 </div>
                             </div>
 
@@ -120,15 +115,13 @@ export default function TasksTemplate({
                             <header className="card-header">
                                 <p className="card-header-title mb-2">{task.title}</p>
                                 <div className="card-header-icon">
-                                    <label className="checkbox">
-                                        <input
-                                            type="checkbox"
-                                            checked={task.completed}
-                                            onChange={(e) =>
-                                                onToggleComplete?.(task.id, e.target.checked)
-                                            }
-                                        />
-                                    </label>
+                                    <Toggle
+                                        label=""
+                                        checked={task.completed}
+                                        onChange={(checked) =>
+                                            onToggleComplete?.(task.id, checked)
+                                        }
+                                    />
                                 </div>
                             </header>
 
