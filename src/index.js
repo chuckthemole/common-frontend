@@ -1,6 +1,6 @@
 import React from 'react';
 
-console.log('Common lib React version:', React.version);
+// console.log('Common lib React version:', React.version);
 
 export { default as Admin } from './components/admin';
 export { default as AwsGetResource } from './components/aws_get_resource';
@@ -32,6 +32,8 @@ export { AuthProvider, useAuth } from './components/auth_context';
 export { default as AuthRoot } from './components/auth_root';
 
 export { default as DashboardTemplate } from './components/dashboard/dashboard-template';
+
+export { default as TasksTemplate } from './components/dashboard/tasks-template';
 
 export * from './components/dashboard-elements';
 export * from './components/design-control';
