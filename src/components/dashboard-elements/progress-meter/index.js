@@ -1,1 +1,1 @@
-export { default } from './progress-meter';
+export { default as ProgressMeter } from './progress-meter';

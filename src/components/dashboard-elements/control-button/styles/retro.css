@@ -1,0 +1,18 @@
+.retro-btn {
+    background: #0f0;
+    border: 3px solid #090;
+    color: #000;
+    font-family: monospace;
+    box-shadow: 4px 4px 0 #060;
+    text-transform: uppercase;
+    transition: all 0.1s ease-in-out;
+    cursor: pointer;
+}
+
+.retro-btn:active,
+.retro-btn.is-active {
+    transform: translateY(2px);
+    box-shadow: 2px 2px 0 #060;
+    background: #2f2;
+    /* Slightly brighter green when pressed */
+}

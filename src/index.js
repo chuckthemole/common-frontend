@@ -43,9 +43,11 @@ export { createApiClient } from './api';
 export { getApi } from './api';
 export { setApi } from './api';
 
-export { default as currentEnv } from './logger';
+export { default as LOGGER } from './logger';
 export { getEnv } from './logger';
 export { setEnv } from './logger';
+
+export * from './utils/component_debugger';
 
 export * as Common from './components/common'
 // export * as Client from './client'

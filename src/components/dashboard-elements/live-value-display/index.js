@@ -1,1 +1,1 @@
-export { default } from './live-value-display';
+export { default as LiveValueDisplay } from './live-value-display';

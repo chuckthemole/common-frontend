@@ -1,0 +1,18 @@
+.cartoon-btn {
+    background: #ffcc00;
+    border: 2px solid #000;
+    color: #000;
+    font-family: 'Comic Sans MS', sans-serif;
+    box-shadow: 3px 3px 0 #000;
+    text-shadow: 1px 1px 0 #fff;
+    transition: all 0.1s ease-in-out;
+    cursor: pointer;
+}
+
+.cartoon-btn:active,
+.cartoon-btn.is-active {
+    transform: translateY(2px);
+    box-shadow: 1px 1px 0 #000;
+    background: #ffdb33;
+    /* Slightly lighter when pressed */
+}
