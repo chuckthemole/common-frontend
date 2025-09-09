@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 /**
  * ControlButtonBase
@@ -20,45 +20,47 @@ import React, { useState } from "react";
  * @returns {JSX.Element}
  */
 export function ControlButtonBase({
-    circular = false,
+    checked: propChecked,
+    circular = true,
     holdToActivate = false,
-    toggle = true, // Toggle behavior
+    toggle = true,
     onToggle,
     children,
     className = "",
     style = {},
-    tooltip: consumerTooltip, // new prop
+    tooltip: consumerTooltip,
 }) {
-    const [isActive, setIsActive] = useState(false);
+    const [internalChecked, setInternalChecked] = useState(propChecked || false);
 
-    // Toggle active state if toggle is enabled
-    const toggleActive = () => {
+    // Keep internal state in sync with parent
+    useEffect(() => {
+        if (propChecked !== undefined && propChecked !== internalChecked) {
+            setInternalChecked(propChecked);
+        }
+    }, [propChecked]);
+
+    const handleClick = () => {
         if (toggle && !holdToActivate) {
-            setIsActive((prev) => {
-                const next = !prev;
-                onToggle?.(next);
-                return next;
-            });
+            const next = !internalChecked;
+            setInternalChecked(next);
+            onToggle?.(next);
         }
     };
 
-    // Handle hold-to-activate press
     const handleMouseDown = () => {
         if (holdToActivate) {
-            setIsActive(true);
+            setInternalChecked(true);
             onToggle?.(true);
         }
     };
 
-    // Handle releasing hold-to-activate
     const handleMouseUp = () => {
         if (holdToActivate) {
-            setIsActive(false);
+            setInternalChecked(false);
             onToggle?.(false);
         }
     };
 
-    // Circular styling if requested
     const circularStyles = circular
         ? {
             width: "3rem",
@@ -72,22 +74,12 @@ export function ControlButtonBase({
         }
         : {};
 
-    // Default tooltip text depending on state
-    const defaultTooltip = isActive
-        ? holdToActivate
-            ? "Release to deactivate"
-            : "Click to deactivate"
-        : holdToActivate
-            ? "Hold to activate"
-            : "Click to activate";
-
-    // Use consumer-provided tooltip if given, else default
-    const tooltip = consumerTooltip || defaultTooltip;
+    const tooltip = consumerTooltip;
 
     return (
         <button
-            className={`${className} ${isActive ? "is-active" : ""}`} // add is-active for CSS
-            onClick={toggleActive}
+            className={`${className} ${internalChecked ? "is-active" : ""}`}
+            onClick={handleClick}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
