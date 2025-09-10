@@ -192,15 +192,33 @@ export default function TasksTemplate({
                                 className="mt-3 p-3"
                                 style={{ backgroundColor: "#f5f5f5", borderRadius: "6px" }}
                             >
-                                <p className="subtitle is-6 has-text-grey mb-0">{task.description}</p>
+                                {task.description.split("\n").map((line, idx) => (
+                                    <React.Fragment key={idx}>
+                                        <p className="subtitle is-6 has-text-grey mb-0">{line}</p>
+                                        <br />
+                                    </React.Fragment>
+                                ))}
                             </div>
                         )}
 
-                        {isAdmin && task.assignedTo && (
+
+
+                        {isAdmin && task.assignedTo?.length > 0 && (
                             <p className="is-size-7 has-text-grey mt-2">
-                                Assigned to: {task.assignedTo.name}
+                                Assigned to: {task.assignedTo.map((u) => u.name).join(", ")}
+                                {task.dueDate && (
+                                    <>
+                                        {" • Due: "}
+                                        {new Date(task.dueDate).toLocaleDateString(undefined, {
+                                            year: "numeric",
+                                            month: "short",
+                                            day: "numeric",
+                                        })}
+                                    </>
+                                )}
                             </p>
                         )}
+
                     </div>
                 );
             })}
