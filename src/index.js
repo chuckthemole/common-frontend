@@ -42,6 +42,8 @@ export { default as api } from './api';
 export { createApiClient } from './api';
 export { getApi } from './api';
 export { setApi } from './api';
+export { getNamedApi } from './api';
+export { setNamedApi } from './api';
 
 export { default as LOGGER } from './logger';
 export { getEnv } from './logger';
