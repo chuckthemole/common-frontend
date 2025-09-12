@@ -38,9 +38,9 @@ export default function FontSettingsModal({ preview = false, secondaryFont = fal
     return (
         <>
             {/* Optional button to open modal */}
-            <a onClick={openModal} className="button is-light">
+            <button onClick={openModal} className="button is-info">
                 Font Settings
-            </a>
+            </button>
 
             <Modal
                 isOpen={modalIsOpen}

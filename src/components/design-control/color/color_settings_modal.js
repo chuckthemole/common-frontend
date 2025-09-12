@@ -25,7 +25,9 @@ export default function ColorSettingsModal({ preview = true }) {
 
     return (
         <>
-            <button onClick={openModal}>Color Settings</button>
+            <button onClick={openModal} className="button is-info">
+                Color Settings
+            </button>
 
             <Modal
                 isOpen={modalIsOpen}
