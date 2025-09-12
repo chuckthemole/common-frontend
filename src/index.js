@@ -30,6 +30,8 @@ export { default as UserIcon } from './components/user_icon';
 export { default as UserInfo } from './components/user_info';
 export { AuthProvider, useAuth } from './components/auth_context';
 export { default as AuthRoot } from './components/auth_root';
+export { default as EntityTaskManager } from './components/entity_task_manager';
+export { default as AdminSiteSettingsDashboard } from './components/dashboard/admin-site-settings-dashboard';
 
 export { default as DashboardTemplate } from './components/dashboard/dashboard-template';
 

@@ -1,29 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Modal from "react-modal";
 import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
-
-const defaultColors = {
-    primary: "#8A4D76",
-    link: "#FA7C91",
-    background: "#ffffff",
-    text: "#363636"
-};
+import { useColorSettings } from "./use_color_settings";
 
 export default function ColorSettingsModal({ preview = true }) {
+    const { colors, setColors } = useColorSettings();
     const [modalIsOpen, setModalIsOpen] = useState(false);
-    const [colors, setColors] = useState({
-        primary: localStorage.getItem("primaryColor") || defaultColors.primary,
-        link: localStorage.getItem("linkColor") || defaultColors.link,
-        background: localStorage.getItem("backgroundColor") || defaultColors.background,
-        text: localStorage.getItem("textColor") || defaultColors.text
-    });
-
-    useEffect(() => {
-        Object.entries(colors).forEach(([key, value]) => {
-            document.documentElement.style.setProperty(`--${key}-color`, value);
-            localStorage.setItem(`${key}Color`, value);
-        });
-    }, [colors]);
 
     const openModal = () => {
         if (!isModalActive()) {
@@ -43,9 +25,7 @@ export default function ColorSettingsModal({ preview = true }) {
 
     return (
         <>
-            <a onClick={openModal} className="button is-light">
-                Color Settings
-            </a>
+            <button onClick={openModal}>Color Settings</button>
 
             <Modal
                 isOpen={modalIsOpen}
@@ -56,7 +36,6 @@ export default function ColorSettingsModal({ preview = true }) {
             >
                 <div className="modal-content box">
                     <h2 className="title is-4">Color Settings</h2>
-
                     {Object.entries(colors).map(([key, value]) => (
                         <div className="field" key={key} style={{ marginBottom: "1rem" }}>
                             <label className="label">{key.charAt(0).toUpperCase() + key.slice(1)}</label>
@@ -79,7 +58,6 @@ export default function ColorSettingsModal({ preview = true }) {
                             </div>
                         </div>
                     ))}
-
                     <div className="field mt-4">
                         <button className="button is-success" onClick={closeModal}>
                             Done
