@@ -1,0 +1,43 @@
+.number-stepper-wrapper {
+  display: inline-block;
+  padding: 0.5rem;
+  font-family: sans-serif;
+}
+
+.stepper-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.number-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  gap: 1rem;
+  min-width: 120px;
+}
+
+.stepper-button {
+  background-color: #eee;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.stepper-button:hover {
+  background-color: #ddd;
+}
+
+.stepper-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  width: 2rem;
+  text-align: center;
+}

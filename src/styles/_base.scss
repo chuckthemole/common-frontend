@@ -1,0 +1,38 @@
+@use "variables" as *;
+
+// --------------------
+// Global body and text
+// --------------------
+body {
+    font-family: var(--primary-font, $family-sans-serif),
+        var(--secondary-font, $family-sans-serif-system),
+        var(--backup-primary-font, $family-nunito),
+        var(--backup-secondary-font, $family-roboto);
+    background-color: var(--background-color, var(--missing-debug-var));
+    color: var(--text-color, var(--missing-debug-var));
+}
+
+// Links
+a {
+    color: var(--link-color, var(--missing-debug-var));
+
+    &:hover {
+        color: var(--link-hover, var(--link-color, var(--missing-debug-var)));
+    }
+}
+
+// Inputs
+input,
+textarea,
+select {
+    background-color: var(--input-background-color, #fff);
+    border-color: var(--input-border-color, var(--missing-debug-var));
+    color: var(--input-text-color, var(--missing-debug-var));
+
+    &::placeholder {
+        color: var(--input-placeholder, #aaa);
+    }
+}
+
+// Import Google Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap');

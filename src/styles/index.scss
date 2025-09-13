@@ -1,0 +1,55 @@
+// --------------------------------------------
+// Main SCSS entry point for Rumpus frontend library
+// --------------------------------------------
+
+// --------------------
+// 1. Variables
+// --------------------
+// Import all SASS variables first. 
+// This ensures colors, spacing, font definitions, and other constants
+// are available to all subsequent files.
+@use "variables" as *;
+
+// --------------------
+// 2. Mixins
+// --------------------
+// Import reusable SASS mixins (media queries, flex helpers, responsive utilities, etc.)
+// early in the chain so that any later file (utilities, base, components, layout) 
+// can leverage these patterns without re-importing.
+@use "mixins" as *;
+
+// --------------------
+// 3. Utilities
+// --------------------
+// Import helper classes, global utilities, and shared patterns:
+// - Fonts (primary/secondary)  
+// - Spacing helpers (margins, padding)  
+// - Spinner animation  
+// - Other reusable utility classes
+// Utilities are placed here so both base styles and components can use them.
+@use "utilities" as *;
+
+// --------------------
+// 4. Base
+// --------------------
+// Import global element styles such as:
+// - body, headings (h1, h2, ...), paragraphs (p), links, etc.
+// Base styles define the foundational typography and HTML element defaults 
+// that all components and layouts build upon.
+@use "base" as *;
+
+// --------------------
+// 5. Components
+// --------------------
+// Import individual UI components (buttons, cards, modals, tabs, etc.)
+// Component styles may reference variables, mixins, and utilities.
+@use "components" as *;
+
+// --------------------
+// 6. Layout
+// --------------------
+// Import application-level layout styles:
+// - App container, navbar, footer, sidebar
+// Layout relies on components and utilities for consistent spacing, typography, and color.
+// Placing layout last ensures it has access to everything it needs.
+@use "layout" as *;

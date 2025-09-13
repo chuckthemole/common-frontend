@@ -2,6 +2,7 @@
     "name": "@rumpushub/common-react",
     "version": "1.1.2",
     "main": "dist/index.js",
+    "style": "dist/index.css",
     "files": [
         "dist"
     ],
@@ -12,7 +13,8 @@
         "clean": "echo Cleaning frontend && rm -rf node_modules package-lock.json",
         "fresh": "npm run clean && npm install",
         "check-global-links": "npm list -g --depth=0 --link=true",
-        "build:scss": "sass src/components/dashboard-elements:dist/components/dashboard-elements --no-source-map"
+        "build:scss": "sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map && sass --load-path=node_modules src/components/dashboard-elements dist/components/dashboard-elements --no-source-map",
+        "watch:scss": "sass --watch --load-path=node_modules src/styles:dist/styles --no-source-map"
     },
     "peerDependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
@@ -31,6 +33,7 @@
         "react-router-dom": "^6.0.0",
         "react-tooltip": "^5.0.0",
         "sass": "^1.89.2",
+        "bulma": "^0.9.4",
         "swr": "^2.0.0"
     },
     "devDependencies": {
@@ -41,7 +44,8 @@
         "consola": "^3.4.2",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
-        "webpack-cli": "^5.1.4"
+        "webpack-cli": "^5.1.4",
+        "bulma": "^0.9.4"
     },
     "babel": {
         "presets": [
