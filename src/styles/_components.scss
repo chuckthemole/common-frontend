@@ -1,4 +1,7 @@
 @use "variables" as *;
+@use "components/dashboard-elements/control-button";
+@use "components/dashboard-elements/number-stepper";
+@use "components/dashboard-elements/toggle-switch";
 
 // Bulma with overrides
 @use "bulma/bulma" with ($family-primary: $family-monospace-system,

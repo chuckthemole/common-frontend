@@ -1,6 +1,5 @@
 import React from "react";
 import { ControlButtonBase } from "./base";
-import "./styles/retro.css";
 
 /**
  * Retro-style control button

@@ -7,14 +7,14 @@
         "dist"
     ],
     "scripts": {
-        "build": "babel src --out-dir dist --copy-files && npm run copy:css",
-        "copy:css": "cp -r src/components/dashboard-elements/*/styles/* dist/components/dashboard-elements/",
-        "build:watch": "babel src --out-dir dist --watch",
-        "clean": "echo Cleaning frontend && rm -rf node_modules package-lock.json",
+        "build": "babel src --out-dir dist --copy-files && npm run build:scss",
+        "build:scss": "sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
+        "watch:scss": "sass --watch --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
+        "build:watch": "babel src --out-dir dist --watch & npm run watch:scss",
+        "clean:css": "echo Cleaning css && rm -rf dist",
+        "clean": "echo Cleaning frontend && rm -rf node_modules package-lock.json dist",
         "fresh": "npm run clean && npm install",
-        "check-global-links": "npm list -g --depth=0 --link=true",
-        "build:scss": "sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map && sass --load-path=node_modules src/components/dashboard-elements dist/components/dashboard-elements --no-source-map",
-        "watch:scss": "sass --watch --load-path=node_modules src/styles:dist/styles --no-source-map"
+        "check-global-links": "npm list -g --depth=0 --link=true"
     },
     "peerDependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.4.0",

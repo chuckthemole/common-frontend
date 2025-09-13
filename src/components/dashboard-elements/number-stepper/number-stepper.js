@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import './number-stepper.css';
 
 /**
  * A number stepper component with a label on the top-left,

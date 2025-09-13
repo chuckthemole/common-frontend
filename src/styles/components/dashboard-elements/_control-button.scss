@@ -1,0 +1,98 @@
+// ================================
+// Control Button Styles
+// ================================
+
+// -------------------------------
+// Variables
+// -------------------------------
+// Consider moving these to your _variables.scss if you want them themeable
+$cartoon-bg: #ffcc00;
+$cartoon-bg-pressed: #ffdb33;
+$cartoon-border: #000;
+$cartoon-text: #000;
+$cartoon-text-shadow: #fff;
+
+$realistic-bg-start: #666;
+$realistic-bg-end: #333;
+$realistic-bg-start-pressed: #777;
+$realistic-bg-end-pressed: #444;
+$realistic-border: #000;
+$realistic-text: #fff;
+$realistic-shadow-inset: inset -2px -2px 5px #222, inset 2px 2px 5px #555;
+$realistic-shadow-pressed: inset -1px -1px 2px #222, inset 1px 1px 2px #555;
+
+$retro-bg: #0f0;
+$retro-bg-pressed: #2f2;
+$retro-border: #090;
+$retro-text: #000;
+$retro-shadow: 4px 4px 0 #060;
+$retro-shadow-pressed: 2px 2px 0 #060;
+
+// -------------------------------
+// Base Button Placeholder
+// -------------------------------
+%button-base {
+    transition: all 0.1s ease-in-out; // smooth interaction
+    cursor: pointer; // pointer for clickable
+}
+
+// ================================
+// Cartoon Button
+// ================================
+.cartoon-btn {
+    @extend %button-base;
+
+    background: $cartoon-bg;
+    border: 2px solid $cartoon-border;
+    color: $cartoon-text;
+    font-family: 'Comic Sans MS', sans-serif;
+    box-shadow: 3px 3px 0 $cartoon-border;
+    text-shadow: 1px 1px 0 $cartoon-text-shadow;
+}
+
+.cartoon-btn:active,
+.cartoon-btn.is-active {
+    transform: translateY(2px); // press effect
+    box-shadow: 1px 1px 0 $cartoon-border;
+    background: $cartoon-bg-pressed; // slightly lighter
+}
+
+// ================================
+// Realistic Button
+// ================================
+.realistic-btn {
+    @extend %button-base;
+
+    background: linear-gradient($realistic-bg-start, $realistic-bg-end);
+    border: 1px solid $realistic-border;
+    color: $realistic-text;
+    box-shadow: $realistic-shadow-inset;
+}
+
+.realistic-btn:active,
+.realistic-btn.is-active {
+    transform: translateY(2px);
+    box-shadow: $realistic-shadow-pressed;
+    background: linear-gradient($realistic-bg-start-pressed, $realistic-bg-end-pressed);
+}
+
+// ================================
+// Retro Button
+// ================================
+.retro-btn {
+    @extend %button-base;
+
+    background: $retro-bg;
+    border: 3px solid $retro-border;
+    color: $retro-text;
+    font-family: monospace;
+    box-shadow: $retro-shadow;
+    text-transform: uppercase;
+}
+
+.retro-btn:active,
+.retro-btn.is-active {
+    transform: translateY(2px);
+    box-shadow: $retro-shadow-pressed;
+    background: $retro-bg-pressed; // slightly brighter green
+}
