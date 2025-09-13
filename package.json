@@ -6,6 +6,9 @@
     "files": [
         "dist"
     ],
+    "bin": {
+        "rumpus-clean-react": "./scripts/cleanup-react-init.sh"
+    },
     "scripts": {
         "build": "babel src --out-dir dist --copy-files && npm run build:scss",
         "build:scss": "sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
@@ -14,7 +17,8 @@
         "clean:css": "echo Cleaning css && rm -rf dist",
         "clean": "echo Cleaning frontend && rm -rf node_modules package-lock.json dist",
         "fresh": "npm run clean && npm install",
-        "check-global-links": "npm list -g --depth=0 --link=true"
+        "check-global-links": "npm list -g --depth=0 --link=true",
+        "dev:link": "npm unlink -g @rumpushub/common-react || true && npm link"
     },
     "peerDependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
