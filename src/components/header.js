@@ -19,16 +19,18 @@ import logger from "../logger";
 function normalizeNavbarItems(items) {
     if (!items) return [];
 
-    return items.map((item) => {
+    return items.map((item, idx) => {
         if (React.isValidElement(item)) {
             logger.debug("Rendering React element directly:", item);
-            return item;
+            // clone element and add a key if missing
+            return React.cloneElement(item, { key: item.key || `custom-${idx}` });
         } else {
             logger.debug("Rendering item via renderNavbarItems:", item);
             return renderNavbarItems([item]);
         }
     }).flat();
 }
+
 
 /**
  * Header component
@@ -50,10 +52,25 @@ export default function Header({ header_path, navbarItemsStart = [], navbarItems
     if (!data) logger.debug("Header loading...");
     if (data) logger.debug("Header data fetched:", data);
 
+    let navbar_burger = (
+        <a
+            role="button"
+            className="navbar-burger"
+            aria-label="menu"
+            aria-expanded="false"
+            data-target="navbarBasicExample"
+        >
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    );
+
     // Default navbar brand shown while waiting for API response
     let navbar_brand = (
-        <Link to="/" className="navbar-item">
+        <Link to="/" className="navbar-brand">
             <FontAwesomeIcon icon={faRadiation} color="red" />
+            {navbar_burger}
         </Link>
     );
 
@@ -63,7 +80,7 @@ export default function Header({ header_path, navbarItemsStart = [], navbarItems
 
     if (data) {
         // --- Navbar brand from API ---
-        navbar_brand = renderBrand(data.navbarBrand);
+        navbar_brand = renderBrand(data.navbarBrand, navbar_burger);
 
         // --- Navbar items from API ---
         navbar_items_start = renderNavbarItems(data.navbarItemsStart || []);
@@ -93,25 +110,12 @@ export default function Header({ header_path, navbarItemsStart = [], navbarItems
 
     return (
         <nav className="navbar" role="navigation" aria-label="main navigation">
-            <div className="navbar-brand">
-                {navbar_brand}
-                <a
-                    role="button"
-                    className="navbar-burger"
-                    aria-label="menu"
-                    aria-expanded="false"
-                    data-target="navbarBasicExample"
-                >
-                    <span aria-hidden="true"></span>
-                    <span aria-hidden="true"></span>
-                    <span aria-hidden="true"></span>
-                </a>
-            </div>
+            {navbar_brand}
 
             <div id="navbarBasicExample" className="navbar-menu">
                 <div className="navbar-start">{navbar_items_start}</div>
                 <div className="navbar-end">
-                    <div className="navbar-item">
+                    <div className="navbar-item no-hover">
                         <div className="buttons">{navbar_items_end}</div>
                     </div>
                 </div>

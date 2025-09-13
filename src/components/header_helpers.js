@@ -13,44 +13,60 @@ export const backendHref = (path) => {
 };
 
 // Render the navbar brand
-export function renderBrand(brand) {
-    if (!brand) return <a className="navbar-item">Brand</a>;
+export function renderBrand(brand, navbar_burger = null) {
+    const BurgerWrapper = navbar_burger ? (
+        <div className="navbar-burger-wrapper">{navbar_burger}</div>
+    ) : null;
+
+    if (!brand) {
+        return (
+            <div className="navbar-brand">
+                <a className="navbar-item">Brand</a>
+                {BurgerWrapper}
+            </div>
+        );
+    }
 
     switch (brand.itemType) {
         case 'BRAND':
             return (
-                <a href={backendHref(brand.href)} className="navbar-item" style={{ display: 'flex', alignItems: 'stretch', height: '100%', padding: 0 }}>
-                    <img
-                        src={backendHref(brand.image)}
-                        alt="Brand"
-                        style={{ height: '100%', width: 'auto', objectFit: 'contain', display: 'block' }}
-                    />
-                </a>
+                <>
+                    <a href={backendHref(brand.href)} className="navbar-brand">
+                        <img src={backendHref(brand.image)} alt="Brand" />
+                    </a>
+                    {BurgerWrapper}
+                </>
             );
+
         case 'AWS_S3_CLOUD_IMAGE':
-            return <a href={backendHref(brand.href)} className="navbar-item">
-                <AwsGetResource resource_key={brand.image} aws_properties_path="/cloud/aws_s3_bucket_properties" />
-            </a>;
+            return (
+                <>
+                    <a href={backendHref(brand.href)} className="navbar-brand">
+                        <AwsGetResource
+                            resource_key={brand.image}
+                            aws_properties_path="/cloud/aws_s3_bucket_properties"
+                        />
+                    </a>
+                    {BurgerWrapper}
+                </>
+            );
+
         default:
-            return <a className="navbar-item">Brand</a>;
+            return (
+                <>
+                    <a className="navbar-brand">Brand</a>
+                    {BurgerWrapper}
+                </>
+            );
     }
 }
 
 // Render a dropdown
-export function renderDropdown(item) {
-    if (!item.dropdown?.length) {
-        // console.log("dropdown is empty!");
-        return null;
-    }
-
-
-    logger.debug('lets give this a test');
-
-    // console.log("dropdown not empty, rendering...");
-    // console.log(item);
+export function renderDropdown(item, idx) {
+    if (!item.dropdown?.length) return null;
 
     return (
-        <div className="navbar-item has-dropdown is-hoverable">
+        <div key={`dropdown-${item.title}-${idx}`} className="navbar-item has-dropdown is-hoverable">
             <a className="navbar-link">{item.title}</a>
             <div className="navbar-dropdown">
                 {item.dropdown.map((dropItem, j) => {
@@ -70,16 +86,17 @@ export function renderDropdown(item) {
     );
 }
 
+
 // Render array of navbar items
 export function renderNavbarItems(items) {
     return items.map((item, i) => {
         switch (item.itemType) {
             case 'LINK':
-                return <a key={`link-${item.name}-${i}`} href={backendHref(item.href)} className="navbar-item">{item.name}</a>;
+                return <a key={`link-${item.title}-${i}`} href={backendHref(item.href)} className="navbar-item">{item.title}</a>;
             case 'DROPDOWN':
-                return <React.Fragment key={`dropdown-${item.name}-${i}`}>{renderDropdown(item)}</React.Fragment>;
+                return renderDropdown(item, i);
             case 'REACT_COMPONENT':
-                return <ReactComponent key={`component-${item.name}-${i}`} component_name={item.reactComponent} className="navbar-item" />;
+                return <ReactComponent key={`component-${item.title}-${i}`} component_name={item.reactComponent} className="navbar-item" />;
             default:
                 return null;
         }

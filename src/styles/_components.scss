@@ -14,7 +14,14 @@
     background-color: var(--button-background-color, var(--missing-debug-var));
     border-color: var(--button-background-color, var(--missing-debug-var));
     color: var(--button-text-color, var(--missing-debug-var));
+
+    &:hover {
+        background-color: var(--hover-color, var(--missing-debug-var));
+        border-color: var(--hover-color, var(--missing-debug-var));
+        color: var(--button-text-color, var(--missing-debug-var)); // keep text same
+    }
 }
+
 
 .button.is-secondary {
     background-color: var(--secondary-color, var(--missing-debug-var));
@@ -24,23 +31,72 @@
 
 // Navbar
 .navbar {
+    height: 4rem; // desired navbar height
+    display: flex;
+    align-items: stretch;
     background-color: var(--navbar-background-color, var(--missing-debug-var));
     color: var(--navbar-text-color, var(--missing-debug-var));
 
-    .navbar-item {
-        color: var(--navbar-text-color, var(--missing-debug-var));
+    .navbar-brand {
+        display: flex;
+        align-items: stretch;
+        height: 100%; // fill navbar height
 
-        &:hover {
-            color: var(--link-hover, var(--navbar-text-color, var(--missing-debug-var)));
+        // Brand link
+        .navbar-item {
+            display: flex;
+            align-items: stretch;
+            padding: 0;       // remove default padding
+            height: 100%;     // fill navbar height
+
+            img {
+                height: 100%;     // fill navbar height
+                width: auto;      // maintain aspect ratio
+                object-fit: contain;
+                display: block;   // remove inline spacing
+            }
+        }
+
+        // Burger wrapper
+        .navbar-burger-wrapper {
+            display: flex;
+            align-items: center;  // vertical center
+            flex: 0 0 auto;       // do not stretch
+            margin-left: auto;    // push to far right
+        }
+
+        .navbar-burger {
+            align-self: center;
+            flex-shrink: 0;
         }
     }
 
-    .navbar-burger {
+    .navbar-item:not(.no-hover) {
         color: var(--navbar-text-color, var(--missing-debug-var));
+        &:hover {
+            background-color: var(--hover-color, var(--missing-debug-var)) !important;
+            color: var(--button-text-color, var(--missing-debug-var)) !important;
+        }
     }
 
-    .navbar-link::after {
-        border-color: var(--navbar-text-color, var(--missing-debug-var));
+    .navbar-item.has-dropdown > .navbar-link {
+        color: var(--navbar-text-color, var(--missing-debug-var));
+        background-color: transparent;
+        &:hover {
+            background-color: var(--hover-color, var(--missing-debug-var)) !important;
+            color: var(--button-text-color, var(--missing-debug-var)) !important;
+        }
+    }
+
+    .navbar-dropdown {
+        background-color: var(--navbar-background-color, var(--missing-debug-var));
+        .navbar-item {
+            color: var(--navbar-text-color, var(--missing-debug-var));
+            &:hover {
+                background-color: var(--hover-color, var(--missing-debug-var)) !important;
+                color: var(--button-text-color, var(--missing-debug-var)) !important;
+            }
+        }
     }
 }
 

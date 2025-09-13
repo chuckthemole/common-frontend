@@ -13,13 +13,13 @@ body {
 }
 
 // Links
-a {
-    color: var(--link-color, var(--missing-debug-var));
+// a {
+//     color: var(--link-color, var(--missing-debug-var));
 
-    &:hover {
-        color: var(--link-hover, var(--link-color, var(--missing-debug-var)));
-    }
-}
+//     &:hover {
+//         color: var(--link-hover-color, var(--link-color, var(--missing-debug-var)));
+//     }
+// }
 
 // Inputs
 input,
