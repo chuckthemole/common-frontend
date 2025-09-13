@@ -46,23 +46,23 @@
         .navbar-item {
             display: flex;
             align-items: stretch;
-            padding: 0;       // remove default padding
-            height: 100%;     // fill navbar height
+            padding: 0; // remove default padding
+            height: 100%; // fill navbar height
 
             img {
-                height: 100%;     // fill navbar height
-                width: auto;      // maintain aspect ratio
+                height: 100%; // fill navbar height
+                width: auto; // maintain aspect ratio
                 object-fit: contain;
-                display: block;   // remove inline spacing
+                display: block; // remove inline spacing
             }
         }
 
         // Burger wrapper
         .navbar-burger-wrapper {
             display: flex;
-            align-items: center;  // vertical center
-            flex: 0 0 auto;       // do not stretch
-            margin-left: auto;    // push to far right
+            align-items: center; // vertical center
+            flex: 0 0 auto; // do not stretch
+            margin-left: auto; // push to far right
         }
 
         .navbar-burger {
@@ -73,15 +73,17 @@
 
     .navbar-item:not(.no-hover) {
         color: var(--navbar-text-color, var(--missing-debug-var));
+
         &:hover {
             background-color: var(--hover-color, var(--missing-debug-var)) !important;
             color: var(--button-text-color, var(--missing-debug-var)) !important;
         }
     }
 
-    .navbar-item.has-dropdown > .navbar-link {
+    .navbar-item.has-dropdown>.navbar-link {
         color: var(--navbar-text-color, var(--missing-debug-var));
         background-color: transparent;
+
         &:hover {
             background-color: var(--hover-color, var(--missing-debug-var)) !important;
             color: var(--button-text-color, var(--missing-debug-var)) !important;
@@ -90,14 +92,27 @@
 
     .navbar-dropdown {
         background-color: var(--navbar-background-color, var(--missing-debug-var));
+
         .navbar-item {
             color: var(--navbar-text-color, var(--missing-debug-var));
+
             &:hover {
                 background-color: var(--hover-color, var(--missing-debug-var)) !important;
                 color: var(--button-text-color, var(--missing-debug-var)) !important;
             }
         }
     }
+}
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.sticky-header.hidden {
+    transform: translateY(-80%);
 }
 
 // Footer

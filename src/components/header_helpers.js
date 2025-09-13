@@ -4,15 +4,35 @@ import ReactComponent from './react_component';
 import React from 'react';
 import logger from '../logger';
 
-// Prepend backend URL
+/**
+ * Build a fully-qualified backend URL for assets and links.
+ *
+ * Ensures all href/src attributes are prefixed with the backend API's baseURL,
+ * avoiding broken links when relative paths are returned by the API.
+ *
+ * @param {string} path - The relative or absolute path provided by the API.
+ * @returns {string} - Fully-qualified backend URL.
+ */
 export const backendHref = (path) => {
     const api = getApi();
     if (!path) return '/';
+
     const baseURL = api?.defaults?.baseURL || '';
     return `${baseURL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
 };
 
-// Render the navbar brand
+/**
+ * Render the "brand" section of the navbar (usually logo + optional burger).
+ *
+ * Handles multiple brand item types returned by the API:
+ *   - BRAND: Standard logo image with link
+ *   - AWS_S3_CLOUD_IMAGE: Logo/image retrieved via an AWS S3 resource component
+ *   - Default: Fallback "Brand" text
+ *
+ * @param {Object} brand - Brand configuration object from the API.
+ * @param {ReactNode|null} navbar_burger - Optional burger menu element.
+ * @returns {JSX.Element} - Rendered brand JSX.
+ */
 export function renderBrand(brand, navbar_burger = null) {
     const BurgerWrapper = navbar_burger ? (
         <div className="navbar-burger-wrapper">{navbar_burger}</div>
@@ -31,7 +51,7 @@ export function renderBrand(brand, navbar_burger = null) {
         case 'BRAND':
             return (
                 <>
-                    <a href={backendHref(brand.href)} className="navbar-brand">
+                    <a href={brand.href} className="navbar-brand">
                         <img src={backendHref(brand.image)} alt="Brand" />
                     </a>
                     {BurgerWrapper}
@@ -41,7 +61,7 @@ export function renderBrand(brand, navbar_burger = null) {
         case 'AWS_S3_CLOUD_IMAGE':
             return (
                 <>
-                    <a href={backendHref(brand.href)} className="navbar-brand">
+                    <a href={brand.href} className="navbar-brand">
                         <AwsGetResource
                             resource_key={brand.image}
                             aws_properties_path="/cloud/aws_s3_bucket_properties"
@@ -61,23 +81,45 @@ export function renderBrand(brand, navbar_burger = null) {
     }
 }
 
-// Render a dropdown
+/**
+ * Render a single dropdown menu inside the navbar.
+ *
+ * Supports:
+ *   - LINK: Standard links inside the dropdown
+ *   - DROPDOWN_DIVIDER: Horizontal divider between dropdown sections
+ *
+ * @param {Object} item - Dropdown configuration object from the API.
+ * @param {number} idx - Unique index for React key.
+ * @returns {JSX.Element|null} - Rendered dropdown JSX or null if empty.
+ */
 export function renderDropdown(item, idx) {
     if (!item.dropdown?.length) return null;
 
     return (
-        <div key={`dropdown-${item.title}-${idx}`} className="navbar-item has-dropdown is-hoverable">
+        <div
+            key={`dropdown-${item.title}-${idx}`}
+            className="navbar-item has-dropdown is-hoverable"
+        >
             <a className="navbar-link">{item.title}</a>
             <div className="navbar-dropdown">
                 {item.dropdown.map((dropItem, j) => {
                     if (dropItem.itemType === 'LINK') {
                         return (
-                            <a key={`dropdown-link-${dropItem.title}-${j}`} href={backendHref(dropItem.href)} className="navbar-item">
+                            <a
+                                key={`dropdown-link-${dropItem.title}-${j}`}
+                                href={dropItem.href}
+                                className="navbar-item"
+                            >
                                 {dropItem.title}
                             </a>
                         );
                     } else if (dropItem.itemType === 'DROPDOWN_DIVIDER') {
-                        return <hr key={`dropdown-divider-${j}`} className="navbar-divider" />;
+                        return (
+                            <hr
+                                key={`dropdown-divider-${j}`}
+                                className="navbar-divider"
+                            />
+                        );
                     }
                     return null;
                 })}
@@ -86,18 +128,42 @@ export function renderDropdown(item, idx) {
     );
 }
 
-
-// Render array of navbar items
+/**
+ * Render an array of navbar items based on item type.
+ *
+ * Supported types:
+ *   - LINK: Standard anchor tag
+ *   - DROPDOWN: Nested menu, rendered via renderDropdown()
+ *   - REACT_COMPONENT: Dynamically injects a React component by name
+ *
+ * @param {Array<Object>} items - Array of navbar item configurations.
+ * @returns {Array<JSX.Element|null>} - Array of rendered React elements.
+ */
 export function renderNavbarItems(items) {
     return items.map((item, i) => {
         switch (item.itemType) {
             case 'LINK':
-                return <a key={`link-${item.title}-${i}`} href={backendHref(item.href)} className="navbar-item">{item.title}</a>;
+                return (
+                    <a
+                        key={`link-${item.title}-${i}`}
+                        href={item.href}
+                        className="navbar-item"
+                    >
+                        {item.title}
+                    </a>
+                );
             case 'DROPDOWN':
                 return renderDropdown(item, i);
             case 'REACT_COMPONENT':
-                return <ReactComponent key={`component-${item.title}-${i}`} component_name={item.reactComponent} className="navbar-item" />;
+                return (
+                    <ReactComponent
+                        key={`component-${item.title}-${i}`}
+                        component_name={item.reactComponent}
+                        className="navbar-item"
+                    />
+                );
             default:
+                logger.warn('Unknown navbar item type:', item.itemType);
                 return null;
         }
     });

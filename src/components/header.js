@@ -1,4 +1,5 @@
 const React = require("react");
+import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRadiation } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
@@ -9,45 +10,48 @@ import { common_fetcher } from "./common_requests";
 import { renderBrand, renderNavbarItems } from "./header_helpers";
 import logger from "../logger";
 
-/**
- * Normalize navbar items
- *
- * Accepts either:
- *  - Array of config objects (passed to renderNavbarItems)
- *  - Array of React elements (rendered directly)
- */
 function normalizeNavbarItems(items) {
     if (!items) return [];
-
-    return items.map((item, idx) => {
-        if (React.isValidElement(item)) {
-            logger.debug("Rendering React element directly:", item);
-            // clone element and add a key if missing
-            return React.cloneElement(item, { key: item.key || `custom-${idx}` });
-        } else {
-            logger.debug("Rendering item via renderNavbarItems:", item);
-            return renderNavbarItems([item]);
-        }
-    }).flat();
+    return items
+        .map((item, idx) => {
+            if (React.isValidElement(item)) {
+                return React.cloneElement(item, { key: item.key || `custom-${idx}` });
+            } else {
+                return renderNavbarItems([item]);
+            }
+        })
+        .flat();
 }
 
-
-/**
- * Header component
- *
- * Renders a responsive navigation header with items pulled from an API,
- * while allowing clients to extend with their own items (start/end).
- *
- * Props:
- *  - header_path: API endpoint path to fetch header config
- *  - navbarItemsStart: optional array of items (same format as API) to append to start
- *  - navbarItemsEnd: optional array of items (same format as API) to append to end
- */
-export default function Header({ header_path, navbarItemsStart = [], navbarItemsEnd = [] }) {
+export default function Header({
+    header_path,
+    navbarItemsStart = [],
+    navbarItemsEnd = [],
+    disappear_on_down_reappear_on_up = true, // <-- NEW PROP
+}) {
     const { data, error } = useSWR(header_path, common_fetcher);
     const api = getApi();
 
-    // Debug: log fetch status
+    const [hidden, setHidden] = useState(false);
+    const [lastScrollY, setLastScrollY] = useState(0);
+
+    // Handle hide-on-scroll only if prop is enabled
+    useEffect(() => {
+        if (!disappear_on_down_reappear_on_up) return;
+
+        const handleScroll = () => {
+            if (window.scrollY > lastScrollY) {
+                setHidden(true); // scrolling down → hide
+            } else {
+                setHidden(false); // scrolling up → show
+            }
+            setLastScrollY(window.scrollY);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, [lastScrollY, disappear_on_down_reappear_on_up]);
+
     if (error) logger.error("Header fetch error:", error);
     if (!data) logger.debug("Header loading...");
     if (data) logger.debug("Header data fetched:", data);
@@ -66,7 +70,6 @@ export default function Header({ header_path, navbarItemsStart = [], navbarItems
         </a>
     );
 
-    // Default navbar brand shown while waiting for API response
     let navbar_brand = (
         <Link to="/" className="navbar-brand">
             <FontAwesomeIcon icon={faRadiation} color="red" />
@@ -74,44 +77,32 @@ export default function Header({ header_path, navbarItemsStart = [], navbarItems
         </Link>
     );
 
-    // Containers for navbar items
     let navbar_items_start = [];
     let navbar_items_end = [];
 
     if (data) {
-        // --- Navbar brand from API ---
         navbar_brand = renderBrand(data.navbarBrand, navbar_burger);
-
-        // --- Navbar items from API ---
         navbar_items_start = renderNavbarItems(data.navbarItemsStart || []);
         navbar_items_end = renderNavbarItems(data.navbarItemsEnd || []);
-
-        // Debug: log rendered API items
-        logger.debug("Rendered API navbarItemsStart:", navbar_items_start);
-        logger.debug("Rendered API navbarItemsEnd:", navbar_items_end);
     }
 
-    // Append client-provided items
     if (navbarItemsStart.length > 0) {
         const extraStart = normalizeNavbarItems(navbarItemsStart);
-        logger.debug("Appending client navbarItemsStart:", extraStart);
         navbar_items_start = [...navbar_items_start, ...extraStart];
     }
 
     if (navbarItemsEnd.length > 0) {
         const extraEnd = normalizeNavbarItems(navbarItemsEnd);
-        logger.debug("Appending client navbarItemsEnd:", extraEnd);
         navbar_items_end = [...navbar_items_end, ...extraEnd];
     }
 
-    // Debug: final items to render
-    logger.debug("Final navbar_items_start:", navbar_items_start);
-    logger.debug("Final navbar_items_end:", navbar_items_end);
-
     return (
-        <nav className="navbar" role="navigation" aria-label="main navigation">
+        <nav
+            className={`navbar sticky-header ${hidden ? "hidden" : ""}`}
+            role="navigation"
+            aria-label="main navigation"
+        >
             {navbar_brand}
-
             <div id="navbarBasicExample" className="navbar-menu">
                 <div className="navbar-start">{navbar_items_start}</div>
                 <div className="navbar-end">
