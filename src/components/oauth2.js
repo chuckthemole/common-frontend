@@ -1,341 +1,151 @@
 import React from 'react';
 import { Github, Mail, Linkedin, User, MessageCircle, Twitter, Apple, GitBranch, Slack } from 'lucide-react';
 
-// OAuth2 Provider Configuration
+/**
+ * OAuth2 Providers Configuration
+ * Each provider has:
+ * - name: Display name
+ * - icon: Lucide icon component
+ * - endpoint: OAuth2 endpoint
+ * Bulma classes will handle colors and button styles
+ */
 const OAUTH_PROVIDERS = {
-    google: {
-        name: 'Google',
-        icon: Mail,
-        colors: {
-            bg: 'bg-red-500 hover:bg-red-600',
-            text: 'text-white',
-            border: 'border-red-500'
-        },
-        endpoint: '/oauth2/authorization/google'
-    },
-    github: {
-        name: 'GitHub',
-        icon: Github,
-        colors: {
-            bg: 'bg-gray-800 hover:bg-gray-900',
-            text: 'text-white',
-            border: 'border-gray-800'
-        },
-        endpoint: '/oauth2/authorization/github'
-    },
-    microsoft: {
-        name: 'Microsoft',
-        icon: User,
-        colors: {
-            bg: 'bg-blue-500 hover:bg-blue-600',
-            text: 'text-white',
-            border: 'border-blue-500'
-        },
-        endpoint: '/oauth2/authorization/microsoft'
-    },
-    facebook: {
-        name: 'Facebook',
-        icon: MessageCircle,
-        colors: {
-            bg: 'bg-blue-600 hover:bg-blue-700',
-            text: 'text-white',
-            border: 'border-blue-600'
-        },
-        endpoint: '/oauth2/authorization/facebook'
-    },
-    discord: {
-        name: 'Discord',
-        icon: MessageCircle,
-        colors: {
-            bg: 'bg-indigo-500 hover:bg-indigo-600',
-            text: 'text-white',
-            border: 'border-indigo-500'
-        },
-        endpoint: '/oauth2/authorization/discord'
-    },
-    twitter: {
-        name: 'Twitter',
-        icon: Twitter,
-        colors: {
-            bg: 'bg-sky-500 hover:bg-sky-600',
-            text: 'text-white',
-            border: 'border-sky-500'
-        },
-        endpoint: '/oauth2/authorization/twitter'
-    },
-    linkedin: {
-        name: 'LinkedIn',
-        icon: Linkedin,
-        colors: {
-            bg: 'bg-blue-700 hover:bg-blue-800',
-            text: 'text-white',
-            border: 'border-blue-700'
-        },
-        endpoint: '/oauth2/authorization/linkedin'
-    },
-    apple: {
-        name: 'Apple',
-        icon: Apple,
-        colors: {
-            bg: 'bg-black hover:bg-gray-800',
-            text: 'text-white',
-            border: 'border-black'
-        },
-        endpoint: '/oauth2/authorization/apple'
-    },
-    gitlab: {
-        name: 'GitLab',
-        icon: GitBranch,
-        colors: {
-            bg: 'bg-orange-500 hover:bg-orange-600',
-            text: 'text-white',
-            border: 'border-orange-500'
-        },
-        endpoint: '/oauth2/authorization/gitlab'
-    },
-    slack: {
-        name: 'Slack',
-        icon: Slack,
-        colors: {
-            bg: 'bg-purple-500 hover:bg-purple-600',
-            text: 'text-white',
-            border: 'border-purple-500'
-        },
-        endpoint: '/oauth2/authorization/slack'
-    }
+    google: { name: 'Google', icon: Mail, endpoint: '/oauth2/authorization/google' },
+    github: { name: 'GitHub', icon: Github, endpoint: '/oauth2/authorization/github' },
+    microsoft: { name: 'Microsoft', icon: User, endpoint: '/oauth2/authorization/microsoft' },
+    facebook: { name: 'Facebook', icon: MessageCircle, endpoint: '/oauth2/authorization/facebook' },
+    discord: { name: 'Discord', icon: MessageCircle, endpoint: '/oauth2/authorization/discord' },
+    twitter: { name: 'Twitter', icon: Twitter, endpoint: '/oauth2/authorization/twitter' },
+    linkedin: { name: 'LinkedIn', icon: Linkedin, endpoint: '/oauth2/authorization/linkedin' },
+    apple: { name: 'Apple', icon: Apple, endpoint: '/oauth2/authorization/apple' },
+    gitlab: { name: 'GitLab', icon: GitBranch, endpoint: '/oauth2/authorization/gitlab' },
+    slack: { name: 'Slack', icon: Slack, endpoint: '/oauth2/authorization/slack' }
 };
 
-// OAuth2 Button Component
+/**
+ * Maps each provider to a Bulma color class
+ * Adjust colors for clarity and branding
+ */
+const PROVIDER_BULMA_CLASSES = {
+    google: 'is-info',     // red
+    github: 'is-dark',       // dark gray
+    microsoft: 'is-danger',    // blue
+    facebook: 'is-link',     // blue
+    discord: 'is-primary',   // indigo
+    twitter: 'is-info',      // light blue
+    linkedin: 'is-link',     // darker blue
+    apple: 'is-black',       // black
+    gitlab: 'is-warning',    // orange
+    slack: 'is-primary'      // purple-ish
+};
+
+/**
+ * OAuth2Button
+ * Renders a single OAuth2 login button
+ */
 const OAuth2Button = ({
     provider,
-    action = 'sign-in',
-    variant = 'filled',
-    size = 'medium',
+    size = 'medium',       // small, medium, large
     fullWidth = false,
+    iconOnly = false,
+    variant = 'filled',    // filled, outlined
     baseUrl = 'http://localhost:8888',
     customEndpoints = {},
     onAuthStart,
-    onAuthError,
-    className = '',
-    children,
-    iconOnly = false
+    onAuthError
 }) => {
     const providerConfig = OAUTH_PROVIDERS[provider.toLowerCase()];
+    if (!providerConfig) return null;
 
-    if (!providerConfig) {
-        console.warn(`OAuth2Button: Unknown provider "${provider}"`);
-        return null;
-    }
-
-    const { name, icon: Icon, colors, endpoint: defaultEndpoint } = providerConfig;
-
-    // Use custom endpoint if provided, otherwise fall back to default
+    const { name, icon: Icon, endpoint: defaultEndpoint } = providerConfig;
     const endpoint = customEndpoints[provider.toLowerCase()] || defaultEndpoint;
 
-    // Size classes
-    const sizeClasses = {
-        small: iconOnly ? 'p-2' : 'px-3 py-2 text-sm',
-        medium: iconOnly ? 'p-2.5' : 'px-4 py-2.5 text-base',
-        large: iconOnly ? 'p-3' : 'px-6 py-3 text-lg'
-    };
-
-    // Icon sizes
-    const iconSizes = {
-        small: 16,
-        medium: 20,
-        large: 24
-    };
-
-    // Variant classes
-    const getVariantClasses = () => {
-        switch (variant) {
-            case 'outlined':
-                return `bg-white hover:bg-gray-50 text-gray-700 border-2 ${colors.border}`;
-            case 'ghost':
-                return `bg-transparent hover:bg-gray-100 text-gray-700 border border-gray-300`;
-            default: // filled
-                return `${colors.bg} ${colors.text} border border-transparent`;
-        }
-    };
-
-    const handleAuth = async () => {
+    // Handle authentication redirect
+    const handleAuth = () => {
         try {
             onAuthStart?.();
             sessionStorage.setItem('oauth_redirect_url', window.location.pathname);
             window.location.href = `${baseUrl}${endpoint}`;
-        } catch (error) {
-            console.error('OAuth2 authentication error:', error);
-            onAuthError?.(error);
+        } catch (err) {
+            console.error('OAuth error', err);
+            onAuthError?.(err);
         }
     };
 
-    const actionText = action === 'sign-up' ? 'Sign up' : 'Sign in';
+    // Bulma button classes
+    const classes = [
+        'button',
+        PROVIDER_BULMA_CLASSES[provider.toLowerCase()] || 'is-primary',
+        variant === 'outlined' ? 'is-outlined' : '',
+        fullWidth ? 'is-fullwidth' : '',
+        size === 'small' ? 'is-small' : size === 'large' ? 'is-large' : '' // medium default
+    ].join(' ');
 
     return (
         <button
             onClick={handleAuth}
-            className={`
-        inline-flex items-center justify-center gap-2 
-        font-medium rounded-lg transition-colors duration-200
-        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${sizeClasses[size]}
-        ${getVariantClasses()}
-        ${fullWidth ? 'w-full' : ''}
-        ${className}
-      `}
-            title={iconOnly ? `${actionText} with ${name}` : undefined}
+            className={classes}
+            title={iconOnly ? `${name} login` : undefined}
+            type="button"
         >
-            <Icon size={iconSizes[size]} />
-            {!iconOnly && (children || `${actionText} with ${name}`)}
+            <Icon size={20} />
+            {!iconOnly && <span style={{ marginLeft: '0.5em' }}>Sign in with {name}</span>}
         </button>
     );
 };
 
-// Main OAuth2 Button Group Component
+/**
+ * OAuth2ButtonGroup
+ * Renders multiple OAuth2 buttons with layout options:
+ * - vertical
+ * - horizontal
+ * - grid (columns specified)
+ */
 const OAuth2ButtonGroup = ({
-    providers = ['google', 'github'],
-    action = 'sign-in',
-    variant = 'filled',
+    providers = ['google'],
+    layout = 'vertical',
     size = 'medium',
-    layout = 'vertical', // 'vertical', 'horizontal', 'grid'
-    baseUrl = 'http://localhost:8888',
-    customEndpoints = {}, // Object to override default endpoints
+    variant = 'filled',
+    columns = 2,
+    iconOnly = false,
+    fullWidth = false,
+    baseUrl,
+    customEndpoints,
     onAuthStart,
     onAuthError,
-    className = '',
-    buttonClassName = '',
-    showText = true,
-    columns = 2 // For grid layout
+    className = ''
 }) => {
-    // Filter out invalid providers
-    const validProviders = providers.filter(provider =>
-        OAUTH_PROVIDERS[provider.toLowerCase()]
-    );
+    const validProviders = providers.filter(p => OAUTH_PROVIDERS[p.toLowerCase()]);
+    if (!validProviders.length) return null;
 
-    if (validProviders.length === 0) {
-        console.warn('OAuth2ButtonGroup: No valid providers specified');
-        return null;
-    }
-
-    // Layout classes
-    const getLayoutClasses = () => {
-        switch (layout) {
-            case 'horizontal':
-                return 'flex flex-wrap gap-3';
-            case 'grid':
-                return `grid gap-3 grid-cols-${Math.min(columns, validProviders.length)}`;
-            default: // vertical
-                return 'space-y-3';
-        }
+    // Layout classes using Bulma helper classes
+    const layoutClasses = {
+        vertical: 'buttons is-flex is-flex-direction-column',
+        horizontal: 'buttons',
+        grid: `columns is-multiline`
     };
 
-    // Determine if buttons should be full width
-    const shouldBeFullWidth = layout === 'vertical';
-
     return (
-        <div className={`${getLayoutClasses()} ${className}`}>
-            {validProviders.map((provider) => (
-                <OAuth2Button
-                    key={provider}
-                    provider={provider}
-                    action={action}
-                    variant={variant}
-                    size={size}
-                    fullWidth={shouldBeFullWidth}
-                    baseUrl={baseUrl}
-                    customEndpoints={customEndpoints}
-                    onAuthStart={onAuthStart}
-                    onAuthError={onAuthError}
-                    className={buttonClassName}
-                    iconOnly={!showText}
-                />
+        <div className={`${layoutClasses[layout] || layoutClasses.vertical} ${className}`}>
+            {validProviders.map(p => (
+                <div key={p} className={layout === 'grid' ? `column is-${12 / columns}` : ''}>
+                    <OAuth2Button
+                        provider={p}
+                        size={size}
+                        variant={variant}
+                        fullWidth={fullWidth || layout === 'vertical'}
+                        iconOnly={iconOnly}
+                        baseUrl={baseUrl}
+                        customEndpoints={customEndpoints}
+                        onAuthStart={onAuthStart}
+                        onAuthError={onAuthError}
+                    />
+                </div>
             ))}
         </div>
     );
 };
 
-// Demo component to show usage examples
-const Demo = () => {
-    const handleAuthStart = () => console.log('Auth started');
-    const handleAuthError = (err) => console.error('Auth error:', err);
-
-    return (
-        <div className="max-w-4xl mx-auto p-6 space-y-8">
-            <h1 className="text-3xl font-bold text-center mb-8">OAuth2 Button Group Examples</h1>
-
-            <div className="grid md:grid-cols-2 gap-8">
-                {/* Vertical Layout */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Vertical Layout</h2>
-                    <OAuth2ButtonGroup
-                        providers={['google', 'github', 'microsoft']}
-                        layout="vertical"
-                        onAuthStart={handleAuthStart}
-                        onAuthError={handleAuthError}
-                    />
-                </div>
-
-                {/* Horizontal Layout */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Horizontal Layout</h2>
-                    <OAuth2ButtonGroup
-                        providers={['google', 'github', 'discord', 'apple']}
-                        layout="horizontal"
-                        variant="outlined"
-                        onAuthStart={handleAuthStart}
-                        onAuthError={handleAuthError}
-                    />
-                </div>
-
-                {/* Grid Layout */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Grid Layout (2 columns)</h2>
-                    <OAuth2ButtonGroup
-                        providers={['google', 'github', 'microsoft', 'discord']}
-                        layout="grid"
-                        columns={2}
-                        variant="ghost"
-                        onAuthStart={handleAuthStart}
-                        onAuthError={handleAuthError}
-                    />
-                </div>
-
-                {/* Custom Endpoints Example */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Custom Endpoints</h2>
-                    <OAuth2ButtonGroup
-                        providers={['google', 'github', 'microsoft']}
-                        layout="vertical"
-                        customEndpoints={{
-                            google: '/auth/google/login',
-                            github: '/auth/github/login',
-                            microsoft: '/auth/microsoft/login'
-                        }}
-                        onAuthStart={handleAuthStart}
-                        onAuthError={handleAuthError}
-                    />
-                </div>
-            </div>
-
-            {/* Large Example */}
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold">All Providers (Grid 3 columns)</h2>
-                <OAuth2ButtonGroup
-                    providers={['google', 'github', 'microsoft', 'facebook', 'discord', 'twitter', 'linkedin', 'apple', 'gitlab']}
-                    layout="grid"
-                    columns={3}
-                    size="small"
-                    onAuthStart={handleAuthStart}
-                    onAuthError={handleAuthError}
-                />
-            </div>
-        </div>
-    );
-};
-
-// Export the main component
+// Export components for flexibility
 export default OAuth2ButtonGroup;
-
-// Also export individual components for flexibility
 export { OAuth2Button, OAuth2ButtonGroup };

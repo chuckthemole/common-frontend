@@ -8,34 +8,36 @@ import OAuth2ButtonGroup from '../oauth2';
 import { useLogin } from '../hooks/use_login';
 import Spinner from '../ui/spinning_wheel';
 import { useAuth } from '../auth_context';
+import logger from '../../logger';
 
 /**
- * LoginModal is a reusable login component that shows a modal login form.
- * 
- * - Uses `useLogin()` hook for form-based login logic.
- * - Integrates `react-router-dom` navigation via `useNavigate()`.
- * - Displays a login button that toggles the modal open/closed.
- * - Supports OAuth2 login buttons via `OAuth2ButtonGroup`.
- * - Automatically closes on successful login.
- * 
- * @param {string} [redirectTo="/"] - Path to redirect to after successful login.
- * @returns {JSX.Element|null}
+ * LoginModal
+ *
+ * Reusable login component with:
+ * - Form-based login
+ * - OAuth2 login
+ * - Trigger button
+ * - Redirect after successful login
+ *
+ * Props:
+ * - redirectTo (string): path to redirect after login, default "/"
+ * - buttonClassName (string): optional CSS class for trigger button, default "is-primary"
+ * - buttonText (string): optional trigger button text, default "Login"
+ * - oauthProviders (array): optional OAuth providers, default ["google"]
  */
-export default function LoginModal({ redirectTo = "/" }) {
-    // Local form state
+export default function LoginModal({
+    redirectTo = "/",
+    buttonClassName = "is-primary",
+    buttonText = "Login",
+    oauthProviders = ["google"]
+}) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-
-    const { isLoading, isAuthenticated, refreshAuth } = useAuth();
-    // console.log(isAuthenticated);
-
-    // Modal open/close state
     const [modalIsOpen, setModalIsOpen] = useState(false);
 
-    // React Router navigation instance
+    const { isLoading, isAuthenticated, refreshAuth } = useAuth();
     const navigate = useNavigate();
 
-    // Hook for login request logic
     const { login, loading, error } = useLogin({
         redirectTo,
         navigate,
@@ -46,53 +48,43 @@ export default function LoginModal({ redirectTo = "/" }) {
         }
     });
 
-    /** Open modal if it's not already active */
-    function openModal() {
+    const openModal = () => {
         if (!isModalActive()) {
             setModalIsOpen(true);
             setModalActive();
         }
-    }
+    };
 
-    /** Close modal and reset form */
-    function closeModal() {
+    const closeModal = () => {
         setModalIsOpen(false);
         setModalInactive();
         clearInput();
-    }
+    };
 
-    /** Clear form fields */
-    function clearInput() {
+    const clearInput = () => {
         setUsername(EMPTY);
         setPassword(EMPTY);
-    }
+    };
 
-    /** Submit login form and trigger login logic */
-    async function handleSubmit(e) {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         await login(username, password);
-    }
+    };
 
-    // Show loading indicator while auth status is being resolved
     if (isLoading || isAuthenticated === undefined) {
-        return (
-            <progress className="progress is-small is-primary" max="100">Loading...</progress>
-        );
+        return <progress className="progress is-small is-primary" max="100">Loading...</progress>;
     }
 
-    // If already logged in, don’t render the login button/modal
-    if (isAuthenticated) {
-        return null;
-    }
+    if (isAuthenticated) return null;
 
     return (
         <>
-            {/* Button to open login modal */}
-            <a onClick={openModal} className="loginBtn button is-light">
-                Login
-            </a>
+            {/* Trigger button with customizable text and style */}
+            <button onClick={openModal} className={`loginBtn button ${buttonClassName}`}>
+                {buttonText}
+            </button>
 
-            {/* Modal Content */}
+            {/* Modal */}
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
@@ -102,13 +94,7 @@ export default function LoginModal({ redirectTo = "/" }) {
             >
                 <div className="modal-content">
                     <form onSubmit={handleSubmit} className="box">
-                        {/* OAuth2 Provider Buttons */}
-                        <OAuth2ButtonGroup
-                            providers={['google']}
-                            customEndpoints={{ google: '/auth/google/authorize' }}
-                        />
-
-                        {/* Username Field */}
+                        {/* Username */}
                         <div className="field">
                             <label className="label">Username</label>
                             <div className="control has-icons-left">
@@ -127,7 +113,7 @@ export default function LoginModal({ redirectTo = "/" }) {
                             </div>
                         </div>
 
-                        {/* Password Field */}
+                        {/* Password */}
                         <div className="field">
                             <label className="label">Password</label>
                             <div className="control has-icons-left">
@@ -146,24 +132,38 @@ export default function LoginModal({ redirectTo = "/" }) {
                             </div>
                         </div>
 
-                        {/* Error message if login fails */}
+                        {/* Error */}
                         {error && <p className="has-text-danger">{error}</p>}
 
-                        {/* Submit/Login button */}
-                        <div className="field">
-                            <button
-                                id="loginSubmit"
-                                type="submit"
-                                className="button is-success"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <Spinner size="16px" thickness="2px" color="#fff" />
-                                ) : (
-                                    'Submit'
-                                )}
-                            </button>
+                        {/* Submit + OAuth2 buttons inline */}
+                        <div className="field is-flex is-align-items-center is-justify-content-space-between flex-wrap">
+                            {/* Submit Button */}
+                            <div className="control mb-2">
+                                <button
+                                    id="loginSubmit"
+                                    type="submit"
+                                    className="button is-success"
+                                    disabled={loading}
+                                >
+                                    {loading ? <Spinner size="16px" thickness="2px" color="#fff" /> : 'Submit'}
+                                </button>
+                            </div>
+
+                            {/* OAuth2 Buttons */}
+                            <div className="control mb-2">
+                                <OAuth2ButtonGroup
+                                    providers={oauthProviders}
+                                    layout="horizontal"      // keep buttons inline
+                                    size="medium"
+                                    variant="filled"
+                                    fullWidth={false}
+                                    customEndpoints={{ google: '/auth/google/authorize' }}
+                                    onAuthStart={() => logger.debug('OAuth started')}
+                                    onAuthError={(err) => logger.error('OAuth error', err)}
+                                />
+                            </div>
                         </div>
+
                     </form>
                 </div>
             </Modal>

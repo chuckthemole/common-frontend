@@ -4,23 +4,33 @@ import { useNavigate } from 'react-router-dom';
 
 import { EMPTY } from '../common';
 import { isModalActive, modal_style, setModalActive, setModalInactive } from '../modal_manager';
-import { isCurrentUserAuthenticated } from '../common_requests';
+import OAuth2ButtonGroup from '../oauth2';
 import { useSignup } from '../hooks/use_signup';
 import { useAuth } from '../auth_context';
 import Spinner from '../ui/spinning_wheel';
+import logger from '../../logger';
 
 /**
- * SignupModal shows a modal form for user registration.
- * 
- * - Uses `useSignup` hook to post credentials to backend.
- * - Automatically closes and optionally redirects on success.
- * - Will not display if user is already authenticated.
- * 
- * @param {JSX.Element|string} [btn] - Optional custom button text or element
- * @param {string} [redirectTo="/"] - Path to redirect after signup
- * @returns {JSX.Element|null}
+ * SignupModal
+ *
+ * Reusable signup component with:
+ * - Form-based signup
+ * - Optional OAuth2 login buttons
+ * - Trigger button with customizable text & style
+ * - Redirect after successful signup
+ *
+ * Props:
+ * - redirectTo (string): path to redirect after signup, default "/"
+ * - buttonClassName (string): optional CSS class for trigger button, default "is-light is-success"
+ * - buttonText (string|JSX.Element): optional trigger button text, default "Sign up"
+ * - oauthProviders (array): optional OAuth providers, default ["google"]
  */
-export default function SignupModal({ btn, redirectTo = "/" }) {
+export default function SignupModal({
+    redirectTo = "/",
+    buttonClassName = "is-success",
+    buttonText = "Sign up",
+    oauthProviders = ["google"]
+}) {
     const { isLoading, isAuthenticated, refreshAuth } = useAuth();
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [username, setUsername] = useState('');
@@ -28,59 +38,57 @@ export default function SignupModal({ btn, redirectTo = "/" }) {
     const [password, setPassword] = useState('');
 
     const navigate = useNavigate();
-    // const is_user_authenticated = isCurrentUserAuthenticated();
 
     const { signup, loading, error } = useSignup({
         redirectTo,
         navigate,
         onSignup: () => {
+            refreshAuth();
             setModalIsOpen(false);
             setModalInactive();
             clearInput();
         }
     });
 
-    function openModal() {
+    // Open modal if none active
+    const openModal = () => {
         if (!isModalActive()) {
             setModalIsOpen(true);
             setModalActive();
         }
-    }
+    };
 
-    function closeModal() {
+    // Close modal and reset inputs
+    const closeModal = () => {
         setModalIsOpen(false);
         setModalInactive();
         clearInput();
-    }
+    };
 
-    function clearInput() {
+    const clearInput = () => {
         setUsername(EMPTY);
         setEmail(EMPTY);
         setPassword(EMPTY);
-    }
+    };
 
-    async function handleSubmit(e) {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         await signup(username, email, password);
-    }
+    };
 
-    // Show loading indicator while auth status is being resolved
+    // Show loading while auth status is unresolved
     if (isLoading || isAuthenticated === undefined) {
-        return (
-            <progress className="progress is-small is-primary" max="100">Loading...</progress>
-        );
+        return <progress className="progress is-small is-primary" max="100">Loading...</progress>;
     }
 
-    if (isAuthenticated) {
-        return null;
-    }
+    if (isAuthenticated) return null;
 
     return (
         <>
             {/* Trigger Button */}
-            <a onClick={openModal} className="signupBtn button is-light is-success">
-                {btn || <span>Sign up</span>}
-            </a>
+            <button onClick={openModal} className={`signupBtn button ${buttonClassName}`}>
+                {buttonText}
+            </button>
 
             {/* Modal Form */}
             <Modal
@@ -146,19 +154,32 @@ export default function SignupModal({ btn, redirectTo = "/" }) {
                         {/* Error Display */}
                         {error && <p className="has-text-danger">{error}</p>}
 
-                        {/* Submit Button */}
-                        <div className="field">
-                            <button
-                                type="submit"
-                                className="button is-success"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <Spinner size="16px" thickness="2px" color="#fff" />
-                                ) : (
-                                    'Submit'
-                                )}
-                            </button>
+                        {/* Submit + OAuth2 buttons inline */}
+                        <div className="field is-flex is-align-items-center is-justify-content-space-between flex-wrap">
+                            {/* Submit Button */}
+                            <div className="control mb-2">
+                                <button
+                                    type="submit"
+                                    className="button is-success"
+                                    disabled={loading}
+                                >
+                                    {loading ? <Spinner size="16px" thickness="2px" color="#fff" /> : 'Submit'}
+                                </button>
+                            </div>
+
+                            {/* TODO: NEED TO TEST AND WORK ON THIS OAuth2 Buttons */}
+                            {/* <div className="control mb-2">
+                                <OAuth2ButtonGroup
+                                    providers={oauthProviders}
+                                    layout="horizontal"
+                                    size="medium"
+                                    variant="filled"
+                                    fullWidth={false}
+                                    customEndpoints={{ google: '/auth/google/authorize' }}
+                                    onAuthStart={() => logger.debug('OAuth started')}
+                                    onAuthError={(err) => logger.error('OAuth error', err)}
+                                />
+                            </div> */}
                         </div>
                     </form>
                 </div>

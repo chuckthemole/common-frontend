@@ -1,60 +1,74 @@
 // useColorSettings.js
 import { useState, useEffect } from "react";
-import { defaultColors } from "./default_color"; // Import your comprehensive color palette
+import { defaultColors } from "./default_color";
+
+/**
+ * Utility: Normalize a color key to a CSS variable name
+ * Example: "navbar-background" -> "--navbar-background-color"
+ */
+const toCssVar = (key) => `--${key}-color`;
+
+/**
+ * Utility: Normalize a key for localStorage
+ * Keep it identical to the color key (kebab-case, no suffix)
+ */
+const toStorageKey = (key) => key;
 
 /**
  * Custom hook to manage global site colors.
  * - Applies colors to CSS variables for live updates
- * - Persists colors to localStorage
- * - Provides a global initializer for App.js or other root components
+ * - Persists colors to localStorage (using kebab-case keys)
+ * - Provides an initializer for restoring persisted colors
  */
 export function useColorSettings() {
-    // Initialize state from localStorage or fallback to defaultColors
+    // Initialize from localStorage or fall back to defaultColors
     const [colors, setColors] = useState(() => {
         const storedColors = {};
         Object.keys(defaultColors).forEach((key) => {
-            storedColors[key] = localStorage.getItem(`${key}Color`) || defaultColors[key];
+            storedColors[key] =
+                localStorage.getItem(toStorageKey(key)) || defaultColors[key];
         });
         return storedColors;
     });
 
     /**
-     * Apply a color object to the document root as CSS variables
-     * Example: { primary: "#FF0000" } sets --primary-color in CSS
-     * @param {Object} colorValues - key/value pairs of colors
+     * Apply a set of color values to CSS variables.
+     * Example: { "navbar-background": "#123456" }
+     * will set document.documentElement.style["--navbar-background-color"]
      */
     const applyColors = (colorValues) => {
         Object.entries(colorValues).forEach(([key, value]) => {
             if (value) {
-                document.documentElement.style.setProperty(`--${key}-color`, value);
+                document.documentElement.style.setProperty(toCssVar(key), value);
             }
         });
     };
 
-    // Whenever colors state changes, apply them and store in localStorage
+    // Whenever colors state changes, apply them & persist to localStorage
     useEffect(() => {
         applyColors(colors);
 
         Object.entries(colors).forEach(([key, value]) => {
-            localStorage.setItem(`${key}Color`, value);
+            localStorage.setItem(toStorageKey(key), value);
         });
     }, [colors]);
 
     /**
-     * Global initializer function
-     * Use in App.js or top-level component to apply stored colors without rendering a modal
+     * Global initializer.
+     * Use at app startup (e.g., in App.js) to restore stored colors.
      */
     const initColors = () => {
         const storedColors = {};
         Object.keys(defaultColors).forEach((key) => {
-            storedColors[key] = localStorage.getItem(`${key}Color`) || defaultColors[key];
+            storedColors[key] =
+                localStorage.getItem(toStorageKey(key)) || defaultColors[key];
         });
         applyColors(storedColors);
     };
 
     return {
         colors,      // Current color values
-        setColors,   // Setter function to update colors dynamically
-        initColors   // Function to initialize colors on app load
+        setColors,   // Update colors dynamically
+        initColors   // Restore/apply colors on app load
     };
 }

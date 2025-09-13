@@ -3,6 +3,7 @@ import Modal from "react-modal";
 import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
 import { useColorSettings } from "./use_color_settings";
 import { predefinedColorLayouts } from "./predefined_color_layouts";
+import { defaultColors } from "./default_color";
 
 /**
  * ColorSettingsModal
@@ -16,12 +17,12 @@ import { predefinedColorLayouts } from "./predefined_color_layouts";
 export default function ColorSettingsModal({ preview = true }) {
     const { colors, setColors } = useColorSettings();
     const [modalIsOpen, setModalIsOpen] = useState(false);
-    const [savedLayouts, setSavedLayouts] = useState({});
+    const [savedLayouts, setSavedLayouts] = useState({ ...predefinedColorLayouts });
     const [selectedLayout, setSelectedLayout] = useState("");
 
     useEffect(() => {
         const stored = JSON.parse(localStorage.getItem("savedColorLayouts") || "{}");
-        setSavedLayouts({ ...predefinedColorLayouts, ...stored });
+        setSavedLayouts((prev) => ({ ...prev, ...stored }));
     }, []);
 
 
@@ -51,11 +52,15 @@ export default function ColorSettingsModal({ preview = true }) {
     };
 
     const handleLoadLayout = (name) => {
-        if (savedLayouts[name]) {
-            setColors(savedLayouts[name]);
+        if (!name) return; // if user selects placeholder
+        const layout = savedLayouts[name];
+        if (layout) {
+            setColors({ ...defaultColors, ...layout }); // merge with defaults
             setSelectedLayout(name);
         }
     };
+
+
 
     const handleDeleteLayout = (name) => {
         const { [name]: _, ...rest } = savedLayouts;
