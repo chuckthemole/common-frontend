@@ -10,11 +10,12 @@
         "rumpus-clean-react": "./scripts/cleanup-react-init.sh"
     },
     "scripts": {
-        "build": "babel src --out-dir dist --copy-files && npm run build:scss",
+        "copy:constants": "mkdir -p dist/constants && cp -R src/constants/* dist/constants/",
+        "build": "babel src --out-dir dist && npm run copy:constants && npm run build:scss",
         "prebuild:scss": "bash scripts/generate-scss.sh",
         "build:scss": "bash scripts/generate-scss.sh && sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
         "watch:scss": "sass --watch --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
-        "build:watch": "babel src --out-dir dist --watch & npm run watch:scss",
+        "build:watch": "npm run copy:constants && babel src --out-dir dist --watch & npm run watch:scss",
         "clean:css": "echo Cleaning css && rm -rf dist",
         "clean": "echo Cleaning frontend && rm -rf node_modules package-lock.json dist",
         "fresh": "npm run clean && npm install",

@@ -3,29 +3,39 @@ import Modal from "react-modal";
 import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
 import { useColorSettings } from "./use_color_settings";
 import { predefinedColorLayouts } from "./predefined_color_layouts";
-import { defaultColors } from "./default_color";
+import colorsJson from "../../../constants/colors.json";
 
 /**
  * ColorSettingsModal
- * - Allows admin to edit global color palette
- * - Applies changes live via CSS variables
- * - Optional preview swatches
- * - Full-width modal layout
- * - Supports saving/loading named color layouts
- * - Truncates long text with tooltip
+ * -----------------
+ * - Full-featured modal for editing global site colors
+ * - Applies changes live via CSS variables using useColorSettings
+ * - Supports saving/loading named layouts to localStorage
+ * - Optional preview swatches next to color pickers
+ * - Handles long labels with truncation and tooltips
  */
 export default function ColorSettingsModal({ preview = true }) {
+    // Hook to manage live color values
     const { colors, setColors } = useColorSettings();
+
+    // Modal open state
     const [modalIsOpen, setModalIsOpen] = useState(false);
+
+    // Stored layouts: predefined + user-saved
     const [savedLayouts, setSavedLayouts] = useState({ ...predefinedColorLayouts });
+
+    // Currently selected layout name
     const [selectedLayout, setSelectedLayout] = useState("");
 
+    // Load saved layouts from localStorage on mount
     useEffect(() => {
         const stored = JSON.parse(localStorage.getItem("savedColorLayouts") || "{}");
         setSavedLayouts((prev) => ({ ...prev, ...stored }));
     }, []);
 
-
+    // --------------------
+    // Modal open/close handlers
+    // --------------------
     const openModal = () => {
         if (!isModalActive()) {
             setModalIsOpen(true);
@@ -38,13 +48,20 @@ export default function ColorSettingsModal({ preview = true }) {
         setModalInactive();
     };
 
+    // --------------------
+    // Color update handler
+    // --------------------
     const handleChange = (key, value) => {
         setColors((prev) => ({ ...prev, [key]: value }));
     };
 
+    // --------------------
+    // Layout management handlers
+    // --------------------
     const handleSaveLayout = () => {
         const name = prompt("Enter a name for this color layout:");
         if (!name) return;
+
         const newLayouts = { ...savedLayouts, [name]: colors };
         setSavedLayouts(newLayouts);
         localStorage.setItem("savedColorLayouts", JSON.stringify(newLayouts));
@@ -52,15 +69,15 @@ export default function ColorSettingsModal({ preview = true }) {
     };
 
     const handleLoadLayout = (name) => {
-        if (!name) return; // if user selects placeholder
+        if (!name) return;
+
         const layout = savedLayouts[name];
         if (layout) {
-            setColors({ ...defaultColors, ...layout }); // merge with defaults
+            // Merge user layout with default colors from colors.json
+            setColors({ ...colorsJson, ...layout });
             setSelectedLayout(name);
         }
     };
-
-
 
     const handleDeleteLayout = (name) => {
         const { [name]: _, ...rest } = savedLayouts;
@@ -69,6 +86,9 @@ export default function ColorSettingsModal({ preview = true }) {
         if (selectedLayout === name) setSelectedLayout("");
     };
 
+    // --------------------
+    // Render
+    // --------------------
     return (
         <>
             <button onClick={openModal} className="button is-info">
@@ -92,12 +112,14 @@ export default function ColorSettingsModal({ preview = true }) {
                         overflowY: "auto",
                         width: "90vw",
                         maxWidth: "1200px",
-                        padding: "2rem"
+                        padding: "2rem",
+                        zIndex: 10000, // ensure content is above header
                     },
                     overlay: {
                         ...modal_style.overlay,
-                        backgroundColor: "rgba(0, 0, 0, 0.5)"
-                    }
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        zIndex: 9999, // overlay also above header
+                    },
                 }}
             >
                 <div className="modal-content">
@@ -111,21 +133,17 @@ export default function ColorSettingsModal({ preview = true }) {
                                 <select
                                     value={selectedLayout}
                                     onChange={(e) => handleLoadLayout(e.target.value)}
-                                    title={selectedLayout} // Tooltip for selected text
+                                    title={selectedLayout}
                                     style={{
                                         textOverflow: "ellipsis",
                                         overflow: "hidden",
                                         whiteSpace: "nowrap",
-                                        maxWidth: "100%"
+                                        maxWidth: "100%",
                                     }}
                                 >
                                     <option value="">-- Select a layout --</option>
                                     {Object.keys(savedLayouts).map((name) => (
-                                        <option
-                                            key={name}
-                                            value={name}
-                                            title={name} // Tooltip for long names
-                                        >
+                                        <option key={name} value={name} title={name}>
                                             {name}
                                         </option>
                                     ))}
@@ -149,11 +167,11 @@ export default function ColorSettingsModal({ preview = true }) {
                                 <div className="field">
                                     <label
                                         className="label"
-                                        title={key.charAt(0).toUpperCase() + key.slice(1)} // Tooltip for truncated labels
+                                        title={key.charAt(0).toUpperCase() + key.slice(1)}
                                         style={{
                                             textOverflow: "ellipsis",
                                             overflow: "hidden",
-                                            whiteSpace: "nowrap"
+                                            whiteSpace: "nowrap",
                                         }}
                                     >
                                         {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -175,7 +193,7 @@ export default function ColorSettingsModal({ preview = true }) {
                                                     height: "25px",
                                                     backgroundColor: value,
                                                     border: "1px solid #ccc",
-                                                    flexShrink: 0
+                                                    flexShrink: 0,
                                                 }}
                                             />
                                         )}

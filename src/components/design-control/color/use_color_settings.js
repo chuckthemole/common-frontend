@@ -1,6 +1,6 @@
 // useColorSettings.js
 import { useState, useEffect } from "react";
-import { defaultColors } from "./default_color";
+import colorsJson from "../../../constants/colors.json";
 
 /**
  * Utility: Normalize a color key to a CSS variable name
@@ -21,20 +21,18 @@ const toStorageKey = (key) => key;
  * - Provides an initializer for restoring persisted colors
  */
 export function useColorSettings() {
-    // Initialize from localStorage or fall back to defaultColors
+    // Initialize from localStorage or fall back to colors.json
     const [colors, setColors] = useState(() => {
         const storedColors = {};
-        Object.keys(defaultColors).forEach((key) => {
+        Object.keys(colorsJson).forEach((key) => {
             storedColors[key] =
-                localStorage.getItem(toStorageKey(key)) || defaultColors[key];
+                localStorage.getItem(toStorageKey(key)) || colorsJson[key];
         });
         return storedColors;
     });
 
     /**
      * Apply a set of color values to CSS variables.
-     * Example: { "navbar-background": "#123456" }
-     * will set document.documentElement.style["--navbar-background-color"]
      */
     const applyColors = (colorValues) => {
         Object.entries(colorValues).forEach(([key, value]) => {
@@ -59,9 +57,9 @@ export function useColorSettings() {
      */
     const initColors = () => {
         const storedColors = {};
-        Object.keys(defaultColors).forEach((key) => {
+        Object.keys(colorsJson).forEach((key) => {
             storedColors[key] =
-                localStorage.getItem(toStorageKey(key)) || defaultColors[key];
+                localStorage.getItem(toStorageKey(key)) || colorsJson[key];
         });
         applyColors(storedColors);
     };
