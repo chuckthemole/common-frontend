@@ -1,6 +1,7 @@
-// _variables.scss
-// Rumpus SCSS Variables - Production-ready with modern light theme
+// Rumpus SCSS Variables - modern light theme
 // ================================================================
+@use "sass:map";
+@import "../../dist/styles/colors.scss";
 
 // -------------------------------------------------------------
 // Font Families
@@ -40,78 +41,7 @@ $fullhd-enabled: false;
 // Root CSS Variables - Modern light theme
 // -------------------------------------------------------------
 :root {
-    // Debug / fallback variable for missing vars
-    --missing-debug-var: #ff00ff; // bright magenta for spotting undefined vars
-
-    // --------------------
-    // Core / Global Colors
-    // --------------------
-    --primary-color: #4F46E5;
-    --secondary-color: #F5A623;
-    --link-color: #2563EB;
-    --link-hover-color: #FF9AA2; // Added
-    --text-color: #1F2937;
-    --heading-color: #111827;
-    --background-color: #F9FAFB;
-    --muted-color: #6B7280;
-
-    // --------------------
-    // Semantic / Functional Colors
-    // --------------------
-    --success-color: #10B981;
-    --warning-color: #F59E0B;
-    --danger-color: #EF4444;
-    --info-color: #3B82F6;
-    --border-color: #DBDBDB; // Added
-    --hover-color: #f2f2f2; // Added
-
-    // --------------------
-    // Navbar
-    // --------------------
-    --navbar-background-color: #ffffff;
-    --navbar-text-color: #1F2937;
-
-    // --------------------
-    // Footer
-    // --------------------
-    --footer-background-color: #F3F4F6;
-    --footer-text-color: #4B5563;
-
-    // --------------------
-    // Sidebar
-    // --------------------
-    --sidebar-background-color: #ffffff;
-    --sidebar-text-color: #4B5563;
-
-    // --------------------
-    // Cards
-    // --------------------
-    --card-background-color: #ffffff;
-    --card-header-background-color: #F3F4F6;
-    --card-text-color: #1F2937;
-
-    // --------------------
-    // Buttons
-    // --------------------
-    --button-background-color: var(--primary-color, var(--missing-debug-var));
-    --button-text-color: #ffffff;
-
-    // --------------------
-    // Inputs
-    // --------------------
-    --input-background-color: #ffffff; // Added
-    --input-border-color: #DBDBDB; // Added
-    --input-text-color: #1F2937; // Added
-    --input-placeholder-color: #AAAAAA; // Added
-
-    // --------------------
-    // Modals / Overlays
-    // --------------------
-    --modal-background-color: #ffffff; // Added
-    --modal-overlay-color: rgba(0, 0, 0, 0.5); // Added
-
-    // --------------------
-    // Highlight / Extra
-    // --------------------
-    --highlight-color: #FFF3B0; // Added
+    @each $key, $value in $colors {
+        --#{$key}-color: #{$value};
+    }
 }

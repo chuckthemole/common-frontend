@@ -11,7 +11,8 @@
     },
     "scripts": {
         "build": "babel src --out-dir dist --copy-files && npm run build:scss",
-        "build:scss": "sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
+        "prebuild:scss": "bash scripts/generate-scss.sh",
+        "build:scss": "bash scripts/generate-scss.sh && sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
         "watch:scss": "sass --watch --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",
         "build:watch": "babel src --out-dir dist --watch & npm run watch:scss",
         "clean:css": "echo Cleaning css && rm -rf dist",
