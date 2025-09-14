@@ -4,36 +4,11 @@
 @import "../../dist/styles/colors.scss";
 
 // -------------------------------------------------------------
-// Font Families
-// -------------------------------------------------------------
-
-// Global sans-serif font
-$family-sans-serif: '"Nunito", sans-serif';
-
-// System font stacks
-$family-sans-serif-system: "Helvetica", "Arial", sans-serif;
-$family-serif-system: "Georgia", "Times New Roman", serif;
-$family-monospace-system: "Courier New", Courier, monospace;
-
-// Google / web fonts
-$family-nunito: "Nunito", sans-serif;
-$family-roboto: "Roboto", sans-serif;
-$family-lato: "Lato", sans-serif;
-$family-montserrat: "Montserrat", sans-serif;
-$family-open-sans: "Open Sans", sans-serif;
-
-// Display / heading fonts (optional)
-$family-poppins: "Poppins", sans-serif;
-$family-rubik: "Rubik", sans-serif;
-$family-oswald: "Oswald", sans-serif;
-
-// -------------------------------------------------------------
-// Bulma overrides
+// Bulma overrides - TODO: I took these out of _components.scss, maybe look into a bit more - chuck
 // -------------------------------------------------------------
 $control-border-width: 2px;
 $input-border-color: transparent;
 $input-shadow: none;
-
 $widescreen-enabled: false;
 $fullhd-enabled: false;
 
@@ -44,4 +19,10 @@ $fullhd-enabled: false;
     @each $key, $value in $colors {
         --#{$key}-color: #{$value};
     }
+
+    --primary-font: "Nunito",
+    sans-serif;
+    --secondary-font: "Helvetica",
+    "Arial",
+    sans-serif;
 }

@@ -1,0 +1,22 @@
+// -------------------------------------------------------------
+// Button Variants (with chained fallbacks for bg + text)
+// -------------------------------------------------------------
+@mixin button-variant($variant-name, $bg) {
+    .button.is-#{$variant-name} {
+        background-color: $bg;
+        border-color: $bg;
+        color: var(--#{$variant-name}-button-text-color, var(--button-text-color, #fff));
+
+        &:hover {
+            background-color: var(--#{$variant-name}-hover-color, var(--hover-color, #{$bg}));
+            border-color: var(--#{$variant-name}-hover-color, var(--hover-color, #{$bg}));
+            color: var(--#{$variant-name}-hover-text-color, var(--button-text-color, #fff));
+        }
+
+        &:active {
+            background-color: var(--#{$variant-name}-active-color, var(--active-color, #{$bg}));
+            border-color: var(--#{$variant-name}-active-color, var(--active-color, #{$bg}));
+            color: var(--#{$variant-name}-active-text-color, var(--button-text-color, #fff));
+        }
+    }
+}

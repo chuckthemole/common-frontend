@@ -4,10 +4,10 @@
 // Global body and text
 // --------------------
 body {
-    font-family: var(--primary-font, $family-sans-serif),
-        var(--secondary-font, $family-sans-serif-system),
-        var(--backup-primary-font, $family-nunito),
-        var(--backup-secondary-font, $family-roboto);
+    font-family: var(--primary-font),
+        var(--secondary-font),
+        var(--backup-primary-font),
+        var(--backup-secondary-font);
     background-color: var(--background-color, var(--missing-debug-var));
     color: var(--text-color, var(--missing-debug-var));
 }
@@ -34,5 +34,5 @@ select {
     }
 }
 
-// Import Google Fonts
+// Import Google Fonts TODO: do we need this import? -chuck
 @import url('https://fonts.googleapis.com/css?family=Nunito:400,700&display=swap');

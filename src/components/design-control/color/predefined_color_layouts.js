@@ -273,6 +273,7 @@ export const predefinedColorLayouts = {
         info: "#FF6347",
         border: "#F5D6A1",
         hover: "#D11F00",
+        "info-hover": "#2f0929ff",
         "navbar-background": "#FF4500",
         "navbar-text": "#FFFFFF",
         "footer-background": "#FFD700",

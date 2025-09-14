@@ -12,6 +12,7 @@
     "info": "#209CEE",
     "border": "#DBDBDB",
     "hover": "#f2f2f2",
+    "info-hover": "#f2f2f2",
     "navbar-background": "#ffffff",
     "navbar-text": "#363636",
     "footer-background": "#F8F8F8",

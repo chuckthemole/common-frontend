@@ -2,32 +2,21 @@
 @use "components/dashboard-elements/control-button";
 @use "components/dashboard-elements/number-stepper";
 @use "components/dashboard-elements/toggle-switch";
+@use "mixins" as *;
 
 // Bulma with overrides
-@use "bulma/bulma" with ($family-primary: $family-monospace-system,
-    $control-border-width: $control-border-width,
-    $input-border-color: $input-border-color,
-    $input-shadow: $input-shadow);
-
-// Buttons
-.button.is-primary {
-    background-color: var(--button-background-color, var(--missing-debug-var));
-    border-color: var(--button-background-color, var(--missing-debug-var));
-    color: var(--button-text-color, var(--missing-debug-var));
-
-    &:hover {
-        background-color: var(--hover-color, var(--missing-debug-var));
-        border-color: var(--hover-color, var(--missing-debug-var));
-        color: var(--button-text-color, var(--missing-debug-var)); // keep text same
-    }
-}
+@use "bulma/bulma" with ($family-primary: var(--primary-font),
+    $family-secondary: var(--secondary-font));
 
 
-.button.is-secondary {
-    background-color: var(--secondary-color, var(--missing-debug-var));
-    border-color: var(--secondary-color, var(--missing-debug-var));
-    color: var(--button-text-color, var(--missing-debug-var));
-}
+// Button Variants
+@include button-variant("primary", var(--button-background-color, #3273dc));
+@include button-variant("secondary", var(--secondary-color, #7a7a7a));
+@include button-variant("info", var(--info-color, #209cee));
+@include button-variant("success", var(--success-color, #23d160));
+@include button-variant("warning", var(--warning-color, #ffdd57));
+@include button-variant("danger", var(--danger-color, #ff3860));
+@include button-variant("link", var(--link-color, #485fc7));
 
 // Navbar
 .navbar {
