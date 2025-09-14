@@ -1,6 +1,6 @@
 import { getApi } from '../api';
 import AwsGetResource from './aws_get_resource';
-import ReactComponent from './react_component';
+import DynamicComponent from './dynamic_component';
 import React from 'react';
 import logger from '../logger';
 
@@ -140,6 +140,7 @@ export function renderDropdown(item, idx) {
  * @returns {Array<JSX.Element|null>} - Array of rendered React elements.
  */
 export function renderNavbarItems(items) {
+    logger.debug('debugging item: ', items);
     return items.map((item, i) => {
         switch (item.itemType) {
             case 'LINK':
@@ -156,11 +157,15 @@ export function renderNavbarItems(items) {
                 return renderDropdown(item, i);
             case 'REACT_COMPONENT':
                 return (
-                    <ReactComponent
+                    <div
                         key={`component-${item.title}-${i}`}
-                        component_name={item.reactComponent}
-                        className="navbar-item"
-                    />
+                    // className="navbar-item" TODO: this should probably be a navbar-item. we maybe not have too much css for navbar-items, and just nest the styled elements. think about. -chuck
+                    >
+                        <DynamicComponent
+                            component_name={item.reactComponent}
+                            componentProps={item.componentProps || {}}
+                        />
+                    </div>
                 );
             default:
                 logger.warn('Unknown navbar item type:', item.itemType);

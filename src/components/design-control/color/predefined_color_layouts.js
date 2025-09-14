@@ -267,7 +267,7 @@ export const predefinedColorLayouts = {
         heading: "#0D0D0D",
         background: "#FFF8F0",
         muted: "#7A7A7A",
-        success: "#48C774",
+        success: "#f77373ff",
         warning: "#FFA500",
         danger: "#FF2400",
         info: "#FF6347",

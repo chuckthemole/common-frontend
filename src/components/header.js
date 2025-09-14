@@ -27,7 +27,7 @@ export default function Header({
     header_path,
     navbarItemsStart = [],
     navbarItemsEnd = [],
-    disappear_on_down_reappear_on_up = true, // <-- NEW PROP
+    disappear_on_down_reappear_on_up = true,
 }) {
     const { data, error } = useSWR(header_path, common_fetcher);
     const api = getApi();

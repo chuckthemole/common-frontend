@@ -20,7 +20,7 @@ export { default as Log } from './components/log';
 export { default as LoginModal } from './components/modal/login_modal';
 export { default as Logout } from './components/logout';
 export { ModalManager } from './components/modal_manager';
-export { default as ReactComponent } from './components/react_component';
+export { default as DynamicComponent } from './components/dynamic_component';
 export { default as RumpusQuill } from './components/rumpus_quill';
 export { default as RumpusQuillForm } from './components/rumpus_quill_form';
 export { default as Section } from './components/section';
