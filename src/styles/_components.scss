@@ -175,3 +175,23 @@
         transform: rotate(360deg);
     }
 }
+
+// Brand
+@keyframes logoColorShift {
+    0% {
+        filter: brightness(0.4) invert(1) sepia(1) saturate(5) hue-rotate(200deg);
+    }
+
+    50% {
+        filter: brightness(1.5) invert(1) sepia(1) saturate(8) hue-rotate(300deg);
+    }
+
+    100% {
+        filter: brightness(0.4) invert(1) sepia(1) saturate(5) hue-rotate(200deg);
+    }
+}
+
+.brand-logo {
+    width: 200px; // or responsive sizing
+    animation: logoColorShift 4s infinite;
+}

@@ -213,5 +213,85 @@ export const predefinedColorLayouts = {
         highlight: "#FFF0CC",
         "link-hover": "#FF7F50",
         shadow: "rgba(0,0,0,0.2)"
+    },
+
+    /**
+     * "Mint Breeze" – Light, airy, modern
+     * Soft greens and blues, excellent for wellness or fintech layouts
+     */
+    "Mint Breeze": {
+        primary: "#3EB489",       // soft mint green
+        secondary: "#A3E7D1",     // pastel aqua
+        link: "#2D8F6B",          // darker mint for links
+        text: "#1B1B1B",          // dark text for readability
+        heading: "#0D3B2E",       // strong contrast headings
+        background: "#F0FFF9",    // soft off-white
+        muted: "#7D7D7D",
+        success: "#48C774",
+        warning: "#FFD57F",
+        danger: "#F14668",
+        info: "#2D8F6B",
+        border: "#D9F0EB",
+        hover: "#E0FAF2",
+        "navbar-background": "#3EB489",
+        "navbar-text": "#FFFFFF",
+        "footer-background": "#A3E7D1",
+        "footer-text": "#1B1B1B",
+        "sidebar-background": "#E0FAF2",
+        "sidebar-text": "#1B1B1B",
+        "card-background": "#FFFFFF",
+        "card-header-background": "#A3E7D1",
+        "card-text": "#1B1B1B",
+        "button-background": "#3EB489",
+        "button-text": "#FFFFFF",
+        "input-background": "#FFFFFF",
+        "input-border": "#D9F0EB",
+        "input-text": "#1B1B1B",
+        "input-placeholder": "#AAAAAA",
+        "modal-background": "#FFFFFF",
+        "modal-overlay": "rgba(0,0,0,0.4)",
+        highlight: "#A3E7D1",
+        "link-hover": "#2D8F6B",
+        shadow: "rgba(0,0,0,0.1)"
+    },
+
+    /**
+     * "Solar Flare" – High energy, dramatic contrast
+     * Great for marketing sites or call-to-action heavy layouts
+     */
+    "Solar Flare": {
+        primary: "#FF4500",       // blazing orange
+        secondary: "#FFD700",     // golden accent
+        link: "#FF6347",          // tomato red for links
+        text: "#1A1A1A",
+        heading: "#0D0D0D",
+        background: "#FFF8F0",
+        muted: "#7A7A7A",
+        success: "#48C774",
+        warning: "#FFA500",
+        danger: "#FF2400",
+        info: "#FF6347",
+        border: "#F5D6A1",
+        hover: "#D11F00",
+        "navbar-background": "#FF4500",
+        "navbar-text": "#FFFFFF",
+        "footer-background": "#FFD700",
+        "footer-text": "#1A1A1A",
+        "sidebar-background": "#FFF0E0",
+        "sidebar-text": "#1A1A1A",
+        "card-background": "#FFFFFF",
+        "card-header-background": "#FF6347",
+        "card-text": "#1A1A1A",
+        "button-background": "#FF4500",
+        "button-text": "#FFFFFF",
+        "input-background": "#FFFFFF",
+        "input-border": "#F5D6A1",
+        "input-text": "#1A1A1A",
+        "input-placeholder": "#AAAAAA",
+        "modal-background": "#FFFFFF",
+        "modal-overlay": "rgba(0,0,0,0.5)",
+        highlight: "#FFE5CC",
+        "link-hover": "#FF6347",
+        shadow: "rgba(0,0,0,0.2)"
     }
 };
