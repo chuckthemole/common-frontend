@@ -48,8 +48,8 @@ export { getNamedApi } from './api';
 export { setNamedApi } from './api';
 
 export { default as LOGGER } from './logger';
-export { getEnv } from './logger';
-export { setEnv } from './logger';
+export { getLoggingEnv } from './logger';
+export { setLoggingEnv } from './logger';
 
 export * from './utils/component_debugger';
 
