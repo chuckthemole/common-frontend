@@ -16,4 +16,4 @@ npm run build
 echo "Publishing to npm (public)..."
 npm publish --access public
 
-echo "✅ Published successfully!"
+echo "Published successfully!"

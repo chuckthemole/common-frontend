@@ -3,6 +3,8 @@ import AwsGetResource from './aws_get_resource';
 import DynamicComponent from './dynamic_component';
 import React from 'react';
 import logger from '../logger';
+import { Link } from 'react-router-dom';
+import { normalizeUrl } from '../utils/utils';
 
 /**
  * Build a fully-qualified backend URL for assets and links.
@@ -98,20 +100,24 @@ export function renderDropdown(item, idx) {
     return (
         <div
             key={`dropdown-${item.title}-${idx}`}
-            className="navbar-item has-dropdown is-hoverable"
+            className="navbar-item-dropdown has-dropdown is-hoverable"
         >
-            <a className="navbar-link">{item.title}</a>
+            {/* Dropdown title */}
+            <Link className="navbar-link" to="#">
+                {item.title}
+            </Link>
+
             <div className="navbar-dropdown">
                 {item.dropdown.map((dropItem, j) => {
                     if (dropItem.itemType === 'LINK') {
                         return (
-                            <a
+                            <Link
                                 key={`dropdown-link-${dropItem.title}-${j}`}
-                                href={dropItem.href}
-                                className="navbar-item"
+                                to={normalizeUrl(dropItem.href)}
+                                className="navbar-item-link"
                             >
                                 {dropItem.title}
-                            </a>
+                            </Link>
                         );
                     } else if (dropItem.itemType === 'DROPDOWN_DIVIDER') {
                         return (
@@ -145,13 +151,13 @@ export function renderNavbarItems(items) {
         switch (item.itemType) {
             case 'LINK':
                 return (
-                    <a
+                    <Link
                         key={`link-${item.title}-${i}`}
-                        href={item.href}
-                        className="navbar-item"
+                        to={item.href}
+                        className="navbar-item-link"
                     >
                         {item.title}
-                    </a>
+                    </Link>
                 );
             case 'DROPDOWN':
                 return renderDropdown(item, i);
@@ -159,6 +165,7 @@ export function renderNavbarItems(items) {
                 return (
                     <div
                         key={`component-${item.title}-${i}`}
+                        className='navbar-item'
                     // className="navbar-item" TODO: this should probably be a navbar-item. we maybe not have too much css for navbar-items, and just nest the styled elements. think about. -chuck
                     >
                         <DynamicComponent

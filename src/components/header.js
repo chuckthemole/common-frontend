@@ -106,9 +106,7 @@ export default function Header({
             <div id="navbarBasicExample" className="navbar-menu">
                 <div className="navbar-start">{navbar_items_start}</div>
                 <div className="navbar-end">
-                    <div className="navbar-item no-hover">
-                        <div className="buttons">{navbar_items_end}</div>
-                    </div>
+                    {navbar_items_end}
                 </div>
             </div>
         </nav>

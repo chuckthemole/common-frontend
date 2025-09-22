@@ -20,38 +20,37 @@
 
 // Navbar
 .navbar {
-    height: 4rem; // desired navbar height
+    height: 4rem;
     display: flex;
     align-items: stretch;
     background-color: var(--navbar-background-color, var(--missing-debug-var));
     color: var(--navbar-text-color, var(--missing-debug-var));
 
+    // Brand section
     .navbar-brand {
         display: flex;
         align-items: stretch;
-        height: 100%; // fill navbar height
+        height: 100%;
 
-        // Brand link
         .navbar-item {
             display: flex;
             align-items: stretch;
-            padding: 0; // remove default padding
-            height: 100%; // fill navbar height
+            padding: 0;
+            height: 100%;
 
             img {
-                height: 100%; // fill navbar height
-                width: auto; // maintain aspect ratio
+                height: 100%;
+                width: auto;
                 object-fit: contain;
-                display: block; // remove inline spacing
+                display: block;
             }
         }
 
-        // Burger wrapper
         .navbar-burger-wrapper {
             display: flex;
-            align-items: center; // vertical center
-            flex: 0 0 auto; // do not stretch
-            margin-left: auto; // push to far right
+            align-items: center;
+            flex: 0 0 auto;
+            margin-left: auto;
         }
 
         .navbar-burger {
@@ -60,8 +59,21 @@
         }
     }
 
-    .navbar-item:not(.no-hover) {
+    // ----------------------------
+    // Navbar items (layout)
+    // ----------------------------
+    .navbar-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        height: 100%;
+    }
+
+    // Links (hoverable)
+    .navbar-item-link {
+        @extend .navbar-item;
         color: var(--navbar-text-color, var(--missing-debug-var));
+        text-decoration: none;
 
         &:hover {
             background-color: var(--hover-color, var(--missing-debug-var)) !important;
@@ -69,25 +81,55 @@
         }
     }
 
-    .navbar-item.has-dropdown>.navbar-link {
-        color: var(--navbar-text-color, var(--missing-debug-var));
-        background-color: transparent;
+    // Dropdowns
+    .navbar-item-dropdown {
+        @extend .navbar-item;
+        position: relative;
 
-        &:hover {
-            background-color: var(--hover-color, var(--missing-debug-var)) !important;
-            color: var(--button-text-color, var(--missing-debug-var)) !important;
-        }
-    }
-
-    .navbar-dropdown {
-        background-color: var(--navbar-background-color, var(--missing-debug-var));
-
-        .navbar-item {
+        // Title link
+        >.navbar-link {
             color: var(--navbar-text-color, var(--missing-debug-var));
+            background-color: transparent;
+            text-decoration: none;
+            transition: background-color 0.2s, color 0.2s;
 
-            &:hover {
+            // Hover/focus on the title itself
+            &:hover,
+            &:focus,
+            &:focus-visible {
                 background-color: var(--hover-color, var(--missing-debug-var)) !important;
                 color: var(--button-text-color, var(--missing-debug-var)) !important;
+            }
+        }
+
+        // Maintain hover color when any child inside dropdown is hovered/focused
+        &:hover>.navbar-link,
+        &:focus-within>.navbar-link {
+            background-color: var(--hover-color, var(--missing-debug-var)) !important;
+            color: var(--button-text-color, var(--missing-debug-var)) !important;
+        }
+
+        .navbar-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 12rem;
+            background-color: var(--navbar-background-color, var(--missing-debug-var));
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+
+            .navbar-item-link {
+                display: block;
+                padding: 0.5rem 1rem;
+                color: var(--navbar-text-color, var(--missing-debug-var));
+                text-decoration: none;
+
+                &:hover,
+                &:focus,
+                &:focus-visible {
+                    background-color: var(--hover-color, var(--missing-debug-var)) !important;
+                    color: var(--button-text-color, var(--missing-debug-var)) !important;
+                }
             }
         }
     }
