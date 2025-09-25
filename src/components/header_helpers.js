@@ -11,6 +11,8 @@ import { normalizeUrl } from '../utils/utils';
  *
  * Ensures all href/src attributes are prefixed with the backend API's baseURL,
  * avoiding broken links when relative paths are returned by the API.
+ * 
+ * TODO: this seems like it should be in a common lib.
  *
  * @param {string} path - The relative or absolute path provided by the API.
  * @returns {string} - Fully-qualified backend URL.
@@ -22,6 +24,21 @@ export const backendHref = (path) => {
     const baseURL = api?.defaults?.baseURL || '';
     return `${baseURL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
 };
+
+/**
+ * Resolve a given path into a usable URL.
+ * - If it's already an absolute URL (http/https), return as-is.
+ * - Otherwise, run it through backendHref().
+ *
+ * @param {string} path - The input path or URL
+ * @returns {string} - A fully qualified URL
+ */
+export function resolveResourcePath(path) {
+    if (!path) return '';
+
+    const isAbsolute = /^https?:\/\//i.test(path);
+    return isAbsolute ? path : backendHref(path);
+}
 
 /**
  * Render the "brand" section of the navbar (usually logo + optional burger).
@@ -51,10 +68,11 @@ export function renderBrand(brand, navbar_burger = null) {
 
     switch (brand.itemType) {
         case 'BRAND':
+            const image_path = resolveResourcePath(brand.image);
             return (
                 <>
                     <a href={brand.href} className="navbar-brand">
-                        <img src={backendHref(brand.image)} alt="Brand" />
+                        <img src={image_path} alt="Brand" />
                     </a>
                     {BurgerWrapper}
                 </>

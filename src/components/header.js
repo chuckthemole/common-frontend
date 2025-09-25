@@ -1,15 +1,18 @@
-const React = require("react");
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faRadiation } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
-import useSWR from "swr";
 
-import { getApi } from "../api";
-import { common_fetcher } from "./common_requests";
+import { useApi } from "./hooks/use_api";
 import { renderBrand, renderNavbarItems } from "./header_helpers";
 import logger from "../logger";
 
+/**
+ * Normalize custom navbar items, ensuring proper keys and React elements.
+ *
+ * @param {Array} items - Array of navbar items
+ * @returns {Array} - Flattened array of valid React elements
+ */
 function normalizeNavbarItems(items) {
     if (!items) return [];
     return items
@@ -23,28 +26,33 @@ function normalizeNavbarItems(items) {
         .flat();
 }
 
+/**
+ * Header component with API-driven content, optional scroll hide/show behavior.
+ *
+ * @param {Object} props
+ * @param {string} props.header_path - API path to fetch header data
+ * @param {Array} props.navbarItemsStart - Additional items for navbar start
+ * @param {Array} props.navbarItemsEnd - Additional items for navbar end
+ * @param {boolean} props.disappear_on_down_reappear_on_up - Scroll hide/show toggle
+ * @returns {React.JSX.Element}
+ */
 export default function Header({
     header_path,
     navbarItemsStart = [],
     navbarItemsEnd = [],
     disappear_on_down_reappear_on_up = true,
 }) {
-    const { data, error } = useSWR(header_path, common_fetcher);
-    const api = getApi();
-
+    const { data, error, loading } = useApi(header_path);
     const [hidden, setHidden] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
 
-    // Handle hide-on-scroll only if prop is enabled
+    // Scroll handler for hiding/reappearing navbar
     useEffect(() => {
         if (!disappear_on_down_reappear_on_up) return;
 
         const handleScroll = () => {
-            if (window.scrollY > lastScrollY) {
-                setHidden(true); // scrolling down → hide
-            } else {
-                setHidden(false); // scrolling up → show
-            }
+            if (window.scrollY > lastScrollY) setHidden(true);
+            else setHidden(false);
             setLastScrollY(window.scrollY);
         };
 
@@ -52,12 +60,13 @@ export default function Header({
         return () => window.removeEventListener("scroll", handleScroll);
     }, [lastScrollY, disappear_on_down_reappear_on_up]);
 
+    // Logging
+    if (loading) logger.debug("Header loading...");
     if (error) logger.error("Header fetch error:", error);
-    if (!data) logger.debug("Header loading...");
-    if (data) logger.debug("Header data fetched:", data);
 
+    // Default navbar elements
     let navbar_burger = (
-        <a
+        <button
             role="button"
             className="navbar-burger"
             aria-label="menu"
@@ -67,7 +76,7 @@ export default function Header({
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
-        </a>
+        </button>
     );
 
     let navbar_brand = (
@@ -80,20 +89,19 @@ export default function Header({
     let navbar_items_start = [];
     let navbar_items_end = [];
 
+    // Populate from API data if available
     if (data) {
         navbar_brand = renderBrand(data.navbarBrand, navbar_burger);
         navbar_items_start = renderNavbarItems(data.navbarItemsStart || []);
         navbar_items_end = renderNavbarItems(data.navbarItemsEnd || []);
     }
 
+    // Append extra custom items
     if (navbarItemsStart.length > 0) {
-        const extraStart = normalizeNavbarItems(navbarItemsStart);
-        navbar_items_start = [...navbar_items_start, ...extraStart];
+        navbar_items_start = [...navbar_items_start, ...normalizeNavbarItems(navbarItemsStart)];
     }
-
     if (navbarItemsEnd.length > 0) {
-        const extraEnd = normalizeNavbarItems(navbarItemsEnd);
-        navbar_items_end = [...navbar_items_end, ...extraEnd];
+        navbar_items_end = [...navbar_items_end, ...normalizeNavbarItems(navbarItemsEnd)];
     }
 
     return (
@@ -105,9 +113,7 @@ export default function Header({
             {navbar_brand}
             <div id="navbarBasicExample" className="navbar-menu">
                 <div className="navbar-start">{navbar_items_start}</div>
-                <div className="navbar-end">
-                    {navbar_items_end}
-                </div>
+                <div className="navbar-end">{navbar_items_end}</div>
             </div>
         </nav>
     );

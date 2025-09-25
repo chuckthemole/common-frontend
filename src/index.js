@@ -51,6 +51,8 @@ export { default as LOGGER } from './logger';
 export { getLoggingEnv } from './logger';
 export { setLoggingEnv } from './logger';
 
+export { LocalPersistence, MemoryPersistence, ApiPersistence } from './persistence';
+
 export * from './utils/component_debugger';
 
 export * as Common from './components/common'
