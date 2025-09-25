@@ -4,7 +4,12 @@ import { faRadiation } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 
 import { useApi } from "./hooks/use_api";
-import { renderBrand, renderNavbarItems } from "./header_helpers";
+import {
+    renderBrand,
+    renderNavbarItems,
+    transformItemsForBurger,
+    renderBurgerLinks
+} from "./header_helpers";
 import logger from "../logger";
 
 /**
@@ -43,10 +48,17 @@ export default function Header({
     disappear_on_down_reappear_on_up = true,
 }) {
     const { data, error, loading } = useApi(header_path);
+
+    // State for hiding header on scroll
     const [hidden, setHidden] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
 
-    // Scroll handler for hiding/reappearing navbar
+    // State for burger menu open/close
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    /**
+     * Scroll handler for hiding/reappearing navbar
+     */
     useEffect(() => {
         if (!disappear_on_down_reappear_on_up) return;
 
@@ -60,18 +72,24 @@ export default function Header({
         return () => window.removeEventListener("scroll", handleScroll);
     }, [lastScrollY, disappear_on_down_reappear_on_up]);
 
-    // Logging
+    // Logging for API fetch
     if (loading) logger.debug("Header loading...");
     if (error) logger.error("Header fetch error:", error);
 
-    // Default navbar elements
+    /**
+     * Toggle burger menu open/close
+     */
+    const toggleMenu = () => setMenuOpen(!menuOpen);
+
+    // Default burger element
     let navbar_burger = (
         <button
             role="button"
-            className="navbar-burger"
+            className={`navbar-burger ${menuOpen ? "is-active" : ""}`}
             aria-label="menu"
-            aria-expanded="false"
+            aria-expanded={menuOpen}
             data-target="navbarBasicExample"
+            onClick={toggleMenu}
         >
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
@@ -79,10 +97,10 @@ export default function Header({
         </button>
     );
 
+    // Default brand element (fallback)
     let navbar_brand = (
         <Link to="/" className="navbar-brand">
             <FontAwesomeIcon icon={faRadiation} color="red" />
-            {navbar_burger}
         </Link>
     );
 
@@ -111,9 +129,16 @@ export default function Header({
             aria-label="main navigation"
         >
             {navbar_brand}
-            <div id="navbarBasicExample" className="navbar-menu">
-                <div className="navbar-start">{navbar_items_start}</div>
-                <div className="navbar-end">{navbar_items_end}</div>
+            <div
+                id="navbarBasicExample"
+                className={`navbar-menu ${menuOpen ? "is-active" : ""}`}
+            >
+                <div className="navbar-start">
+                    {navbar_items_start}
+                </div>
+                <div className="navbar-end">
+                    {navbar_items_end}
+                </div>
             </div>
         </nav>
     );

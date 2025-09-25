@@ -198,3 +198,81 @@ export function renderNavbarItems(items) {
         }
     });
 }
+
+/**
+ * Transform arbitrary navbar items into simple links for burger menu.
+ *
+ * - REACT_COMPONENT -> uses `componentProps.title` or fallback text as link
+ * - DROPDOWN -> flattens all inner LINKs into individual links
+ * - LINK -> unchanged
+ *
+ * @param {Array<Object>} items - Array of navbar item configs
+ * @returns {Array<Object>} - Array of uniform LINK-like items
+ */
+export function transformItemsForBurger(items) {
+    if (!items) return [];
+
+    const transformed = [];
+
+    items.forEach((item) => {
+        switch (item.itemType) {
+            case "LINK":
+                transformed.push({ ...item });
+                break;
+
+            case "REACT_COMPONENT":
+                // Use title from props or fallback
+                transformed.push({
+                    itemType: "LINK",
+                    title: item.componentProps?.title || "Component",
+                    href: item.componentProps?.href || "#",
+                });
+                break;
+
+            case "DROPDOWN":
+                // Flatten all dropdown LINKs
+                item.dropdown?.forEach((dropItem) => {
+                    if (dropItem.itemType === "LINK") {
+                        transformed.push({ ...dropItem });
+                    } else if (dropItem.itemType === "REACT_COMPONENT") {
+                        transformed.push({
+                            itemType: "LINK",
+                            title: dropItem.componentProps?.title || "Component",
+                            href: dropItem.componentProps?.href || "#",
+                        });
+                    }
+                    // DROPDOWN_DIVIDER is ignored in burger menu
+                });
+                break;
+
+            default:
+                logger.warn("Unknown item type for burger menu:", item.itemType);
+        }
+    });
+
+    return transformed;
+}
+
+/**
+ * Render uniform burger links from transformed items.
+ *
+ * @param {Array<Object>} items - Array of LINK-like items
+ * @returns {Array<JSX.Element>}
+ */
+export function renderBurgerLinks(items) {
+    return items.map((item, idx) => (
+        <Link
+            key={`burger-link-${item.title}-${idx}`}
+            to={item.href || "#"}
+            className="navbar-item-link"
+            onClick={() => {
+                // optional: close menu on click
+                const menu = document.getElementById("navbarBasicExample");
+                menu?.classList.remove("is-active");
+            }}
+        >
+            {item.title}
+        </Link>
+    ));
+}
+

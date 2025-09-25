@@ -35,8 +35,8 @@ export default function Footer({ footer_path }) {
                         <div className="column" key={title}>
                             <div className="footer-title">{title}</div>
                             {Array.isArray(items) &&
-                                items.map((item) => (
-                                    <div key={item}>
+                                items.map((item, idx) => (
+                                    <div key={`${item}-${idx}`}>
                                         <span>{item}</span>
                                     </div>
                                 ))}
