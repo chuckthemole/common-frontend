@@ -1,73 +1,89 @@
-const React = require('react');
-import { common_loader } from './common_requests';
+import React, { useEffect, useState } from 'react';
+import { useApi } from './hooks/use_api';
+import logger from '../logger';
 
 /**
- * Loader for footer
- * 
- * @param {*} path path to GET footer
- * @returns 
- */
-export function loader(path) {
-    return common_loader(path);
-}
-
-/**
- * 
- * @param {string} footer_path
- * 
+ * Footer component that fetches and displays footer content from the API.
+ *
+ * @param {Object} props
+ * @param {string} props.footer_path - API path to fetch footer data
  * @returns {React.JSX.Element}
  */
-export default function Footer({footer_path}) {
+export default function Footer({ footer_path }) {
+    const { data, error, loading } = useApi(footer_path);
 
-    const footer_loader = loader(footer_path);
-
-    if (footer_loader.error) {
-        return error_render();
+    if (loading) {
+        logger.debug('Footer loading...');
+        return renderLoading();
     }
 
-    if (!footer_loader.data) {
-        return loading_render();
+    if (error) {
+        logger.error('Footer fetch error:', error);
+        return renderError(error.message || 'Failed to load footer');
     }
-   
+
+    if (!data?.columns || !Array.isArray(data.columns)) {
+        logger.warn('Footer data invalid:', data);
+        return renderError('Invalid footer data structure.');
+    }
+
     return (
-        <div className='columns is-centered has-text-centered'>
-            <div className='column is-half'>
+        <div className="columns is-centered has-text-centered">
+            <div className="column is-half">
                 <div className="columns is-centered">
-                    {footer_loader.data.columns.map(({items, title}) => (
+                    {data.columns.map(({ items, title }) => (
                         <div className="column" key={title}>
-                            <div>{title}</div>
-                            {items.map(item => 
-                                <div key={item}>
-                                    <span>{item}</span>
-                                </div>
-                            )}
+                            <div className="footer-title">{title}</div>
+                            {Array.isArray(items) &&
+                                items.map((item) => (
+                                    <div key={item}>
+                                        <span>{item}</span>
+                                    </div>
+                                ))}
                         </div>
                     ))}
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-// return an error render
-function error_render() {
-    return(
-        <div className='columns is-centered has-text-centered'>
-            <div className='column is-half notification is-warning'>
-                <p>An error occurred with footer</p>
+/**
+ * Renders an error state for the footer.
+ *
+ * @param {string} [message="An error occurred with footer"] - Optional error message
+ * @returns {React.JSX.Element}
+ */
+function renderError(message = 'An error occurred with footer') {
+    return (
+        <div className="columns is-centered has-text-centered">
+            <div className="column is-half notification is-warning">
+                <p>{message}</p>
             </div>
         </div>
-    )
+    );
 }
 
-// return a loading render
-function loading_render() {
-    return(
-        <div className='container m-6'>
-            <progress className="progress is-small is-primary" max="100">15%</progress>
-            <progress className="progress is-danger" max="100">30%</progress>
-            <progress className="progress is-medium is-dark" max="100">45%</progress>
-            <progress className="progress is-large is-info" max="100">60%</progress>
+/**
+ * Renders a loading state for the footer.
+ *
+ * @returns {React.JSX.Element}
+ */
+function renderLoading() {
+    return (
+        <div className="container m-6">
+            <progress className="progress is-small is-primary" max="100">
+                15%
+            </progress>
+            <progress className="progress is-danger" max="100">
+                30%
+            </progress>
+            <progress className="progress is-medium is-dark" max="100">
+                45%
+            </progress>
+            <progress className="progress is-large is-info" max="100">
+                60%
+            </progress>
         </div>
-    )
+    );
 }
