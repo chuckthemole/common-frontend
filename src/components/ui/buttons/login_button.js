@@ -1,6 +1,6 @@
 // components/LoginButton.jsx
 import React from 'react';
-import { setModalActive, isModalActive } from '../modal_manager';
+import { setModalActive, isModalActive } from '../../modal_manager';
 
 export default function LoginButton({ label = "Login", className = "button is-light" }) {
     return (

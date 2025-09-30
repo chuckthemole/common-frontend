@@ -1,0 +1,1 @@
+export { default as BugReportForm } from './bug-report-form';

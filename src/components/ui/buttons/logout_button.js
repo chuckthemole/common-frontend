@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useLogout } from '../hooks/use_logout';
+import { useLogout } from '../../hooks/use_logout';
 import { useNavigate } from 'react-router-dom';
-import Spinner from './spinning_wheel';
-import { useAuthStatus } from '../hooks/use_auth_status';
-import { useAuth } from '../auth_context';
+import Spinner from '../loaders/spinning_wheel';
+import { useAuthStatus } from '../../hooks/use_auth_status';
+import { useAuth } from '../../auth_context';
+import logger from '../../../logger';
 
 export default function LogoutButton({
     children = "Sign Out",
@@ -35,7 +36,7 @@ export default function LogoutButton({
         // If `reload === true`, page reloads and this line never runs
     };
 
-    console.log(isAuthenticated);
+    logger.debug('Authenticated: ' + isAuthenticated);
     if (isAuthLoading || isAuthenticated === undefined) {
         return (
             <Spinner size="20px" thickness="2px" color="#333" />

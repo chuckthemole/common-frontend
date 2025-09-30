@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useLogout } from '../hooks/use_logout';
+import { useLogout } from '../../hooks/use_logout';
 import { useNavigate } from 'react-router-dom';
-import Spinner from './spinning_wheel';
-import { useAuthStatus } from '../hooks/use_auth_status';
-import { useAuth } from '../auth_context';
+import Spinner from '../loaders/spinning_wheel';
+import { useAuthStatus } from '../../hooks/use_auth_status';
+import { useAuth } from '../../auth_context';
 import { Link } from 'react-router-dom';
+import logger from '../../../logger';
 
 export default function AdminButton({
     children = "Admin",
@@ -16,12 +17,14 @@ export default function AdminButton({
 }) {
     const { isAuthLoading, isAuthenticated, roles } = useAuth();
 
-    console.log(roles);
     if (isAuthLoading || isAuthenticated === undefined) {
         return (
             <Spinner size="20px" thickness="2px" color="#333" />
         );
     }
+
+    logger.debug("is authenticated: " + isAuthenticated);
+    logger.debug(roles);
 
     if (!isAuthenticated) {
         return (

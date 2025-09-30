@@ -21,8 +21,6 @@ export { default as LoginModal } from './components/modal/login_modal';
 export { default as Logout } from './components/logout';
 export { ModalManager } from './components/modal_manager';
 export { default as DynamicComponent } from './components/dynamic_component';
-export { default as RumpusQuill } from './components/rumpus_quill';
-export { default as RumpusQuillForm } from './components/rumpus_quill_form';
 export { default as Section } from './components/section';
 export { default as SignupModal } from './components/modal/signup_modal';
 export { UserCommon } from './components/user_common';
@@ -39,6 +37,8 @@ export { default as TasksTemplate } from './components/dashboard/tasks-template'
 
 export * from './components/dashboard-elements';
 export * from './components/design-control';
+export * from './components/ui';
+export * from './components/common-forms';
 
 export { default as api } from './api';
 export { createApiClient } from './api';

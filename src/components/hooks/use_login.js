@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { getApi } from '../../api';
+import logger from '../../logger';
 import qs from 'qs'; // Used to serialize data as x-www-form-urlencoded
 
 /**
@@ -63,17 +64,47 @@ export function useLogin({ onLogin, redirectTo = null, navigate = null } = {}) {
                 setError('Invalid credentials.');
             }
         } catch (err) {
-            console.error('Login error:', err); // always do this
-            if (err.response) {
-                console.error('Error status:', err.response.status);
-                console.error('Error data:', err.response.data);
-            } else {
-                console.error('No response received:', err.message);
+            const endpoint = '/auth/login';
+            const method = 'POST';
+            const payload = { username }; // don't log password for security!
+
+            // Always show high-level error
+            logger.error(`Login request failed for ${method} ${endpoint}:`, err.message);
+
+            // Attempt to get full URL from Axios config
+            let fullUrl = endpoint;
+            if (err.config) {
+                fullUrl = err.config.baseURL
+                    ? `${err.config.baseURL.replace(/\/$/, '')}${err.config.url}`
+                    : err.config.url;
             }
-            setError('Login failed.');
+
+            if (err.response) {
+                // Detailed debug info (only in dev/staging)
+                logger.debug('API error response:', {
+                    url: fullUrl,
+                    method: err.config?.method?.toUpperCase() || method,
+                    status: err.response.status,
+                    data: err.response.data,
+                    payload, // optionally include what was sent
+                    headers: err.config?.headers,
+                });
+            } else {
+                // Network errors or no response
+                logger.debug('No response received from API:', {
+                    url: fullUrl,
+                    method: err.config?.method?.toUpperCase() || method,
+                    payload,
+                    message: err.message,
+                    headers: err.config?.headers,
+                });
+            }
+
+            setError('Login failed. Please check your credentials or try again later.');
         } finally {
             setLoading(false);
         }
+
     }, [onLogin, redirectTo, navigate]);
 
     return { login, loading, error };

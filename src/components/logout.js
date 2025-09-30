@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { isCurrentUserAuthenticated } from './common_requests';
 import { getApi } from '../api';
-import Spinner from './ui/spinning_wheel';
+import Spinner from './ui/loaders/spinning_wheel';
 import { useAuthStatus } from './hooks/use_auth_status';
 
 export default function Logout() {

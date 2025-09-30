@@ -14,9 +14,9 @@ const lazyWithLogging = (importFunc, name) =>
 const COMPONENT_MAP = {
     SignupModal: lazyWithLogging(() => import('./modal/signup_modal'), 'SignupModal'),
     LoginModal: lazyWithLogging(() => import('./modal/login_modal'), 'LoginModal'),
-    Logout: lazyWithLogging(() => import('./ui/logout_button'), 'Logout'),
+    Logout: lazyWithLogging(() => import('./ui/buttons/logout_button'), 'Logout'),
     UserIcon: lazyWithLogging(() => import('./user_icon'), 'UserIcon'),
-    Admin: lazyWithLogging(() => import('./ui/admin_button'), 'Admin'),
+    Admin: lazyWithLogging(() => import('./ui/buttons/admin_button'), 'Admin'),
 };
 
 // Required props for validation

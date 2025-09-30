@@ -7,7 +7,7 @@ import { isModalActive, modal_style, setModalActive, setModalInactive } from '..
 import OAuth2ButtonGroup from '../oauth2';
 import { useSignup } from '../hooks/use_signup';
 import { useAuth } from '../auth_context';
-import Spinner from '../ui/spinning_wheel';
+import Spinner from '../ui/loaders/spinning_wheel';
 import logger from '../../logger';
 
 /**
