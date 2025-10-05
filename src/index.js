@@ -40,6 +40,8 @@ export * from './components/design-control';
 export * from './components/ui';
 export * from './components/common-forms';
 
+export * from './persistence';
+
 export { default as api } from './api';
 export { createApiClient } from './api';
 export { getApi } from './api';
@@ -51,7 +53,7 @@ export { default as LOGGER } from './logger';
 export { getLoggingEnv } from './logger';
 export { setLoggingEnv } from './logger';
 
-export { LocalPersistence, MemoryPersistence, ApiPersistence } from './persistence';
+export { LocalPersistence, MemoryPersistence, ApiPersistence } from './persistence/persistence';
 
 export * from './utils/component_debugger';
 

@@ -6,7 +6,7 @@ import {
     LocalPersistence,
     MemoryPersistence,
     ApiPersistence
-} from "./../../../persistence";
+} from "../../../persistence/persistence";
 
 /**
  * Utility: Normalize a color key to a CSS variable name.
