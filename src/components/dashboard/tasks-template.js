@@ -12,11 +12,31 @@ debugComponents(
     "tasks-template"
 );
 
+/**
+ * Enum for supported task layouts.
+ */
 export const TaskLayout = {
     GRID: "grid",
     HORIZONTAL: "horizontal",
 };
 
+/**
+ * TasksTemplate Component
+ * -----------------------
+ * Displays a list of tasks in grid or horizontal layout.
+ * Supports built-in actions (highlight, delete, complete toggle)
+ * and custom task UI elements.
+ *
+ * @param {Object} props
+ * @param {Array} props.tasks - List of task objects.
+ * @param {Object} props.currentUser - Current user object.
+ * @param {boolean} [props.isAdmin=false] - Whether current user is an admin.
+ * @param {string} [props.layout=TaskLayout.GRID] - Layout type ("grid" or "horizontal").
+ * @param {Function} [props.taskUiElements] - Function returning custom UI elements per task.
+ * @param {Function} [props.onTasksChange] - Callback invoked when tasks are modified.
+ * @param {boolean} [props.allowReopen=false] - Whether completed tasks can be reopened.
+ * @param {boolean} [props.showTaskButtons=true] - Whether to show task action buttons.
+ */
 export default function TasksTemplate({
     tasks = [],
     currentUser,
@@ -25,12 +45,14 @@ export default function TasksTemplate({
     taskUiElements,
     onTasksChange,
     allowReopen = false,
+    showTaskButtons = false,
 }) {
     const [expanded, setExpanded] = useState({});
     const [localTasks, setLocalTasks] = useState(tasks);
 
     useEffect(() => setLocalTasks(tasks), [tasks]);
 
+    /** Update tasks both locally and externally */
     const updateTasks = (updater) => {
         setLocalTasks((prev) => {
             const newTasks = typeof updater === "function" ? updater(prev) : updater;
@@ -39,10 +61,12 @@ export default function TasksTemplate({
         });
     };
 
+    /** Toggle expansion of a task */
     const toggleExpand = (taskId) => {
         setExpanded((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
     };
 
+    /** Filter visible tasks */
     const visibleTasks = isAdmin
         ? localTasks
         : localTasks.filter((t) => t.assignedTo?.id === currentUser?.id);
@@ -50,11 +74,16 @@ export default function TasksTemplate({
     if (!visibleTasks.length)
         return <p className="has-text-grey-light is-italic">No tasks available.</p>;
 
-    // Render UI elements per task
+    /**
+     * Render all UI elements (built-in + custom) for a single task.
+     * Skipped entirely if showTaskButtons is false.
+     */
     const renderUiElements = (task) => {
+        if (!showTaskButtons) return null;
+
         const customElements = taskUiElements?.(task) || [];
 
-        // Determine which built-in buttons are already present
+        // Detect which built-in actions are already included
         const hasHighlight = customElements.some(
             (el) => el.action === TasksTemplate.builtInActions.highlight
         );
@@ -62,7 +91,7 @@ export default function TasksTemplate({
             (el) => el.action === TasksTemplate.builtInActions.deleteTask
         );
 
-        // Combine custom elements with default built-in buttons if missing
+        // Add missing built-in actions
         const elements = [
             ...customElements,
             !hasHighlight && {
@@ -77,7 +106,6 @@ export default function TasksTemplate({
             },
         ].filter(Boolean);
 
-        // Flex container for horizontal layout spacing
         const containerStyle =
             layout === TaskLayout.HORIZONTAL
                 ? { display: "flex", gap: "0.5rem", alignItems: "center" }
@@ -94,7 +122,7 @@ export default function TasksTemplate({
                         task.completed &&
                         !allowReopen;
 
-                    // Render ToggleSwitch for toggleComplete
+                    // ToggleSwitch for toggleComplete
                     if (!component && action === TasksTemplate.builtInActions.toggleComplete) {
                         return (
                             <ToggleSwitch
@@ -107,7 +135,6 @@ export default function TasksTemplate({
                         );
                     }
 
-                    // Render ControlButton variants (Cartoon, Realistic, etc.)
                     const Component =
                         component ||
                         (action === TasksTemplate.builtInActions.highlight
@@ -130,8 +157,8 @@ export default function TasksTemplate({
                                     : action === TasksTemplate.builtInActions.toggleComplete
                                         ? task.completed
                                         : undefined
-                            } // sync with task state if needed
-                            onToggle={(val) => handleChange(val)} // trigger built-in action
+                            }
+                            onToggle={(val) => handleChange(val)}
                             disabled={isDisabled}
                         />
                     );
@@ -140,7 +167,6 @@ export default function TasksTemplate({
         );
     };
 
-
     return (
         <div
             className={
@@ -148,6 +174,7 @@ export default function TasksTemplate({
             }
         >
             {visibleTasks.map((task) => {
+                const isOpen = expanded[task.id] || false;
                 const boxStyle = {
                     opacity: task.completed ? 0.5 : 1,
                     backgroundColor: task.highlighted
@@ -167,8 +194,6 @@ export default function TasksTemplate({
                     borderRadius: "6px",
                 };
 
-                const isOpen = expanded[task.id] || false;
-
                 return (
                     <div
                         key={task.id}
@@ -184,7 +209,9 @@ export default function TasksTemplate({
                             >
                                 <p className="title is-5 mb-0">{task.title}</p>
                             </div>
-                            <div className="is-flex-shrink-0">{renderUiElements(task)}</div>
+                            {showTaskButtons && (
+                                <div className="is-flex-shrink-0">{renderUiElements(task)}</div>
+                            )}
                         </div>
 
                         {isOpen && task.description && (
@@ -201,8 +228,6 @@ export default function TasksTemplate({
                             </div>
                         )}
 
-
-
                         {isAdmin && task.assignedTo?.length > 0 && (
                             <p className="is-size-7 has-text-grey mt-2">
                                 Assigned to: {task.assignedTo.map((u) => u.name).join(", ")}
@@ -218,7 +243,6 @@ export default function TasksTemplate({
                                 )}
                             </p>
                         )}
-
                     </div>
                 );
             })}
@@ -226,7 +250,9 @@ export default function TasksTemplate({
     );
 }
 
-// Built-in actions
+/** -----------------------------
+ * Built-in task actions
+ * ----------------------------- */
 TasksTemplate.builtInActions = {
     toggleComplete: (checked, task, setTasks) => {
         setTasks((prev) =>
