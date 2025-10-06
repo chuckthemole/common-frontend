@@ -4,3 +4,4 @@ export * from './number-stepper';
 export * from './progress-meter';
 export * from './slider';
 export * from './toggle-switch';
+export * from './filter';
