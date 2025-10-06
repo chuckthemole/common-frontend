@@ -5,3 +5,4 @@ export * from './progress-meter';
 export * from './slider';
 export * from './toggle-switch';
 export * from './filter';
+export * from './multi-selector';

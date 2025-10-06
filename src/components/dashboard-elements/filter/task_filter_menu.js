@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import ToggleSwitch from "../toggle-switch/toggle-switch";
+import MultiSelector from "../multi-selector/multi_selector";
 
 /**
- * TaskFilterMenuWithModal
+ * TaskFilterMenu
  * ------------------------
  * Wraps TaskFilterMenu in a modal if desired, with a button to open it.
  *
@@ -14,7 +15,7 @@ import ToggleSwitch from "../toggle-switch/toggle-switch";
  * @param {Object} [styles] - Optional styles
  * @param {string} [buttonLabel="Open Filters"] - Label for the open modal button
  */
-export default function TaskFilterMenuWithModal({
+export default function TaskFilterMenu({
     isModal = false,
     filters,
     values,
@@ -30,117 +31,146 @@ export default function TaskFilterMenuWithModal({
         onChange?.({ ...values, [key]: value });
     };
 
+    const handleResetAll = () => {
+        const resetValues = {};
+        filters.forEach((f) => {
+            switch (f.type) {
+                case "multi-select":
+                    resetValues[f.key] = [];
+                    break;
+                case "select":
+                    resetValues[f.key] = "";
+                    break;
+                case "checkbox":
+                    resetValues[f.key] = false;
+                    break;
+                case "toggle":
+                    resetValues[f.key] = f.toggleLabels?.[0] || "Off";
+                    break;
+                default:
+                    resetValues[f.key] = null;
+            }
+        });
+        onChange?.(resetValues);
+    };
+
+    const renderFilter = (filter) => {
+        const { key, type, label, options = [], toggleLabels = ["Off", "On"], selectionType } = filter;
+        const value = values[key];
+
+        switch (type) {
+            case "multi-select":
+                return (
+                    <div key={key} style={{ display: "flex", flexDirection: "column" }}>
+                        <label style={{ marginBottom: "0.25rem" }}>{label}</label>
+                        <MultiSelector
+                            options={options}
+                            value={value || []}
+                            onChange={(newValues) => handleFilterChange(key, newValues)}
+                            placeholder={`Select ${label.toLowerCase()}...`}
+                            disabled={styles.disabled}
+                            selectionType={selectionType || "chip"}
+                        />
+                    </div>
+                );
+            case "select":
+                return (
+                    <div key={key} style={{ display: "flex", flexDirection: "column" }}>
+                        <label style={{ marginBottom: "0.25rem" }}>{label}</label>
+                        <MultiSelector
+                            options={options}
+                            value={value ? [value] : []}
+                            onChange={(newValues) => handleFilterChange(key, newValues[0] || "")}
+                            placeholder={`Select ${label.toLowerCase()}...`}
+                            disabled={styles.disabled}
+                            selectionType={selectionType || "chip"}
+                        />
+                    </div>
+                );
+            case "checkbox":
+                return (
+                    <div key={key} style={{ display: "flex", alignItems: "center" }}>
+                        <ToggleSwitch checked={!!value} onChange={(checked) => handleFilterChange(key, checked)} />
+                        <label style={{ marginLeft: "0.25rem" }}>{label}</label>
+                    </div>
+                );
+            case "toggle":
+                return (
+                    <div key={key} style={{ display: "flex", alignItems: "center" }}>
+                        <label style={{ marginRight: "0.5rem" }}>{label}:</label>
+                        <ToggleSwitch
+                            checked={value === toggleLabels[1]}
+                            onChange={(checked) =>
+                                handleFilterChange(key, checked ? toggleLabels[1] : toggleLabels[0])
+                            }
+                        />
+                        <span style={{ marginLeft: "0.5rem" }}>
+                            {value === toggleLabels[1] ? toggleLabels[1] : toggleLabels[0]}
+                        </span>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
     const content = (
         <div
             style={{
-                padding: "1rem",
-                background: "#fff",
-                borderRadius: "8px",
                 display: "flex",
+                flexDirection: "column",
                 gap: "1rem",
-                flexWrap: "wrap",
-                alignItems: "center",
                 ...styles.container,
             }}
         >
-            {filters.map((filter) => {
-                const { key, type, label, options = [], toggleLabels = ["Off", "On"] } = filter;
-                const value = values[key];
+            {filters.map((filter, index) => (
+                <div key={filter.key} style={{ padding: "0.5rem 0" }}>
+                    {renderFilter(filter)}
+                    {index < filters.length - 1 && (
+                        <hr style={{ margin: "0.5rem 0", borderColor: "#ddd" }} />
+                    )}
+                </div>
+            ))}
 
-                if (type === "multi-select") {
-                    return (
-                        <div key={key} style={{ display: "flex", flexDirection: "column", ...styles.filter }}>
-                            <label style={{ marginBottom: "0.25rem" }}>{label}</label>
-                            <select
-                                multiple
-                                value={value || []}
-                                onChange={(e) => {
-                                    const selected = Array.from(e.target.selectedOptions, (o) => o.value);
-                                    handleFilterChange(key, selected);
-                                }}
-                                style={styles.input}
-                            >
-                                {options.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                    );
-                }
-
-                if (type === "select") {
-                    return (
-                        <div key={key} style={{ display: "flex", flexDirection: "column", ...styles.filter }}>
-                            <label style={{ marginBottom: "0.25rem" }}>{label}</label>
-                            <select
-                                value={value ?? ""}
-                                onChange={(e) => handleFilterChange(key, e.target.value)}
-                                style={styles.input}
-                            >
-                                <option value="">--Select--</option>
-                                {options.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
-                        </div>
-                    );
-                }
-
-                if (type === "checkbox") {
-                    return (
-                        <div key={key} style={{ display: "flex", alignItems: "center", ...styles.filter }}>
-                            <ToggleSwitch checked={!!value} onChange={(checked) => handleFilterChange(key, checked)} />
-                            <label style={{ marginLeft: "0.25rem" }}>{label}</label>
-                        </div>
-                    );
-                }
-
-                if (type === "toggle") {
-                    return (
-                        <div key={key} style={{ display: "flex", alignItems: "center", ...styles.filter }}>
-                            <label style={{ marginRight: "0.5rem" }}>{label}:</label>
-                            <ToggleSwitch
-                                checked={value === toggleLabels[1]}
-                                onChange={(checked) =>
-                                    handleFilterChange(key, checked ? toggleLabels[1] : toggleLabels[0])
-                                }
-                            />
-                            <span style={{ marginLeft: "0.5rem" }}>
-                                {value === toggleLabels[1] ? toggleLabels[1] : toggleLabels[0]}
-                            </span>
-                        </div>
-                    );
-                }
-
-                return null;
-            })}
+            <div style={{ marginTop: "1rem", textAlign: "right" }}>
+                <button className="button is-light is-small" onClick={handleResetAll}>
+                    Reset All Filters
+                </button>
+            </div>
         </div>
     );
 
-    // If not modal, just render content
     if (!isModal) return content;
 
-    // Render button + modal logic
     return (
         <>
-            <a className="button is-info" onClick={() => setIsOpen(true)}>{buttonLabel}</a>
+            <a className="button is-info" onClick={() => setIsOpen(true)}>
+                {buttonLabel}
+            </a>
             {isOpen && (
-                <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        width: "100vw",
-                        height: "100vh",
-                        background: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        zIndex: 1000,
-                    }}
-                    onClick={() => setIsOpen(false)}
-                >
-                    <div onClick={(e) => e.stopPropagation()}>{content}</div>
+                <div className="modal is-active" onClick={() => setIsOpen(false)}>
+                    <div className="modal-background"></div>
+                    <div
+                        className="modal-card"
+                        style={{
+                            minHeight: "400px",  // enough to show first filters
+                            maxHeight: "85vh",
+                            overflowY: "auto",
+                            width: "95%",
+                            maxWidth: "700px",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <header className="modal-card-head">
+                            <p className="modal-card-title">{buttonLabel}</p>
+                            <button
+                                className="delete"
+                                aria-label="close"
+                                onClick={() => setIsOpen(false)}
+                            ></button>
+                        </header>
+                        <section className="modal-card-body">{content}</section>
+                    </div>
                 </div>
             )}
         </>

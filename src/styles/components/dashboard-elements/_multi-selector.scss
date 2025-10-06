@@ -1,0 +1,85 @@
+.multi-selector-container {
+    position: relative;
+    width: 200px;
+    font-family: sans-serif;
+}
+
+.multi-selector-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 4px 8px;
+    min-height: 36px;
+    cursor: pointer;
+    background-color: #fff;
+}
+
+.multi-selector-input .placeholder {
+    color: #999;
+}
+
+.multi-selector-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.chip {
+    background-color: #00d1b2;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.chip-remove {
+    background: transparent;
+    border: none;
+    margin-left: 4px;
+    cursor: pointer;
+    color: #fff;
+    font-weight: bold;
+}
+
+.dropdown-arrow {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: #555;
+}
+
+.multi-selector-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 2px;
+}
+
+.multi-selector-option {
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.multi-selector-option:hover {
+    background-color: #f0f0f0;
+}
+
+.multi-selector-option.selected {
+    background-color: #00d1b2;
+    color: #fff;
+}
+
+.checkmark {
+    float: right;
+    font-weight: bold;
+}
