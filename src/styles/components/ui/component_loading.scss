@@ -1,0 +1,73 @@
+.loading-text {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #4a4a4a;
+}
+
+.loading-dots::after {
+    content: "";
+    display: inline-block;
+    width: 1em;
+    text-align: left;
+    animation: dots 1s steps(3, end) infinite;
+}
+
+@keyframes dots {
+
+    0%,
+    20% {
+        content: "";
+    }
+
+    40% {
+        content: ".";
+    }
+
+    60% {
+        content: "..";
+    }
+
+    80%,
+    100% {
+        content: "...";
+    }
+}
+
+/* Optional: add a slight animation to horizontal progress bars for extra flair */
+.progress.is-primary {
+    animation: progress-glow 1.5s ease-in-out infinite alternate;
+}
+
+.progress.is-info {
+    animation: progress-glow 1.5s ease-in-out infinite alternate;
+    background-color: #209cee;
+}
+
+.progress.is-success {
+    animation: progress-glow 1.5s ease-in-out infinite alternate;
+    background-color: #23d160;
+}
+
+.progress.is-warning {
+    animation: progress-glow 1.5s ease-in-out infinite alternate;
+    background-color: #ffdd57;
+}
+
+.progress.is-danger {
+    animation: progress-glow 1.5s ease-in-out infinite alternate;
+    background-color: #ff3860;
+}
+
+@keyframes progress-glow {
+    0% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.6;
+    }
+}
