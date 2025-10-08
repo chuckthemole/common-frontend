@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { getApi } from "../../api";
 import logger from "../../logger";
 import { RumpusQuill, RumpusQuillForm } from "../ui";
+import { useNotionUsers } from "../hooks/notion/use_notion_users";
 
 /**
  * BugReportForm
@@ -33,6 +34,9 @@ export default function BugReportForm({
     const [body, setBody] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const { users, loading: usersLoading, error: usersError } = useNotionUsers('consoleIntegration');
+
 
     const extraState = fields.reduce((acc, field) => {
         acc[field.name] = field.defaultValue || "";
@@ -156,39 +160,104 @@ export default function BugReportForm({
                 </div>
 
                 {/* Extra Fields */}
-                {fields.map((field) => (
-                    <div className="field" key={field.name}>
-                        <label className="label">{field.label}</label>
-                        <div className="control">
-                            {field.type === "select" && field.options ? (
-                                <div className="select">
-                                    <select
-                                        value={extraFields[field.name]}
-                                        onChange={(e) =>
-                                            handleChangeExtra(field.name, e.target.value)
-                                        }
-                                    >
-                                        <option value="">Select...</option>
-                                        {field.options.map((opt) => (
-                                            <option key={opt} value={opt}>
-                                                {opt}
-                                            </option>
-                                        ))}
-                                    </select>
+                {fields.map((field) => {
+                    const value = extraFields[field.name];
+                    const handleChange = (e) => handleChangeExtra(field.name, e.target.value);
+
+                    // Handle Notion "people" type (Assigned To field)
+                    if (field.notionType === "people") {
+                        return (
+                            <div className="field" key={field.name}>
+                                <label className="label">{field.label}</label>
+                                <div className="control">
+                                    {usersLoading ? (
+                                        <p>Loading users...</p>
+                                    ) : usersError ? (
+                                        <p className="help is-danger">Failed to load users.</p>
+                                    ) : (
+                                        <div className="select is-fullwidth">
+                                            <select value={value} onChange={handleChange}>
+                                                <option value="">Select a user...</option>
+                                                {users.map((user) => (
+                                                    <option key={user.id} value={user.id}>
+                                                        {user.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
                                 </div>
-                            ) : (
+                            </div>
+                        );
+                    }
+
+                    // Handle standard select fields (priority, state, etc.)
+                    if (field.type === "select" && Array.isArray(field.options)) {
+                        return (
+                            <div className="field" key={field.name}>
+                                <label className="label">{field.label}</label>
+                                <div className="control">
+                                    <div className="select is-fullwidth">
+                                        <select value={value} onChange={handleChange}>
+                                            <option value="">Select...</option>
+                                            {field.options.map((opt) => (
+                                                <option key={opt} value={opt}>
+                                                    {opt}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // Handle multi-select fields
+                    if (field.notionType === "multi_select" && Array.isArray(field.options)) {
+                        return (
+                            <div className="field" key={field.name}>
+                                <label className="label">{field.label}</label>
+                                <div className="control">
+                                    <div className="select is-multiple is-fullwidth">
+                                        <select
+                                            multiple
+                                            value={value}
+                                            onChange={(e) =>
+                                                handleChangeExtra(
+                                                    field.name,
+                                                    Array.from(e.target.selectedOptions, (opt) => opt.value)
+                                                )
+                                            }
+                                        >
+                                            {field.options.map((opt) => (
+                                                <option key={opt} value={opt}>
+                                                    {opt}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
+
+                    // Default: simple text/number/date/etc.
+                    return (
+                        <div className="field" key={field.name}>
+                            <label className="label">{field.label}</label>
+                            <div className="control">
                                 <input
                                     className="input"
                                     type={field.type || "text"}
-                                    value={extraFields[field.name]}
-                                    onChange={(e) =>
-                                        handleChangeExtra(field.name, e.target.value)
-                                    }
+                                    placeholder={field.placeholder || ""}
+                                    value={value}
+                                    onChange={handleChange}
                                 />
-                            )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
+
 
                 {/* Submit */}
                 <div className="field">
