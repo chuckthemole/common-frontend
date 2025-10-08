@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ToggleSwitch from "../toggle-switch/toggle-switch";
 import MultiSelector from "../multi-selector/multi_selector";
+import SingleSelector from "../single-selector/single-selector";
 
 /**
  * TaskFilterMenu
@@ -77,16 +78,16 @@ export default function TaskFilterMenu({
                 return (
                     <div key={key} style={{ display: "flex", flexDirection: "column" }}>
                         <label style={{ marginBottom: "0.25rem" }}>{label}</label>
-                        <MultiSelector
+                        <SingleSelector
                             options={options}
-                            value={value ? [value] : []}
-                            onChange={(newValues) => handleFilterChange(key, newValues[0] || "")}
+                            value={value || ""}
+                            onChange={(newValue) => handleFilterChange(key, newValue)}
                             placeholder={`Select ${label.toLowerCase()}...`}
                             disabled={styles.disabled}
-                            selectionType={selectionType || "chip"}
                         />
                     </div>
                 );
+
             case "checkbox":
                 return (
                     <div key={key} style={{ display: "flex", alignItems: "center" }}>

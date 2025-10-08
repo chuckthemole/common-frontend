@@ -3,6 +3,7 @@ import { getApi } from "../../api";
 import logger from "../../logger";
 import { RumpusQuill, RumpusQuillForm } from "../ui";
 import { useNotionUsers } from "../hooks/notion/use_notion_users";
+import { ComponentLoading } from "../ui/loaders/component_loading";
 
 /**
  * BugReportForm
@@ -171,6 +172,7 @@ export default function BugReportForm({
                                 <label className="label">{field.label}</label>
                                 <div className="control">
                                     {usersLoading ? (
+                                        // TODO: <ComponentLoading type={"single-progress"} />
                                         <p>Loading users...</p>
                                     ) : usersError ? (
                                         <p className="help is-danger">Failed to load users.</p>

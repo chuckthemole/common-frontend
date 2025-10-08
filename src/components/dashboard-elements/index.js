@@ -6,3 +6,4 @@ export * from './slider';
 export * from './toggle-switch';
 export * from './filter';
 export * from './multi-selector';
+export * from './single-selector';

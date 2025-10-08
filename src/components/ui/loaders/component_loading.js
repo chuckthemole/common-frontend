@@ -24,6 +24,27 @@ const ComponentLoading = ({
         );
     }
 
+    // if (type === "single-progress") {
+    //     // Animated progress bars with different colors/sizes
+    //     const bars = [
+    //         { size: "small", color: "primary" },
+    //     ];
+
+    //     return (
+    //         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    //             {bars.map((b, idx) => (
+    //                 <progress
+    //                     key={idx}
+    //                     className={`progress is-${b.size} is-${b.color}`}
+    //                     max="100"
+    //                 >
+    //                     Loading
+    //                 </progress>
+    //             ))}
+    //         </div>
+    //     );
+    // }
+
     if (type === "progress") {
         // Animated progress bars with different colors/sizes
         const bars = [
