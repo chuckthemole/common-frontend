@@ -1,22 +1,41 @@
-import React, { useState, useRef } from 'react';
-import { getApi } from '../../api';
-import logger from '../../logger';
-import { RumpusQuill, RumpusQuillForm } from '../ui';
+import React, { useState, useRef } from "react";
+import { getApi } from "../../api";
+import logger from "../../logger";
+import { RumpusQuill, RumpusQuillForm } from "../ui";
 
+/**
+ * BugReportForm
+ * Creates a Notion-compatible bug report payload and posts it to the given endpoint.
+ *
+ * Expected Notion-style payload:
+ * {
+ *   "properties": {
+ *     "Title": { "title": [{ "text": { "content": "<title>" } }] },
+ *     "Short Description": { "rich_text": [{ "text": { "content": "<body>" } }] },
+ *     "Priority": { "select": { "name": "High" } },
+ *     "State": { "select": { "name": "In Progress" } },
+ *     "Start Date": { "date": { "start": "2025-10-07" } },
+ *     "Due Date": { "date": { "start": "2025-10-10" } },
+ *     "Assigned To": { "people": [{ "id": "<uuid>" }] },
+ *     "Actual Effort (Hrs)": { "number": 2 },
+ *     "Estimated Effort (Hrs)": { "number": 3 }
+ *   }
+ * }
+ */
 export default function BugReportForm({
     endpoint,
     onSuccess,
-    titlePlaceholder = 'Title',
-    bodyPlaceholder = 'Describe the bug...',
-    fields = []
+    titlePlaceholder = "Title",
+    bodyPlaceholder = "Describe the bug...",
+    fields = [],
 }) {
-    const [title, setTitle] = useState('');
-    const [body, setBody] = useState('');
+    const [title, setTitle] = useState("");
+    const [body, setBody] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const extraState = fields.reduce((acc, field) => {
-        acc[field.name] = field.defaultValue || '';
+        acc[field.name] = field.defaultValue || "";
         return acc;
     }, {});
     const [extraFields, setExtraFields] = useState(extraState);
@@ -27,6 +46,49 @@ export default function BugReportForm({
         setExtraFields((prev) => ({ ...prev, [name]: value }));
     };
 
+    const buildNotionPayload = () => {
+        const properties = {
+            Title: {
+                title: [{ text: { content: title } }],
+            },
+            "Short Description": {
+                rich_text: [{ text: { content: body } }],
+            },
+        };
+
+        for (const [key, value] of Object.entries(extraFields)) {
+            const fieldDef = fields.find((f) => f.name === key);
+            if (!value) continue;
+
+            const notionKey = fieldDef?.notionName || key;
+
+            switch (fieldDef?.notionType) {
+                case "select":
+                    properties[notionKey] = { select: { name: value } };
+                    break;
+                case "multi_select":
+                    properties[notionKey] = { multi_select: value.map((v) => ({ name: v })) };
+                    break;
+                case "date":
+                    properties[notionKey] = { date: { start: value } };
+                    break;
+                case "number":
+                    properties[notionKey] = { number: Number(value) };
+                    break;
+                case "people":
+                    properties[notionKey] = { people: [{ id: value }] };
+                    break;
+                default:
+                    properties[notionKey] = {
+                        rich_text: [{ text: { content: value.toString() } }],
+                    };
+            }
+        }
+
+        return { properties };
+    };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -34,27 +96,29 @@ export default function BugReportForm({
 
         try {
             const api = getApi();
-            const payload = { title, body, ...extraFields };
-            const res = await api.post(endpoint, payload);
+            const payload = buildNotionPayload();
 
-            logger.info('Form submitted successfully', res.data);
+            logger.debug("Submitting bug report payload:", payload);
+            logger.debug("Final Notion payload:", JSON.stringify(payload, null, 2));
+            const res = await api.post(endpoint, payload);
+            logger.debug("Form submitted successfully", res.data);
 
             // Reset form
-            setTitle('');
-            setBody('');
+            setTitle("");
+            setBody("");
             setExtraFields(extraState);
-            if (editorRef.current) editorRef.current.getEditor().setContents('');
+            if (editorRef.current) editorRef.current.getEditor().setContents("");
 
             if (onSuccess) onSuccess(res.data);
         } catch (err) {
-            logger.error('Failed to submit form:', err.message);
+            logger.error("Failed to submit form:", err.message);
             if (err.response) {
-                logger.debug('API error response:', {
+                logger.debug("API error response:", {
                     status: err.response.status,
                     data: err.response.data,
                 });
             }
-            setError('Failed to submit form. Please try again.');
+            setError("Failed to submit form. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -73,6 +137,7 @@ export default function BugReportForm({
                             placeholder={titlePlaceholder}
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
+                            required
                         />
                     </div>
                 </div>
@@ -95,23 +160,30 @@ export default function BugReportForm({
                     <div className="field" key={field.name}>
                         <label className="label">{field.label}</label>
                         <div className="control">
-                            {field.type === 'select' && field.options ? (
+                            {field.type === "select" && field.options ? (
                                 <div className="select">
                                     <select
                                         value={extraFields[field.name]}
-                                        onChange={(e) => handleChangeExtra(field.name, e.target.value)}
+                                        onChange={(e) =>
+                                            handleChangeExtra(field.name, e.target.value)
+                                        }
                                     >
+                                        <option value="">Select...</option>
                                         {field.options.map((opt) => (
-                                            <option key={opt} value={opt}>{opt}</option>
+                                            <option key={opt} value={opt}>
+                                                {opt}
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
                             ) : (
                                 <input
                                     className="input"
-                                    type={field.type || 'text'}
+                                    type={field.type || "text"}
                                     value={extraFields[field.name]}
-                                    onChange={(e) => handleChangeExtra(field.name, e.target.value)}
+                                    onChange={(e) =>
+                                        handleChangeExtra(field.name, e.target.value)
+                                    }
                                 />
                             )}
                         </div>
@@ -122,7 +194,7 @@ export default function BugReportForm({
                 <div className="field">
                     <div className="control">
                         <button className="button is-link" type="submit" disabled={loading}>
-                            {loading ? 'Submitting...' : 'Submit'}
+                            {loading ? "Submitting..." : "Submit"}
                         </button>
                     </div>
                 </div>
