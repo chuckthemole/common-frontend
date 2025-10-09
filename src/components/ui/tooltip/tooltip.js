@@ -8,22 +8,31 @@ export default function Tooltip({
     size = "medium",
 }) {
     const tooltipClass = classNames("tooltip-container", {
-        // Variants
-        "tooltip-dark": variant === "dark",
-        "tooltip-light": variant === "light",
-        "tooltip-info": variant === "info",
-        "tooltip-success": variant === "success",
-        "tooltip-error": variant === "error",
-        // Sizes
         "tooltip-small": size === "small",
         "tooltip-medium": size === "medium",
         "tooltip-large": size === "large",
     });
 
+    // Bulma-compatible color mapping
+    const colorClass = classNames({
+        "has-background-dark has-text-white": variant === "dark",
+        "has-background-light has-text-dark": variant === "light",
+        "has-background-info has-text-white": variant === "info",
+        "has-background-success has-text-white": variant === "success",
+        "has-background-danger has-text-white": variant === "error",
+    });
+
     return (
         <div className={tooltipClass}>
             {children}
-            <span className="tooltip-text">{text}</span>
+            <span
+                className={classNames(
+                    "tooltip-text",
+                    colorClass // has-background-info, has-background-success, etc.
+                )}
+            >
+                {text}
+            </span>
         </div>
     );
 }

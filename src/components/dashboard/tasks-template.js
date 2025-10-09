@@ -5,6 +5,7 @@ import ControlButtonRealistic from "../dashboard-elements/control-button/control
 import Alert from "../ui/alerts/alert";
 import Tooltip from "../ui/tooltip/tooltip";
 import { debugComponents } from "../../utils/component_debugger";
+import { ComponentLoading } from "../ui/loaders";
 
 debugComponents(
     {
@@ -63,7 +64,8 @@ export default function TasksTemplate({
     };
 
     if (!visibleTasks.length)
-        return <p className="has-text-grey-light is-italic">No tasks available.</p>;
+        return <ComponentLoading />;
+    // return <p className="has-text-grey-light is-italic">No tasks available.</p>;
 
     const renderUiElements = (task) => {
         if (!showTaskButtons) return null;
@@ -151,8 +153,10 @@ export default function TasksTemplate({
 
                     const isHighlight = action === TasksTemplate.builtInActions.highlight;
 
+                    const tooltipVariant =
+                        action === TasksTemplate.builtInActions.deleteTask ? "error" : "info";
                     return (
-                        <Tooltip variant="info" size="large" key={idx} text={props.label || "Action"} >
+                        <Tooltip variant={tooltipVariant} size="large" key={idx} text={props.label || "Action"} >
                             <Component
                                 key={idx}
                                 {...props}

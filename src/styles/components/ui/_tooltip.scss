@@ -33,53 +33,7 @@
         margin-left: -5px;
         border-width: 5px;
         border-style: solid;
-    }
-
-    // Variants
-    &.tooltip-dark .tooltip-text {
-        background-color: #363636;
-        color: #fff;
-    }
-
-    &.tooltip-dark .tooltip-text::after {
-        border-color: #363636 transparent transparent transparent;
-    }
-
-    &.tooltip-light .tooltip-text {
-        background-color: #f5f5f5;
-        color: #363636;
-        border: 1px solid #ccc;
-    }
-
-    &.tooltip-light .tooltip-text::after {
-        border-color: #f5f5f5 transparent transparent transparent;
-    }
-
-    &.tooltip-info .tooltip-text {
-        background-color: #209cee;
-        color: #fff;
-    }
-
-    &.tooltip-info .tooltip-text::after {
-        border-color: #209cee transparent transparent transparent;
-    }
-
-    &.tooltip-success .tooltip-text {
-        background-color: #23d160;
-        color: #fff;
-    }
-
-    &.tooltip-success .tooltip-text::after {
-        border-color: #23d160 transparent transparent transparent;
-    }
-
-    &.tooltip-error .tooltip-text {
-        background-color: #ff3860;
-        color: #fff;
-    }
-
-    &.tooltip-error .tooltip-text::after {
-        border-color: #ff3860 transparent transparent transparent;
+        border-color: currentColor transparent transparent transparent;
     }
 
     // Sizes
