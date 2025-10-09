@@ -3,6 +3,7 @@ import ToggleSwitch from "../dashboard-elements/toggle-switch/toggle-switch";
 import ControlButtonCartoon from "../dashboard-elements/control-button/control-button-cartoon";
 import ControlButtonRealistic from "../dashboard-elements/control-button/control-button-realistic";
 import Alert from "../ui/alerts/alert";
+import Tooltip from "../ui/tooltip/tooltip";
 import { debugComponents } from "../../utils/component_debugger";
 
 debugComponents(
@@ -151,19 +152,21 @@ export default function TasksTemplate({
                     const isHighlight = action === TasksTemplate.builtInActions.highlight;
 
                     return (
-                        <Component
-                            key={idx}
-                            {...props}
-                            checked={
-                                isHighlight
-                                    ? task.highlighted
-                                    : action === TasksTemplate.builtInActions.toggleComplete
-                                        ? task.completed
-                                        : undefined
-                            }
-                            onToggle={(val) => handleChange(val)}
-                            disabled={isDisabled}
-                        />
+                        <Tooltip variant="info" size="large" key={idx} text={props.label || "Action"} >
+                            <Component
+                                key={idx}
+                                {...props}
+                                checked={
+                                    isHighlight
+                                        ? task.highlighted
+                                        : action === TasksTemplate.builtInActions.toggleComplete
+                                            ? task.completed
+                                            : undefined
+                                }
+                                onToggle={(val) => handleChange(val)}
+                                disabled={isDisabled}
+                            />
+                        </Tooltip>
                     );
                 })}
             </div>

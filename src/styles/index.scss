@@ -53,3 +53,7 @@
 // Layout relies on components and utilities for consistent spacing, typography, and color.
 // Placing layout last ensures it has access to everything it needs.
 @use "layout" as *;
+
+// Components
+@use "components/dashboard-elements" as *;
+@use "components/ui" as *;
