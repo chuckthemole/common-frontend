@@ -1,46 +1,81 @@
-import React, { useState, useEffect } from "react";
+/**
+ * Modal for selecting layout preferences.
+ * It uses the LayoutSettingsContext to persist and sync layout configuration
+ * (e.g., column width) across the app, and modal_manager for consistent modal state tracking.
+ */
+
+import React, { useState, useEffect, useCallback } from "react";
 import Modal from "react-modal";
-import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
+import {
+    isModalActive,
+    modal_style,
+    setModalActive,
+    setModalInactive,
+} from "../../modal_manager";
 import { useLayoutSettings, layoutOptions } from "./layout_settings_context";
 
 export default function LayoutSettingsModal() {
     const { layout, setLayoutSetting, initialized } = useLayoutSettings();
     const [modalIsOpen, setModalIsOpen] = useState(false);
 
-    // Wait for persistence to load before showing anything
+    /**
+     * Ensure modal never displays before layout settings are initialized.
+     * Prevents users from interacting with stale or undefined data.
+     */
     useEffect(() => {
         if (!initialized && modalIsOpen) {
             setModalIsOpen(false);
         }
-    }, [initialized]);
+    }, [initialized, modalIsOpen]);
 
-    const openModal = () => {
+    /**
+     * Opens modal safely — checks global modal manager to avoid overlap.
+     */
+    const openModal = useCallback(() => {
         if (!isModalActive()) {
             setModalIsOpen(true);
             setModalActive();
         }
-    };
+    }, []);
 
-    const closeModal = () => {
+    /**
+     * Closes modal and updates modal manager state.
+     */
+    const closeModal = useCallback(() => {
         setModalIsOpen(false);
         setModalInactive();
-    };
+    }, []);
 
-    const handleSelect = (value) => {
-        setLayoutSetting("columnWidth", value);
-    };
+    /**
+     * Handles select change and updates the layout context directly.
+     * This ensures a single source of truth (context), avoiding internal modal state drift.
+     */
+    const handleSelect = useCallback(
+        (value) => {
+            setLayoutSetting("columnWidth", value);
+        },
+        [setLayoutSetting]
+    );
 
     return (
         <>
-            <button onClick={openModal} className="button is-info">
+            {/* Trigger button for opening modal */}
+            <button
+                onClick={openModal}
+                className="button is-info"
+                aria-label="Open Layout Settings"
+            >
                 Layout Settings
             </button>
 
+            {/* Layout Settings Modal */}
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                contentLabel="Layout Selector"
-                ariaHideApp={false}
+                contentLabel="Layout Settings Modal"
+                ariaHideApp={false} // Disable app hiding for non-root mounting
+                shouldCloseOnOverlayClick={true}
+                shouldCloseOnEsc={true}
                 style={{
                     ...modal_style,
                     content: {
@@ -57,6 +92,7 @@ export default function LayoutSettingsModal() {
                         padding: "2rem",
                         borderRadius: "12px",
                         backgroundColor: "#fff",
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
                     },
                     overlay: {
                         ...modal_style.overlay,
@@ -67,6 +103,7 @@ export default function LayoutSettingsModal() {
             >
                 <h2 className="title is-4 mb-4">Layout Settings</h2>
 
+                {/* If settings not loaded, show loader */}
                 {!initialized ? (
                     <p>Loading settings…</p>
                 ) : (
@@ -76,6 +113,7 @@ export default function LayoutSettingsModal() {
                             <select
                                 value={layout.columnWidth}
                                 onChange={(e) => handleSelect(e.target.value)}
+                                aria-label="Select layout width"
                             >
                                 {layoutOptions.map((opt) => (
                                     <option key={opt} value={opt}>
@@ -88,7 +126,11 @@ export default function LayoutSettingsModal() {
                 )}
 
                 <div className="buttons is-right mt-4">
-                    <button className="button is-success" onClick={closeModal}>
+                    <button
+                        className="button is-success"
+                        onClick={closeModal}
+                        aria-label="Close Layout Settings"
+                    >
                         Done
                     </button>
                 </div>
