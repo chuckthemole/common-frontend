@@ -29,6 +29,7 @@ export default function TasksTemplate({
     onTasksChange,
     allowReopen = false,
     showTaskButtons = false,
+    fullWidthBoxes = false
 }) {
     const [expanded, setExpanded] = useState({});
     const [localTasks, setLocalTasks] = useState(tasks);
@@ -220,7 +221,13 @@ export default function TasksTemplate({
                     return (
                         <div
                             key={task.id}
-                            className={layout === TaskLayout.GRID ? "column is-one-third" : "box mb-3"}
+                            className={
+                                layout === TaskLayout.GRID
+                                    ? fullWidthBoxes
+                                        ? "column is-full"
+                                        : "column is-one-third"
+                                    : "box mb-3"
+                            }
                             style={boxStyle}
                         >
                             <div className="is-flex is-align-items-center is-justify-content-space-between">

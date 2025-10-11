@@ -29,16 +29,12 @@ export { default as UserInfo } from './components/user_info';
 export { AuthProvider, useAuth } from './components/auth_context';
 export { default as AuthRoot } from './components/auth_root';
 export { default as EntityTaskManager } from './components/entity_task_manager';
-export { default as AdminSiteSettingsDashboard } from './components/dashboard/admin-site-settings-dashboard';
-
-export { default as DashboardTemplate } from './components/dashboard/dashboard-template';
-
-export { default as TasksTemplate } from './components/dashboard/tasks-template';
 
 export * from './components/dashboard-elements';
 export * from './components/design-control';
 export * from './components/ui';
 export * from './components/common-forms';
+export * from './components/dashboard';
 
 export * from './persistence';
 

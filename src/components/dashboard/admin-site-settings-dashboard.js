@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import FontSettingsModal from "../design-control/font/font_settings_modal";
 import ColorSettingsModal from "../design-control/color/color_settings_modal";
+import LayoutSettingsModal from "../design-control/layout/layout_settings_modal";
 
 /**
  * Admin Site Settings Dashboard
@@ -9,17 +10,11 @@ import ColorSettingsModal from "../design-control/color/color_settings_modal";
  * - Extensible with other global settings
  */
 export default function AdminSiteSettingsDashboard() {
-    // State placeholders
+    // State placeholders for other settings (optional if used elsewhere)
     const [fontSettings, setFontSettings] = useState({});
     const [colorSettings, setColorSettings] = useState({});
-    const [layoutSettings, setLayoutSettings] = useState({});
     const [seoSettings, setSeoSettings] = useState({});
     const [advancedSettings, setAdvancedSettings] = useState({});
-
-    const handleOpenModal = (settingType) => {
-        console.log(`Open modal for ${settingType}`);
-        // Your modal logic here
-    };
 
     return (
         <div className="admin-site-settings-dashboard container">
@@ -66,9 +61,8 @@ export default function AdminSiteSettingsDashboard() {
                         <div className="card-content">
                             <div className="content">
                                 <p>Adjust global layout options like header, footer, and sidebar positions.</p>
-                                <button className="button is-info" onClick={() => handleOpenModal("layout")}>
-                                    Edit Layout Settings
-                                </button>
+                                {/* Directly include LayoutSettingsModal for admin control */}
+                                <LayoutSettingsModal />
                             </div>
                         </div>
                     </div>
@@ -83,7 +77,7 @@ export default function AdminSiteSettingsDashboard() {
                         <div className="card-content">
                             <div className="content">
                                 <p>Manage meta tags, keywords, and other SEO-related global settings.</p>
-                                <button className="button is-info" onClick={() => handleOpenModal("seo")}>
+                                <button className="button is-info">
                                     Edit SEO Settings
                                 </button>
                             </div>
@@ -100,7 +94,7 @@ export default function AdminSiteSettingsDashboard() {
                         <div className="card-content">
                             <div className="content">
                                 <p>Other global admin options like scripts, analytics, cookies, or integrations.</p>
-                                <button className="button is-info" onClick={() => handleOpenModal("advanced")}>
+                                <button className="button is-info">
                                     Edit Advanced Settings
                                 </button>
                             </div>
