@@ -10,7 +10,7 @@
         "rumpus-clean-react": "./scripts/cleanup-react-init.sh"
     },
     "scripts": {
-        "copy:constants": "mkdir -p dist/constants && cp -R src/constants/* dist/constants/",
+        "copy:constants": "mkdir -p dist/constants && cp -R src/constants/* dist/constants/ && mkdir -p dist/config && cp -R src/config/* dist/config/",
         "build": "babel src --out-dir dist && npm run copy:constants && npm run build:scss",
         "prebuild:scss": "bash scripts/generate-scss.sh",
         "build:scss": "bash scripts/generate-scss.sh && sass --load-path=node_modules src/styles/index.scss dist/index.css --no-source-map",

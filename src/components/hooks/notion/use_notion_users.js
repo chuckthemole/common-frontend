@@ -1,25 +1,25 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { getApi } from "../../../api";
 import logger from "../../../logger";
 
 /**
  * useNotionUsers
- * Custom React hook to fetch users from a Notion integration endpoint.
+ * Fetches and optionally filters Notion users from a backend integration endpoint.
  *
- * Uses the shared `getApi()` client for consistent base URL, headers, and error handling.
- * Handles both network and data-level errors, logging all stages for easier debugging.
- *
- * @param {string} integrationKey - The integration key configured on the backend (e.g. "consoleIntegration")
- * @returns {object} - { users, loading, error, refresh }
+ * @param {string} integrationKey - Integration key configured on the backend (e.g. "consoleIntegration")
+ * @param {object} [options] - Optional configuration
+ * @param {string} [options.filter] - Case-insensitive string to filter users by name or email
+ * @param {(user: object) => boolean} [options.filterFn] - Optional custom filter callback (overrides string filter)
+ * @returns {object} - { users, filteredUsers, loading, error, refresh, setFilter }
  */
-export function useNotionUsers(integrationKey) {
+export function useNotionUsers(integrationKey, options = {}) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [filter, setFilter] = useState(options.filter || "");
 
     /**
-     * Fetch Notion users from the backend
-     * Uses your central Axios instance via getApi()
+     * Fetch Notion users from the backend.
      */
     const fetchUsers = useCallback(async () => {
         if (!integrationKey) {
@@ -34,20 +34,14 @@ export function useNotionUsers(integrationKey) {
 
         const api = getApi();
         const url = `/notion-api/integrations/notion/${integrationKey}/users`;
-        const baseUrl = api.defaults?.baseURL || "";
-        const fullUrl = `${baseUrl}${url}`;
 
-        logger.debug(`[useNotionUsers] Fetching users from: ${fullUrl}`);
         logger.debug(`[useNotionUsers] Fetching users from: ${url}`);
 
         try {
             const response = await api.get(url);
-            logger.debug(`[useNotionUsers] Response received:`, response);
-
             const data = response.data;
 
             if (!data || typeof data !== "object") {
-                logger.error("[useNotionUsers] Invalid response format:", data);
                 throw new Error("Invalid response format: expected JSON object.");
             }
 
@@ -63,9 +57,8 @@ export function useNotionUsers(integrationKey) {
             setUsers(normalized);
             logger.info(`[useNotionUsers] Loaded ${normalized.length} users successfully.`);
         } catch (err) {
-            // Handle Axios-style errors
             if (err.response) {
-                logger.error("[useNotionUsers] API error response:", {
+                logger.error("[useNotionUsers] API error:", {
                     status: err.response.status,
                     data: err.response.data,
                 });
@@ -82,10 +75,42 @@ export function useNotionUsers(integrationKey) {
         }
     }, [integrationKey]);
 
-    // Fetch users automatically when the hook mounts or integrationKey changes
+    /**
+     * Fetch users when the integration key changes.
+     */
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
 
-    return { users, loading, error, refresh: fetchUsers };
+    /**
+     * Compute filtered user list (memoized for performance).
+     */
+    const filteredUsers = useMemo(() => {
+        if (!users?.length) return [];
+
+        // If a custom filter function is provided, use that
+        if (typeof options.filterFn === "function") {
+            return users.filter(options.filterFn);
+        }
+
+        // Otherwise, apply a simple case-insensitive string match
+        const query = filter?.trim().toLowerCase();
+        if (!query) return users;
+
+        return users.filter(
+            (u) =>
+                u.name?.toLowerCase().includes(query) ||
+                u.email?.toLowerCase().includes(query)
+        );
+    }, [users, filter, options.filterFn]);
+
+    return {
+        users,            // raw data
+        filteredUsers,    // filtered view
+        loading,
+        error,
+        refresh: fetchUsers,
+        filter,
+        setFilter,        // expose setter so consumer can control search
+    };
 }
