@@ -42,7 +42,9 @@ export function useLogin({ onLogin, redirectTo = null, navigate = null } = {}) {
                 '/auth/login', // TODO: This path should eventually be made configurable
                 qs.stringify({ username, password }), // Send as x-www-form-urlencoded
                 {
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
                     withCredentials: true, // Required for session cookie
                     // maxRedirects: 0 // prevent axios from following 302 to `/`
                 }
