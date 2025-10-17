@@ -1,47 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import logger from "../../../logger";
 import { JsonEditor as Editor } from "json-edit-react";
 
-/**
- * JsonEditor component
- *
- * Props:
- * - initialData: object - initial JSON data to render
- * - onSave: function - callback triggered when the "Save Changes" button is clicked
- */
-export default function JsonEditor({
-    initialData = {},
-    onSave,
-    title = 'JSON Editor'
-}) {
-    const [data, setData] = useState(initialData);
+export default function JsonEditor({ data, onChange, onSave, title = 'JSON Editor' }) {
+    const [editorData, setEditorData] = useState(data || {});
     const [error, setError] = useState(null);
 
-    // Handle JSON changes
-    const handleChange = (updatedData) => {
+    // Keep local state in sync if parent data changes
+    useEffect(() => {
+        setEditorData(data || {});
+    }, [data]);
+
+    const handleSave = () => {
         try {
-            if (typeof updatedData !== "object" || updatedData === null) {
-                throw new Error("Invalid JSON data provided");
-            }
-            setData(updatedData);
-            setError(null);
-            logger.debug("JsonEditor: Data updated", updatedData);
+            const copy = JSON.parse(JSON.stringify(editorData)); // deep copy
+            if (onSave) onSave(copy);
+            logger.debug("JsonEditor: Saved JSON", copy);
         } catch (err) {
-            logger.error("JsonEditor: Error updating data", err);
             setError(err.message);
+            logger.error("JsonEditor: Error on save", err);
         }
     };
 
-    // Handle save button click
-    const handleSave = () => {
-        try {
-            logger.debug("JsonEditor: Saving JSON", data);
-            if (onSave) onSave(data);
-        } catch (err) {
-            logger.error("JsonEditor: Error on save", err);
-            setError(err.message);
-        }
-    };
+    // Keyboard shortcut Ctrl+S to save
+    const handleKeyDown = useCallback(
+        (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                e.preventDefault();
+                handleSave();
+            }
+        },
+        [editorData]
+    );
+
+    useEffect(() => {
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [handleKeyDown]);
 
     return (
         <div className="box has-background-dark has-text-white p-5">
@@ -54,18 +49,23 @@ export default function JsonEditor({
             )}
 
             <Editor
-                data={data}
-                onChange={handleChange}
-                editable={true}
-                style={{ minHeight: "300px", backgroundColor: "#ffffffff" }}
+                data={editorData}
+                setData={setEditorData}
+                onUpdate={({ newData }) => {
+                    setEditorData(newData);
+                    if (onChange) onChange(newData);
+                    setError(null);
+                }}
             />
 
-            <button
-                onClick={handleSave}
-                className="button is-link is-medium mt-4"
-            >
-                Save Changes
-            </button>
+            <div className="buttons mt-4">
+                <button
+                    onClick={handleSave}
+                    className="button is-link is-medium"
+                >
+                    Save Changes
+                </button>
+            </div>
         </div>
     );
 }
