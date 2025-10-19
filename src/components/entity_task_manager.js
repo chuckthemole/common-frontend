@@ -16,6 +16,7 @@ export default function EntityTaskManager({
     const [childForm, setChildForm] = useState({});
     const [activeEntityIndex, setActiveEntityIndex] = useState(null);
     const [loadingEntityIndex, setLoadingEntityIndex] = useState(null);
+    const [savingEntityIndex, setSavingEntityIndex] = useState(null);
 
     // Fetch entities and tasks
     useEffect(() => {
@@ -59,25 +60,40 @@ export default function EntityTaskManager({
 
     // Add or update entity
     async function saveEntity() {
-        if (!entityForm.name) return;
+        if (!entityForm.alias) {
+            logger.debug("No entityForm.alias in saveEntity.");
+            return;
+        }
+
         const api = getNamedApi(apiName);
-        const payload = { alias: entityForm.name };
+        const payload = { alias: entityForm.alias, id: entityForm.id }; // include ID for update
 
         try {
+            // set loading state for this entity
+            if (editingIndex !== null) setSavingEntityIndex(editingIndex);
+
+            const updated = [...entities];
             if (editingIndex !== null) {
-                const updated = [...entities];
                 updated[editingIndex] = { ...updated[editingIndex], ...entityForm };
                 setEntities(updated);
-                setEditingIndex(null);
             } else {
                 setEntities([...entities, { ...entityForm, tasks: [] }]);
             }
+
+            // await backend confirmation
             await api.post(endpoints.addEntity, payload);
             logger.info(`${entityName} saved successfully`);
+
+            // once done, refresh data from backend so it stays consistent
+            const entitiesResp = await api.get(endpoints.getEntities);
+            setEntities(entitiesResp.data || []);
+
         } catch (err) {
             logger.error(`Error saving ${entityName}:`, err);
         } finally {
+            setSavingEntityIndex(null);
             setEntityForm({});
+            setEditingIndex(null);
         }
     }
 
@@ -193,7 +209,7 @@ export default function EntityTaskManager({
 
                     return (
                         <li key={entity.id || `temp-${entityIndex}`} style={{ borderBottom: "1px solid #ddd" }}>
-                            {!entity.id || loadingEntityIndex === entityIndex ? (
+                            {!entity.id || loadingEntityIndex === entityIndex || savingEntityIndex === entityIndex ? (
                                 <ComponentLoading bars={1} />
                             ) : (
                                 <>
@@ -291,8 +307,8 @@ export default function EntityTaskManager({
                         <input
                             className="input"
                             placeholder={`${entityName} Name`}
-                            value={entityForm.name || ""}
-                            onChange={e => setEntityForm({ ...entityForm, name: e.target.value })}
+                            value={entityForm.alias || ""}
+                            onChange={e => setEntityForm({ ...entityForm, alias: e.target.value })}
                         />
                     </div>
                     <div className="control">
