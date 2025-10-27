@@ -1,9 +1,8 @@
-// import React, { useState } from 'react';
-
 // TODO: why is this in react dir? - chuck
 
 import useSWR from 'swr';
-import { getApi } from '../api'
+import { getApi } from '../api';
+import logger from '../logger';
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
@@ -22,7 +21,7 @@ export const common_fetcher = async (endpoint) => {
         if (error.response?.status === 204) {
             return {}; // or [] depending on what your consumers expect
         }
-
+        logger.info(endpoint);
         const err = new Error('An error occurred while fetching the data.');
         err.info = error.response?.data || null;
         err.status = error.response?.status || 500;
