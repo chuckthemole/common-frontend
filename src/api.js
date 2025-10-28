@@ -55,3 +55,15 @@ export function createApiClient(baseURL, extraConfig = {}) {
         ...extraConfig
     });
 }
+
+/**
+ * Get the baseURL of an API instance.
+ * If `name` is not provided, returns the MAIN API's baseURL.
+ * @param {string} [name] - Optional name of the API instance
+ * @returns {string} baseURL
+ */
+export function getApiBaseURL(name) {
+    const api = name ? getNamedApi(name) : getApi();
+    return api.defaults.baseURL;
+}
+

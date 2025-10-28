@@ -35,6 +35,7 @@ export * from './components/design-control';
 export * from './components/ui';
 export * from './components/common-forms';
 export * from './components/dashboard';
+export * from './components/integrations';
 
 export * from './persistence';
 
@@ -44,6 +45,7 @@ export { getApi } from './api';
 export { setApi } from './api';
 export { getNamedApi } from './api';
 export { setNamedApi } from './api';
+export { getApiBaseURL } from './api';
 
 export { default as LOGGER } from './logger';
 export { getLoggingEnv } from './logger';
