@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRadiation } from "@fortawesome/free-solid-svg-icons";
-import { Link } from "react-router-dom";
 
 import { useApi } from "./hooks/use_api";
 import {
@@ -98,11 +95,7 @@ export default function Header({
     );
 
     // Default brand element (fallback)
-    let navbar_brand = (
-        <Link to="/" className="navbar-brand">
-            <FontAwesomeIcon icon={faRadiation} color="red" />
-        </Link>
-    );
+    let navbar_brand = renderBrand(null, navbar_burger);
 
     let navbar_items_start = [];
     let navbar_items_end = [];

@@ -5,6 +5,8 @@ import React from 'react';
 import logger from '../logger';
 import { Link } from 'react-router-dom';
 import { normalizeUrl } from '../utils/utils';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faRadiation } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * Build a fully-qualified backend URL for assets and links.
@@ -60,9 +62,12 @@ export function renderBrand(brand, navbar_burger = null) {
     if (!brand) {
         return (
             <div className="navbar-brand">
-                <a className="navbar-item">Brand</a>
+                {/* <Link to="/" className="navbar-item navbar-brand-icon"> */}
+                <Link to="/" className="navbar-brand">
+                    <FontAwesomeIcon icon={faRadiation} color='red' size='3x' />
+                </Link>
                 {BurgerWrapper}
-            </div>
+            </div >
         );
     }
 
