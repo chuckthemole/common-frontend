@@ -1,7 +1,5 @@
 import React from 'react';
 
-// console.log('Common lib React version:', React.version);
-
 export { default as Admin } from './components/admin';
 export { default as AwsGetResource } from './components/aws_get_resource';
 export { AwsProperties } from './components/aws_properties';
@@ -36,6 +34,7 @@ export * from './components/ui';
 export * from './components/common-forms';
 export * from './components/dashboard';
 export * from './components/integrations';
+export * from './components/triggers';
 export * from './utils';
 
 export * from './persistence';

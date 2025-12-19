@@ -13,7 +13,6 @@ export default function Tooltip({
         "tooltip-large": size === "large",
     });
 
-    // Bulma-compatible color mapping
     const colorClass = classNames({
         "has-background-dark has-text-white": variant === "dark",
         "has-background-light has-text-dark": variant === "light",
@@ -25,12 +24,7 @@ export default function Tooltip({
     return (
         <div className={tooltipClass}>
             {children}
-            <span
-                className={classNames(
-                    "tooltip-text",
-                    colorClass // has-background-info, has-background-success, etc.
-                )}
-            >
+            <span className={classNames("tooltip-text", colorClass)}>
                 {text}
             </span>
         </div>

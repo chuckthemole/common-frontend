@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useRouteError } from "react-router-dom";
+import { useRouteError, Link } from "react-router-dom";
 
 export class ErrorType {
     static DEFAULT = new ErrorType('DEFAULT', 'Something went wrong!');
@@ -35,7 +35,7 @@ export class ErrorType {
 export function RenderFromSWR(data, error, render_content, error_message) {
     if (error) {
         console.log(error);
-        return(
+        return (
             <div className='columns is-centered has-text-centered'>
                 <div className='column is-half notification is-warning'>
                     <p>{error_message}</p>
@@ -44,7 +44,7 @@ export function RenderFromSWR(data, error, render_content, error_message) {
         )
     }
     if (!data) {
-        return(
+        return (
             <div className='container m-6'>
                 <progress className="progress is-small is-primary" max="100">15%</progress>
                 <progress className="progress is-danger" max="100">30%</progress>
@@ -71,7 +71,9 @@ export default function ErrorPage() {
                 {/* <p>
                     <i>{error.statusText || error.message}</i>
                 </p> */}
-                <a href="/" className="button is-primary">Go Home</a>
+                <Link to="/" className="button is-primary">
+                    Go Home
+                </Link>
             </div>
         </div>
     );

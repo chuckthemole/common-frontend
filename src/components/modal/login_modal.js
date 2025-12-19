@@ -153,7 +153,7 @@ export default function LoginModal({
                             <div className="control mb-2">
                                 <OAuth2ButtonGroup
                                     providers={oauthProviders}
-                                    layout="horizontal"      // keep buttons inline
+                                    layout="horizontal"
                                     size="medium"
                                     variant="filled"
                                     fullWidth={false}

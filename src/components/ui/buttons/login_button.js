@@ -1,4 +1,3 @@
-// components/LoginButton.jsx
 import React from 'react';
 import { setModalActive, isModalActive } from '../../modal_manager';
 

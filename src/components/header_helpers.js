@@ -149,6 +149,26 @@ export function renderDropdown(item, idx) {
                                 className="navbar-divider"
                             />
                         );
+                    } else if (dropItem.itemType === 'DROPDOWN_SECTION_TITLE') {
+                        return (
+                            <span
+                                key={`dropdown-section-${dropItem.title}-${j}`}
+                                className="navbar-item has-text-weight-semibold"
+                            >
+                                {dropItem.title}
+                            </span>
+                        );
+                    } else if (dropItem.itemType === 'REACT_COMPONENT') {
+                        return (
+                            <>
+                                <DynamicComponent
+                                    key={`dropdown-react-${dropItem.title}-${j}`}
+                                    className='navbar-item'
+                                    component_name={dropItem.reactComponent}
+                                    componentProps={dropItem.componentProps || {}}
+                                />
+                            </>
+                        );
                     }
                     return null;
                 })}

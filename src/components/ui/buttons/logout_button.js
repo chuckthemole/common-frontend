@@ -36,7 +36,7 @@ export default function LogoutButton({
         // If `reload === true`, page reloads and this line never runs
     };
 
-    logger.debug('Authenticated: ' + isAuthenticated);
+    // logger.debug('Authenticated: ' + isAuthenticated);
     if (isAuthLoading || isAuthenticated === undefined) {
         return (
             <Spinner size="20px" thickness="2px" color="#333" />
