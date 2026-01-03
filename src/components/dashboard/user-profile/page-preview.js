@@ -1,29 +1,125 @@
-import React from "react";
-
-import SectionRenderer from './section-renderer';
+import React, { useRef } from "react";
+import SectionRenderer from "./section-renderer";
 
 export default function PagePreview({ page }) {
-    return (
-        <div className={`user-profile-preview theme-${page.theme}`}>
-            <nav className="tabs is-centered mb-5">
-                <ul>
-                    {page.sections
-                        .filter((s) => s.enabled)
-                        .map((s) => (
-                            <li key={s.id}>
-                                <a href={`#${s.id}`}>{s.type}</a>
-                            </li>
-                        ))}
-                </ul>
-            </nav>
+    const containerRef = useRef(null);
+    const ThemeLayout = THEME_LAYOUTS[page.theme] || DefaultLayout;
 
-            {page.sections
-                .filter((s) => s.enabled)
-                .map((s) => (
-                    <section key={s.id} id={s.id} className={s.type}>
-                        <SectionRenderer section={s} />
-                    </section>
-                ))}
+    return (
+        <div
+            ref={containerRef}
+            className={`user-profile-preview theme-${page.theme}`}
+        >
+            <ThemeLayout page={page} containerRef={containerRef} />
         </div>
     );
+}
+
+
+
+/* ---------- Theme Layout Registry ---------- */
+
+const THEME_LAYOUTS = {
+    modern: ModernLayout,
+    minimal: MinimalLayout,
+    portfolio: PortfolioLayout,
+};
+
+/* ---------- Layouts ---------- */
+
+function DefaultLayout({ page }) {
+    return (
+        <>
+            <Nav page={page} />
+            <Sections page={page} />
+        </>
+    );
+}
+
+function ModernLayout({ page, containerRef }) {
+    return (
+        <>
+            <Nav page={page} containerRef={containerRef} />
+            <main className="layout-modern">
+                <Sections page={page} />
+            </main>
+        </>
+    );
+}
+
+function MinimalLayout({ page, containerRef }) {
+    return (
+        <main className="layout-minimal">
+            <Sections page={page} />
+        </main>
+    );
+}
+
+function PortfolioLayout({ page, containerRef }) {
+    return (
+        <div className="layout-portfolio">
+            <aside className="sidebar">
+                <HeroOnly page={page} />
+                <Nav page={page} containerRef={containerRef} vertical />
+            </aside>
+            <main className="content">
+                <Sections page={page} skip={["hero"]} />
+            </main>
+        </div>
+    );
+}
+
+/* ---------- Shared Pieces ---------- */
+
+function Nav({ page, containerRef, vertical = false }) {
+    const handleClick = (e, id) => {
+        e.preventDefault();
+
+        const container = containerRef.current;
+        if (!container) return;
+
+        const target = container.querySelector(`#${id}`);
+        if (!target) return;
+
+        target.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    };
+
+    return (
+        <nav className={`tabs ${vertical ? "is-vertical" : "is-centered"} mb-5`}>
+            <ul>
+                {page.sections
+                    .filter((s) => s.enabled)
+                    .map((s) => (
+                        <li key={s.id}>
+                            <a href={`#${s.id}`} onClick={(e) => handleClick(e, s.id)}>
+                                {s.type}
+                            </a>
+                        </li>
+                    ))}
+            </ul>
+        </nav>
+    );
+}
+
+
+function Sections({ page, skip = [] }) {
+    return page.sections
+        .filter((s) => s.enabled && !skip.includes(s.id))
+        .map((s) => (
+            <section key={s.id} id={s.id} className={`section-${s.type}`}>
+                <SectionRenderer section={s} />
+            </section>
+        ));
+}
+
+function HeroOnly({ page }) {
+    const hero = page.sections.find((s) => s.id === "hero" && s.enabled);
+    return hero ? (
+        <section className="section-hero">
+            <SectionRenderer section={hero} />
+        </section>
+    ) : null;
 }

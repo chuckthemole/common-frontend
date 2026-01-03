@@ -271,7 +271,9 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 {/* ---------- Preview Column ---------- */}
                 {previewVisible && (
                     <div className="column is-6 pl-4">
-                        <PagePreview page={page} />
+                        <div className="page-preview-frame">
+                            <PagePreview page={page} />
+                        </div>
                     </div>
                 )}
             </div>
