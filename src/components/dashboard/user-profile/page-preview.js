@@ -4,7 +4,7 @@ import SectionRenderer from './section-renderer';
 
 export default function PagePreview({ page }) {
     return (
-        <div className={`box mt-6 theme-${page.theme}`}>
+        <div className={`user-profile-preview theme-${page.theme}`}>
             <nav className="tabs is-centered mb-5">
                 <ul>
                     {page.sections
@@ -20,7 +20,7 @@ export default function PagePreview({ page }) {
             {page.sections
                 .filter((s) => s.enabled)
                 .map((s) => (
-                    <section key={s.id} id={s.id} className="mb-6">
+                    <section key={s.id} id={s.id} className={s.type}>
                         <SectionRenderer section={s} />
                     </section>
                 ))}

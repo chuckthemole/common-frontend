@@ -1,0 +1,113 @@
+/* ---------- User Profile Page Preview Styles ---------- */
+
+/* Container for the whole preview */
+.user-profile-preview {
+    padding: 2rem;
+    border-radius: 8px;
+    min-height: 400px;
+
+    /* Give each section spacing */
+    section {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+}
+
+/* Hero Section */
+.user-profile-preview .hero {
+    text-align: center;
+
+    img {
+        display: block;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        max-width: 150px;
+    }
+
+    h1.title {
+        margin-bottom: 0.5rem;
+        font-size: 2rem;
+    }
+
+    p.subtitle {
+        font-size: 1.2rem;
+        color: #555;
+    }
+}
+
+/* About Section */
+.user-profile-preview .about {
+    .content {
+        line-height: 1.6;
+        font-size: 1rem;
+        color: #333;
+    }
+}
+
+/* Projects Section */
+.user-profile-preview .projects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .project-box {
+        flex: 1 1 30%;
+        min-width: 200px;
+        background: #f5f5f5;
+        border-radius: 6px;
+        padding: 1rem;
+        text-align: center;
+
+        a {
+            color: #3273dc;
+            text-decoration: none;
+            word-break: break-word;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    /* Darker style if you want optional portfolio theme */
+    &.portfolio .project-box {
+        background: #2a2a2a;
+        color: #fff;
+    }
+}
+
+/* Contact Section */
+.user-profile-preview .contact {
+    font-size: 1rem;
+
+    a {
+        color: #3273dc;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+/* Optional themes */
+.user-profile-preview.theme-modern {
+    background-color: #fff;
+    color: #363636;
+    font-family: 'Helvetica', 'Arial', sans-serif;
+}
+
+.user-profile-preview.theme-minimal {
+    background-color: #f7f7f7;
+    color: #222;
+    font-family: 'Helvetica Neue', sans-serif;
+}
+
+.user-profile-preview.theme-portfolio {
+    background-color: #1a1a1a;
+    color: #eee;
+    font-family: 'Courier New', monospace;
+}
