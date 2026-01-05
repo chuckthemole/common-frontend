@@ -225,3 +225,31 @@
         border: none;
     }
 }
+
+.editor-column {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 160px); // match preview frame height
+}
+
+/* Sticky header */
+.editor-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--background-color, #fff);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e5e5e5;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Scrollable editor controls */
+.editor-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 0.5rem; // avoids scrollbar overlap
+}
