@@ -253,3 +253,31 @@
     overflow-y: auto;
     padding-right: 0.5rem; // avoids scrollbar overlap
 }
+
+/* TODO - we may want to make this section more abstract in another scss file */
+.page-style-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; // vertical buffer between dropdown and buttons
+}
+
+/* Dropdown fills same width as grid */
+.theme-selector {
+    width: 100%;
+
+    // Ensure the selector itself stretches
+    >* {
+        width: 100%;
+    }
+}
+
+.buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem; // buffer between buttons
+
+    button {
+        width: 100%;
+    }
+}
+/* **************************************** */

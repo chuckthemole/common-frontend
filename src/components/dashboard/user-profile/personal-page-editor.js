@@ -7,6 +7,8 @@ import { getApi } from "../../../api";
 import logger from "../../../logger";
 import PagePreview from "./page-preview";
 import Alert from "../../ui/alerts/alert";
+import FontSettingsModal from "../../design-control/font/font_settings_modal";
+import ColorSettingsModal from "../../design-control/color/color_settings_modal";
 
 const THEMES = [
     { value: "modern", label: "Modern (default)" },
@@ -28,6 +30,8 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
+    const [fontSettings, setFontSettings] = useState({});
+    const [colorSettings, setColorSettings] = useState({});
 
     const aboutRef = useRef(null);
 
@@ -122,161 +126,181 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 <div className={`column ${previewVisible ? "is-6" : "is-12"} editor-column`}>
                     {/* Scrollable controls */}
                     <div className="editor-scroll">
-                        <form onSubmit={handleSubmit}>
-                            {/* Theme */}
-                            <div className="box mb-5">
-                                <label className="label">Page Style</label>
-                                <SingleSelector
-                                    options={THEMES}
-                                    value={page.theme}
-                                    onChange={(value) =>
-                                        setPage((p) => ({ ...p, theme: value }))
-                                    }
-                                    searchable={false}
-                                />
+
+                        <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
+                            <div className="page-style-controls">
+                                {/* Theme selector */}
+                                <div className="theme-selector">
+                                    <SingleSelector
+                                        options={THEMES}
+                                        value={page.theme}
+                                        onChange={(value) => setPage((p) => ({ ...p, theme: value }))}
+                                        searchable={false}
+                                    />
+                                </div>
+
+                                {/* Buttons grid (max 3 per row) */}
+                                <div className="buttons-grid">
+                                    <FontSettingsModal
+                                        preview={true}
+                                        secondaryFont={true}
+                                        onChange={(newFontSettings) => setFontSettings(newFontSettings)}
+                                        currentSettings={fontSettings}
+                                        buttonLabel="Font"
+                                    />
+
+                                    <ColorSettingsModal
+                                        onChange={(newColorSettings) => setColorSettings(newColorSettings)}
+                                        currentSettings={colorSettings}
+                                        buttonLabel="Colors"
+                                    />
+
+                                    {/* <LayoutSettingsModal buttonLabel="Layout" /> */}
+                                </div>
                             </div>
+                        </SectionCard>
 
-                            {/* HERO */}
-                            <SectionCard
-                                title="Hero"
-                                enabled={hero.enabled}
-                                onChange={(v) => toggleSection("hero", v)}
+
+                        {/* HERO */}
+                        <SectionCard
+                            title="Hero"
+                            enabled={hero.enabled}
+                            onChange={(v) => toggleSection("hero", v)}
+                        >
+                            <input
+                                className="input mb-2"
+                                placeholder="Name"
+                                onChange={(e) =>
+                                    updateSection("hero", { name: e.target.value })
+                                }
+                            />
+                            <input
+                                className="input mb-2"
+                                placeholder="Tagline"
+                                onChange={(e) =>
+                                    updateSection("hero", { tagline: e.target.value })
+                                }
+                            />
+                            <input
+                                className="input"
+                                placeholder="Profile Image URL"
+                                onChange={(e) =>
+                                    updateSection("hero", { profileImage: e.target.value })
+                                }
+                            />
+                        </SectionCard>
+
+                        {/* ABOUT */}
+                        <SectionCard
+                            title="About"
+                            enabled={about.enabled}
+                            onChange={(v) => toggleSection("about", v)}
+                        >
+                            <RumpusQuill
+                                value={about.data.content}
+                                editor_ref={aboutRef}
+                                setValue={(val) =>
+                                    updateSection("about", { content: val })
+                                }
+                                placeholder="Write your bio..."
+                            />
+                        </SectionCard>
+
+                        {/* PROJECTS */}
+                        <SectionCard
+                            title="Projects"
+                            enabled={projects.enabled}
+                            onChange={(v) => toggleSection("projects", v)}
+                        >
+                            <button
+                                type="button"
+                                className="button is-small mb-3"
+                                onClick={() =>
+                                    updateProjects([
+                                        ...projects.data.items,
+                                        { title: "", link: "" },
+                                    ])
+                                }
                             >
-                                <input
-                                    className="input mb-2"
-                                    placeholder="Name"
-                                    onChange={(e) =>
-                                        updateSection("hero", { name: e.target.value })
-                                    }
-                                />
-                                <input
-                                    className="input mb-2"
-                                    placeholder="Tagline"
-                                    onChange={(e) =>
-                                        updateSection("hero", { tagline: e.target.value })
-                                    }
-                                />
-                                <input
-                                    className="input"
-                                    placeholder="Profile Image URL"
-                                    onChange={(e) =>
-                                        updateSection("hero", { profileImage: e.target.value })
-                                    }
-                                />
-                            </SectionCard>
+                                + Add Project
+                            </button>
 
-                            {/* ABOUT */}
-                            <SectionCard
-                                title="About"
-                                enabled={about.enabled}
-                                onChange={(v) => toggleSection("about", v)}
-                            >
-                                <RumpusQuill
-                                    value={about.data.content}
-                                    editor_ref={aboutRef}
-                                    setValue={(val) =>
-                                        updateSection("about", { content: val })
-                                    }
-                                    placeholder="Write your bio..."
-                                />
-                            </SectionCard>
+                            {projects.data.items.map((p, i) => (
+                                <div key={i} className="box mb-3">
+                                    <input
+                                        className="input mb-2"
+                                        placeholder="Project title"
+                                        value={p.title}
+                                        onChange={(e) => {
+                                            const items = [...projects.data.items];
+                                            items[i].title = e.target.value;
+                                            updateProjects(items);
+                                        }}
+                                    />
+                                    <input
+                                        className="input mb-3"
+                                        placeholder="Project link"
+                                        value={p.link}
+                                        onChange={(e) => {
+                                            const items = [...projects.data.items];
+                                            items[i].link = e.target.value;
+                                            updateProjects(items);
+                                        }}
+                                    />
 
-                            {/* PROJECTS */}
-                            <SectionCard
-                                title="Projects"
-                                enabled={projects.enabled}
-                                onChange={(v) => toggleSection("projects", v)}
-                            >
-                                <button
-                                    type="button"
-                                    className="button is-small mb-3"
-                                    onClick={() =>
-                                        updateProjects([
-                                            ...projects.data.items,
-                                            { title: "", link: "" },
-                                        ])
-                                    }
-                                >
-                                    + Add Project
-                                </button>
-
-                                {projects.data.items.map((p, i) => (
-                                    <div key={i} className="box mb-3">
-                                        <input
-                                            className="input mb-2"
-                                            placeholder="Project title"
-                                            value={p.title}
-                                            onChange={(e) => {
-                                                const items = [...projects.data.items];
-                                                items[i].title = e.target.value;
-                                                updateProjects(items);
-                                            }}
-                                        />
-                                        <input
-                                            className="input mb-3"
-                                            placeholder="Project link"
-                                            value={p.link}
-                                            onChange={(e) => {
-                                                const items = [...projects.data.items];
-                                                items[i].link = e.target.value;
-                                                updateProjects(items);
-                                            }}
-                                        />
-
-                                        <div className="buttons">
-                                            <button
-                                                type="button"
-                                                className="button is-small"
-                                                onClick={() => moveProject(i, -1)}
-                                            >
-                                                ↑
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="button is-small"
-                                                onClick={() => moveProject(i, 1)}
-                                            >
-                                                ↓
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="button is-small is-danger"
-                                                onClick={() => removeProject(i)}
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
+                                    <div className="buttons">
+                                        <button
+                                            type="button"
+                                            className="button is-small"
+                                            onClick={() => moveProject(i, -1)}
+                                        >
+                                            ↑
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="button is-small"
+                                            onClick={() => moveProject(i, 1)}
+                                        >
+                                            ↓
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="button is-small is-danger"
+                                            onClick={() => removeProject(i)}
+                                        >
+                                            Remove
+                                        </button>
                                     </div>
-                                ))}
-                            </SectionCard>
+                                </div>
+                            ))}
+                        </SectionCard>
 
-                            {/* CONTACT */}
-                            <SectionCard
-                                title="Contact"
-                                enabled={contact.enabled}
-                                onChange={(v) => toggleSection("contact", v)}
-                            >
-                                <input
-                                    className="input"
-                                    placeholder="Email"
-                                    type="email"
-                                    onChange={(e) =>
-                                        updateSection("contact", { email: e.target.value })
-                                    }
-                                />
-                            </SectionCard>
+                        {/* CONTACT */}
+                        <SectionCard
+                            title="Contact"
+                            enabled={contact.enabled}
+                            onChange={(v) => toggleSection("contact", v)}
+                        >
+                            <input
+                                className="input"
+                                placeholder="Email"
+                                type="email"
+                                onChange={(e) =>
+                                    updateSection("contact", { email: e.target.value })
+                                }
+                            />
+                        </SectionCard>
 
-                            {error && (
-                                <Alert
-                                    message={error}
-                                    type="error"
-                                    persistent={false}
-                                    size="medium"
-                                    position="bottom"
-                                    onClose={() => setError(null)}
-                                />
-                            )}
-                        </form>
+                        {error && (
+                            <Alert
+                                message={error}
+                                type="error"
+                                persistent={false}
+                                size="medium"
+                                position="bottom"
+                                onClose={() => setError(null)}
+                            />
+                        )}
                     </div>
                 </div>
 
