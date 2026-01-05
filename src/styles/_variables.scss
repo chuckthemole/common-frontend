@@ -20,9 +20,12 @@ $fullhd-enabled: false;
         --#{$key}-color: #{$value};
     }
 
-    --primary-font: "Nunito",
-    sans-serif;
-    --secondary-font: "Helvetica",
-    "Arial",
-    sans-serif;
+    --primary-font: unset;
+    --secondary-font: unset;
+
+    // --primary-font: "Nunito",
+    // sans-serif;
+    // --secondary-font: "Helvetica",
+    // "Arial",
+    // sans-serif;
 }

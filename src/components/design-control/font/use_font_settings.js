@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { google_fonts, system_fonts, custom_fonts } from "../../../constants/fonts";
+import logger from "../../../logger";
 
 /**
  * Custom hook to manage global font settings.
@@ -19,7 +20,9 @@ export function useFontSettings({ secondaryFont = false } = {}) {
 
     // Load saved fonts or fallback to defaults
     const savedPrimary = localStorage.getItem("primaryFont") || google_fonts[0].value;
+    logger.debug("Primary font loaded: " + savedPrimary);
     const savedSecondary = localStorage.getItem("secondaryFont") || system_fonts[0].value;
+    logger.debug("Secondary font loaded: " + savedSecondary);
 
     const [currentFont, setCurrentFont] = useState(savedPrimary);
     const [currentSecondaryFont, setCurrentSecondaryFont] = useState(savedSecondary);
