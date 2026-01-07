@@ -1,28 +1,34 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
-import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
-import { useFontSettings } from "./use_font_settings";
+import {
+    isModalActive,
+    modal_style,
+    setModalActive,
+    setModalInactive,
+} from "../../modal_manager";
+import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
+import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
+import logger from "../../../logger";
 
 /**
- * Modal for selecting site-wide fonts.
- * - Allows toggling sources: Google, System, Custom
- * - Allows selecting primary and secondary fonts
- * - Optional preview of fonts
+ * FontSettingsModal
+ * - Uses ToggleSwitch for font sources
+ * - Uses SingleSelector for font slot selection
  */
-export default function FontSettingsModal({ preview = false, secondaryFont = false }) {
+export default function FontSettingsModal({
+    preview = false,
+    fontSettings,
+    buttonLabel = "Font Settings",
+}) {
     const [modalIsOpen, setModalIsOpen] = useState(false);
 
-    const {
-        fonts,
-        currentFont,
-        setCurrentFont,
-        currentSecondaryFont,
-        setCurrentSecondaryFont,
-        enabledSources,
-        toggleSource,
-    } = useFontSettings({ secondaryFont });
+    if (!fontSettings) {
+        logger.warn("FontSettingsModal requires fontSettings prop");
+        return null;
+    }
 
-    /** Modal handlers */
+    const { fonts, values, setFont, enabledSources, toggleSource } = fontSettings;
+
     const openModal = () => {
         if (!isModalActive()) {
             setModalIsOpen(true);
@@ -37,93 +43,80 @@ export default function FontSettingsModal({ preview = false, secondaryFont = fal
 
     return (
         <>
-            {/* Optional button to open modal */}
             <button onClick={openModal} className="button is-info">
-                Font Settings
+                {buttonLabel}
             </button>
 
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                className="modal-content"
-                style={modal_style}
                 contentLabel="Font Selector"
+                style={{
+                    ...modal_style,
+                    content: {
+                        ...modal_style.content,
+                        top: "50%",
+                        left: "50%",
+                        right: "auto",
+                        bottom: "auto",
+                        transform: "translate(-50%, -50%)",
+                        maxHeight: "90vh",
+                        overflowY: "auto",
+                        width: "90vw",
+                        maxWidth: "800px",
+                        padding: "2rem",
+                        zIndex: 10000,
+                    },
+                    overlay: {
+                        ...modal_style.overlay,
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                        zIndex: 9999,
+                    },
+                }}
             >
-                <div className="modal-content box">
+                <div className="modal-content">
                     <h2 className="title is-4">Font Settings</h2>
 
                     {/* Font source toggles */}
-                    {["google", "system", "custom"].map((src) => (
-                        <div className="field" key={src}>
-                            <label className="checkbox">
-                                <input
-                                    type="checkbox"
+                    <div className="columns is-multiline mb-4">
+                        {["google", "system", "custom"].map((src) => (
+                            <div key={src} className="column is-4">
+                                <ToggleSwitch
                                     checked={enabledSources[src]}
                                     onChange={() => toggleSource(src)}
-                                />{" "}
-                                {src.charAt(0).toUpperCase() + src.slice(1)} Fonts
-                            </label>
-                        </div>
-                    ))}
-
-                    {/* Primary font selector */}
-                    <div className={`field ${preview ? "is-flex" : ""}`} style={{ gap: "1rem" }}>
-                        <div>
-                            <label className="label">Primary Font</label>
-                            <div className="control">
-                                <div className="select">
-                                    <select value={currentFont} onChange={(e) => setCurrentFont(e.target.value)}>
-                                        {fonts.map((font) => (
-                                            <option key={font.name} value={font.value}>
-                                                {font.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                />
+                                <span className="ml-2">
+                                    {src.charAt(0).toUpperCase() + src.slice(1)} Fonts
+                                </span>
                             </div>
-                        </div>
-
-                        {preview && (
-                            <div
-                                className="box"
-                                style={{
-                                    fontFamily: currentFont,
-                                    minWidth: "200px",
-                                    textAlign: "center",
-                                }}
-                            >
-                                <p>The quick brown fox</p>
-                                <p>jumps over the lazy dog.</p>
-                            </div>
-                        )}
+                        ))}
                     </div>
 
-                    {/* Secondary font selector */}
-                    {secondaryFont && (
-                        <div className={`field ${preview ? "is-flex" : ""}`} style={{ gap: "1rem" }}>
-                            <div>
-                                <label className="label">Secondary Font</label>
-                                <div className="control">
-                                    <div className="select">
-                                        <select
-                                            value={currentSecondaryFont}
-                                            onChange={(e) => setCurrentSecondaryFont(e.target.value)}
-                                        >
-                                            {fonts.map((font) => (
-                                                <option key={font.name} value={font.value}>
-                                                    {font.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
+                    {/* Font slot selectors */}
+                    {Object.entries(values).map(([slotKey, value]) => (
+                        <div
+                            key={slotKey}
+                            className={`field ${preview ? "is-flex" : ""}`}
+                            style={{ gap: "1rem", alignItems: "center", marginBottom: "1.5rem" }}
+                        >
+                            <div style={{ flex: 1 }}>
+                                <label className="label">
+                                    {slotKey.replace(/([A-Z])/g, " $1")}
+                                </label>
+                                <SingleSelector
+                                    options={fonts.map((f) => ({ value: f.value, label: f.name }))}
+                                    value={value}
+                                    onChange={(v) => setFont(slotKey, v)}
+                                    searchable
+                                    portalTarget={document.body}
+                                />
                             </div>
 
                             {preview && (
                                 <div
                                     className="box"
                                     style={{
-                                        fontFamily: currentSecondaryFont,
+                                        fontFamily: value,
                                         minWidth: "200px",
                                         textAlign: "center",
                                     }}
@@ -133,9 +126,8 @@ export default function FontSettingsModal({ preview = false, secondaryFont = fal
                                 </div>
                             )}
                         </div>
-                    )}
+                    ))}
 
-                    {/* Close button */}
                     <div className="field mt-4">
                         <button className="button is-success" onClick={closeModal}>
                             Done

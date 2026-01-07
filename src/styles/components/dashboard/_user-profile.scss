@@ -6,10 +6,22 @@
 
 .page-preview-frame {
     height: calc(100vh - 160px); // editor header offset
+    width: 100%;
     border: 1px solid #ddd;
     border-radius: 6px;
     overflow: hidden;
     background: #fff;
+
+    font-family: var(--page-font, Inter); // default body font
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: var(--heading-font, "Playfair Display"); // default heading font
+    }
 }
 
 /* ---------- Root Preview Container ---------- */
@@ -280,4 +292,5 @@
         width: 100%;
     }
 }
+
 /* **************************************** */

@@ -1,110 +1,137 @@
-import { useState, useEffect, useMemo } from "react";
-import { google_fonts, system_fonts, custom_fonts } from "../../../constants/fonts";
-import logger from "../../../logger";
+// import { useState, useEffect, useMemo } from "react";
+// import {
+//     google_fonts,
+//     system_fonts,
+//     custom_fonts
+// } from "../../../constants/fonts";
+// import logger from "../../../logger";
 
-/**
- * Custom hook to manage global font settings.
- * Handles:
- *  - Primary and secondary fonts
- *  - Enabled font sources
- *  - Applying fonts as CSS variables
- *  - Persisting selections to localStorage
- */
-export function useFontSettings({ secondaryFont = false } = {}) {
-    // Toggle which font sources are enabled
-    const [enabledSources, setEnabledSources] = useState({
-        google: true,
-        system: true,
-        custom: true,
-    });
+// /**
+//  * Generic font settings hook.
+//  *
+//  * Responsibilities:
+//  * - Manage font slots (user-defined)
+//  * - Apply fonts to a target element via CSS variables
+//  * - Optionally persist to localStorage
+//  * - Load remote font stylesheets when needed
+//  */
+// export function useFontSettings({
+//     slots = {},
+//     target = document.documentElement,
+//     persist = true,
+// } = {}) {
+//     /* ---------------- Font Sources ---------------- */
 
-    // Load saved fonts or fallback to defaults
-    const savedPrimary = localStorage.getItem("primaryFont") || google_fonts[0].value;
-    logger.debug("Primary font loaded: " + savedPrimary);
-    const savedSecondary = localStorage.getItem("secondaryFont") || system_fonts[0].value;
-    logger.debug("Secondary font loaded: " + savedSecondary);
+//     const [enabledSources, setEnabledSources] = useState({
+//         google: true,
+//         system: true,
+//         custom: true,
+//     });
 
-    const [currentFont, setCurrentFont] = useState(savedPrimary);
-    const [currentSecondaryFont, setCurrentSecondaryFont] = useState(savedSecondary);
+//     const fonts = useMemo(() => {
+//         let f = [];
+//         if (enabledSources.google) f = f.concat(google_fonts);
+//         if (enabledSources.system) f = f.concat(system_fonts);
+//         if (enabledSources.custom) f = f.concat(custom_fonts);
+//         return f;
+//     }, [enabledSources]);
 
-    // Combine fonts from enabled sources
-    const fonts = useMemo(() => {
-        let f = [];
-        if (enabledSources.google) f = f.concat(google_fonts);
-        if (enabledSources.system) f = f.concat(system_fonts);
-        if (enabledSources.custom) f = f.concat(custom_fonts);
-        return f;
-    }, [enabledSources]);
+//     /* ---------------- Slot State ---------------- */
 
-    // Helper to apply a font globally
-    const applyFont = (fontValue) => {
-        document.documentElement.style.setProperty("--primary-font", fontValue);
-        localStorage.setItem("primaryFont", fontValue);
+//     const [values, setValues] = useState(() => {
+//         const initial = {};
+//         Object.entries(slots).forEach(([key, slot]) => {
+//             if (persist && slot.storageKey) {
+//                 initial[key] =
+//                     localStorage.getItem(slot.storageKey) ?? slot.default;
+//             } else {
+//                 initial[key] = slot.default;
+//             }
+//         });
+//         return initial;
+//     });
 
-        const fontObj = fonts.find((f) => f.value === fontValue);
-        if (fontObj?.url) {
-            const linkId = `font-${fontObj.name}`;
-            if (!document.getElementById(linkId)) {
-                const link = document.createElement("link");
-                link.id = linkId;
-                link.rel = "stylesheet";
-                link.href = fontObj.url;
-                document.head.appendChild(link);
-            }
-        }
-    };
+//     /* ---------------- Apply Font ---------------- */
 
-    // Apply primary font whenever it changes
-    useEffect(() => {
-        applyFont(currentFont);
-    }, [currentFont, fonts]);
+//     const applyFont = (slotKey, fontValue) => {
+//         const slot = slots[slotKey];
+//         if (!slot || !target) return;
 
-    // Apply secondary font if enabled
-    useEffect(() => {
-        if (secondaryFont) {
-            document.documentElement.style.setProperty("--secondary-font", currentSecondaryFont);
-            localStorage.setItem("secondaryFont", currentSecondaryFont);
+//         logger.debug(`Applying font [${slotKey}]: ${fontValue}`);
 
-            const fontObj = fonts.find((f) => f.value === currentSecondaryFont);
-            if (fontObj?.url) {
-                const linkId = `font-${fontObj.name}`;
-                if (!document.getElementById(linkId)) {
-                    const link = document.createElement("link");
-                    link.id = linkId;
-                    link.rel = "stylesheet";
-                    link.href = fontObj.url;
-                    document.head.appendChild(link);
-                }
-            }
-        }
-    }, [currentSecondaryFont, secondaryFont, fonts]);
+//         target.style.setProperty(slot.cssVar, fontValue);
 
-    // Toggle a font source (google/system/custom)
-    const toggleSource = (source) => {
-        setEnabledSources((prev) => ({ ...prev, [source]: !prev[source] }));
-    };
+//         if (persist && slot.storageKey) {
+//             localStorage.setItem(slot.storageKey, fontValue);
+//         }
 
-    // Global initializer to apply fonts from localStorage without rendering modal
-    const initFonts = () => {
-        const storedPrimary = localStorage.getItem("primaryFont");
-        if (storedPrimary) applyFont(storedPrimary);
+//         const fontObj = fonts.find((f) => f.value === fontValue);
+//         if (fontObj?.url) {
+//             const linkId = `font-${fontObj.name}`;
+//             if (!document.getElementById(linkId)) {
+//                 const link = document.createElement("link");
+//                 link.id = linkId;
+//                 link.rel = "stylesheet";
+//                 link.href = fontObj.url;
+//                 document.head.appendChild(link);
+//             }
+//         }
+//     };
 
-        if (secondaryFont) {
-            const storedSecondary = localStorage.getItem("secondaryFont");
-            if (storedSecondary) {
-                document.documentElement.style.setProperty("--secondary-font", storedSecondary);
-            }
-        }
-    };
+//     /* ---------------- React to Changes ---------------- */
 
-    return {
-        fonts,
-        currentFont,
-        setCurrentFont,
-        currentSecondaryFont,
-        setCurrentSecondaryFont,
-        enabledSources,
-        toggleSource,
-        initFonts,
-    };
+//     useEffect(() => {
+//         Object.entries(values).forEach(([slotKey, value]) => {
+//             applyFont(slotKey, value);
+//         });
+//         // eslint-disable-next-line react-hooks/exhaustive-deps
+//     }, [values, fonts, target]);
+
+//     /* ---------------- Public API ---------------- */
+
+//     const setFont = (slotKey, value) => {
+//         setValues((prev) => ({
+//             ...prev,
+//             [slotKey]: value,
+//         }));
+//     };
+
+//     const toggleSource = (source) => {
+//         setEnabledSources((prev) => ({
+//             ...prev,
+//             [source]: !prev[source],
+//         }));
+//     };
+
+//     const initFonts = () => {
+//         Object.entries(slots).forEach(([key, slot]) => {
+//             if (!persist || !slot.storageKey) return;
+//             const stored = localStorage.getItem(slot.storageKey);
+//             if (stored) applyFont(key, stored);
+//         });
+//     };
+
+//     return {
+//         fonts,
+//         values,        // { primary, secondary, body, heading, ... }
+//         setFont,       // setFont("primary", "Inter")
+//         enabledSources,
+//         toggleSource,
+//         initFonts,
+//     };
+// }
+
+import { useContext } from "react";
+import { FontSettingsContext } from "./font_settings_context";
+
+export function useFontSettings() {
+    const context = useContext(FontSettingsContext);
+
+    if (!context) {
+        throw new Error(
+            "useFontSettings must be used within a FontSettingsProvider"
+        );
+    }
+
+    return context;
 }

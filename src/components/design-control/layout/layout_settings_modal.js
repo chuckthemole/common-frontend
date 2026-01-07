@@ -13,6 +13,7 @@ import {
     setModalInactive,
 } from "../../modal_manager";
 import { useLayoutSettings, layoutOptions } from "./layout_settings_context";
+import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 
 export default function LayoutSettingsModal() {
     const { layout, setLayoutSetting, initialized } = useLayoutSettings();
@@ -20,7 +21,6 @@ export default function LayoutSettingsModal() {
 
     /**
      * Ensure modal never displays before layout settings are initialized.
-     * Prevents users from interacting with stale or undefined data.
      */
     useEffect(() => {
         if (!initialized && modalIsOpen) {
@@ -47,8 +47,7 @@ export default function LayoutSettingsModal() {
     }, []);
 
     /**
-     * Handles select change and updates the layout context directly.
-     * This ensures a single source of truth (context), avoiding internal modal state drift.
+     * Handles selection change and updates the layout context directly.
      */
     const handleSelect = useCallback(
         (value) => {
@@ -56,6 +55,14 @@ export default function LayoutSettingsModal() {
         },
         [setLayoutSetting]
     );
+
+    /**
+     * Map layout options to SingleSelector format
+     */
+    const selectorOptions = layoutOptions.map((opt) => ({
+        value: opt,
+        label: opt.replace("is-", "").replace("-", " "),
+    }));
 
     return (
         <>
@@ -73,9 +80,9 @@ export default function LayoutSettingsModal() {
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
                 contentLabel="Layout Settings Modal"
-                ariaHideApp={false} // Disable app hiding for non-root mounting
-                shouldCloseOnOverlayClick={true}
-                shouldCloseOnEsc={true}
+                ariaHideApp={false}
+                shouldCloseOnOverlayClick
+                shouldCloseOnEsc
                 style={{
                     ...modal_style,
                     content: {
@@ -103,24 +110,18 @@ export default function LayoutSettingsModal() {
             >
                 <h2 className="title is-4 mb-4">Layout Settings</h2>
 
-                {/* If settings not loaded, show loader */}
                 {!initialized ? (
                     <p>Loading settings…</p>
                 ) : (
                     <div className="field">
                         <label className="label">Main Content Width</label>
-                        <div className="control select is-fullwidth">
-                            <select
+                        <div className="control">
+                            <SingleSelector
+                                options={selectorOptions}
                                 value={layout.columnWidth}
-                                onChange={(e) => handleSelect(e.target.value)}
-                                aria-label="Select layout width"
-                            >
-                                {layoutOptions.map((opt) => (
-                                    <option key={opt} value={opt}>
-                                        {opt.replace("is-", "").replace("-", " ")}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={handleSelect}
+                                portalTarget={document.body}
+                            />
                         </div>
                     </div>
                 )}

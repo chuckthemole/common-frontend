@@ -9,12 +9,48 @@ import PagePreview from "./page-preview";
 import Alert from "../../ui/alerts/alert";
 import FontSettingsModal from "../../design-control/font/font_settings_modal";
 import ColorSettingsModal from "../../design-control/color/color_settings_modal";
+import { useFontSettings, FontSettingsProvider } from "../../../../dist/components/design-control/font";
 
 const THEMES = [
     { value: "modern", label: "Modern (default)" },
     { value: "minimal", label: "Minimal" },
     { value: "portfolio", label: "Portfolio Focused" },
 ];
+
+function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorSettings }) {
+    const fontSettings = useFontSettings();
+
+    return (
+        <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
+            <div className="page-style-controls">
+                <div className="theme-selector">
+                    <SingleSelector
+                        options={THEMES}
+                        value={page.theme}
+                        onChange={(value) =>
+                            setPage((p) => ({ ...p, theme: value }))
+                        }
+                        searchable={false}
+                    />
+                </div>
+
+                <div className="buttons-grid">
+                    <FontSettingsModal
+                        preview
+                        fontSettings={fontSettings}
+                        buttonLabel="Fonts"
+                    />
+
+                    <ColorSettingsModal
+                        onChange={setColorSettings}
+                        currentSettings={colorSettings}
+                        buttonLabel="Colors"
+                    />
+                </div>
+            </div>
+        </SectionCard>
+    );
+}
 
 export default function PersonalPageEditor({ endpoint, onSuccess }) {
     const [page, setPage] = useState({
@@ -26,13 +62,11 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
             { id: "contact", type: "contact", enabled: true, data: { email: "" } },
         ],
     });
-
+    const previewRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
-    const [fontSettings, setFontSettings] = useState({});
     const [colorSettings, setColorSettings] = useState({});
-
     const aboutRef = useRef(null);
 
     const sectionById = (id) => page.sections.find((s) => s.id === id);
@@ -56,9 +90,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
     };
 
     /* ---------- Project helpers ---------- */
-
-    const updateProjects = (items) =>
-        updateSection("projects", { items });
+    const updateProjects = (items) => updateSection("projects", { items });
 
     const moveProject = (index, dir) => {
         const items = [...sectionById("projects").data.items];
@@ -98,7 +130,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
 
     return (
         <RumpusQuillForm>
-            {/* ---------- Global Header (FULL WIDTH) ---------- */}
+            {/* ---------- Header ---------- */}
             <div className="editor-header global-editor-header">
                 <h2 className="title is-4 mb-0">Personal Page Editor</h2>
 
@@ -121,47 +153,35 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
 
             {/* ---------- Main Layout ---------- */}
             <div className="columns is-variable is-6">
-
                 {/* ---------- Editor Column ---------- */}
                 <div className={`column ${previewVisible ? "is-6" : "is-12"} editor-column`}>
                     {/* Scrollable controls */}
                     <div className="editor-scroll">
 
-                        <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
-                            <div className="page-style-controls">
-                                {/* Theme selector */}
-                                <div className="theme-selector">
-                                    <SingleSelector
-                                        options={THEMES}
-                                        value={page.theme}
-                                        onChange={(value) => setPage((p) => ({ ...p, theme: value }))}
-                                        searchable={false}
-                                    />
-                                </div>
+                        <FontSettingsProvider
+                            target={previewRef}
+                            persist={false}
+                            slots={{
+                                body: {
+                                    cssVar: "--page-font",
+                                    default: "Inter"
+                                },
+                                heading: {
+                                    cssVar: "--heading-font",
+                                    default: "Playfair Display"
+                                },
+                            }}
+                        >
+                            <PageStyleControls
+                                previewRef={previewRef}
+                                page={page}
+                                setPage={setPage}
+                                colorSettings={colorSettings}
+                                setColorSettings={setColorSettings}
+                            />
+                        </FontSettingsProvider>
 
-                                {/* Buttons grid (max 3 per row) */}
-                                <div className="buttons-grid">
-                                    <FontSettingsModal
-                                        preview={true}
-                                        secondaryFont={true}
-                                        onChange={(newFontSettings) => setFontSettings(newFontSettings)}
-                                        currentSettings={fontSettings}
-                                        buttonLabel="Font"
-                                    />
-
-                                    <ColorSettingsModal
-                                        onChange={(newColorSettings) => setColorSettings(newColorSettings)}
-                                        currentSettings={colorSettings}
-                                        buttonLabel="Colors"
-                                    />
-
-                                    {/* <LayoutSettingsModal buttonLabel="Layout" /> */}
-                                </div>
-                            </div>
-                        </SectionCard>
-
-
-                        {/* HERO */}
+                        {/* ---------- HERO ---------- */}
                         <SectionCard
                             title="Hero"
                             enabled={hero.enabled}
@@ -190,7 +210,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                             />
                         </SectionCard>
 
-                        {/* ABOUT */}
+                        {/* ---------- ABOUT ---------- */}
                         <SectionCard
                             title="About"
                             enabled={about.enabled}
@@ -206,7 +226,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                             />
                         </SectionCard>
 
-                        {/* PROJECTS */}
+                        {/* ---------- PROJECTS ---------- */}
                         <SectionCard
                             title="Projects"
                             enabled={projects.enabled}
@@ -275,7 +295,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                             ))}
                         </SectionCard>
 
-                        {/* CONTACT */}
+                        {/* ---------- CONTACT ---------- */}
                         <SectionCard
                             title="Contact"
                             enabled={contact.enabled}
@@ -306,8 +326,15 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
 
                 {/* ---------- Preview Column ---------- */}
                 {previewVisible && (
-                    <div className="column is-6 pl-4">
-                        <div className="page-preview-frame">
+                    <div className="column is-6">
+                        <div
+                            className="page-preview-frame"
+                            ref={previewRef}
+                            style={{
+                                "--page-font": "Inter",
+                                "--heading-font": "Playfair Display",
+                            }}
+                        >
                             <PagePreview page={page} />
                         </div>
                     </div>
@@ -318,7 +345,6 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
 }
 
 /* ---------- UI Helpers ---------- */
-
 const SectionCard = ({ title, enabled, onChange, children }) => (
     <div className="box mb-5">
         <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">

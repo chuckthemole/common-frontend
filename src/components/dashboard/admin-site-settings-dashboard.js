@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import FontSettingsModal from "../design-control/font/font_settings_modal";
 import ColorSettingsModal from "../design-control/color/color_settings_modal";
 import LayoutSettingsModal from "../design-control/layout/layout_settings_modal";
+import { useFontSettings } from "../design-control/font/use_font_settings";
 
 /**
  * Admin Site Settings Dashboard
@@ -10,11 +11,26 @@ import LayoutSettingsModal from "../design-control/layout/layout_settings_modal"
  * - Extensible with other global settings
  */
 export default function AdminSiteSettingsDashboard() {
-    // State placeholders for other settings (optional if used elsewhere)
-    const [fontSettings, setFontSettings] = useState({});
     const [colorSettings, setColorSettings] = useState({});
     const [seoSettings, setSeoSettings] = useState({});
     const [advancedSettings, setAdvancedSettings] = useState({});
+
+    const fontSettings = useFontSettings({
+        target: document.documentElement,
+        persist: true,
+        slots: {
+            primaryFont: {
+                cssVar: "--primary-font",
+                default: "Inter",
+                storageKey: "primaryFont",
+            },
+            secondaryFont: {
+                cssVar: "--secondary-font",
+                default: "Arial",
+                storageKey: "secondaryFont",
+            },
+        },
+    });
 
     return (
         <div className="admin-site-settings-dashboard container">
@@ -31,7 +47,11 @@ export default function AdminSiteSettingsDashboard() {
                         <div className="card-content">
                             <div className="content">
                                 <p>Control the global fonts for your site.</p>
-                                <FontSettingsModal preview={true} secondaryFont={true} />
+                                <FontSettingsModal
+                                    preview={true}
+                                    fontSettings={fontSettings}
+                                    buttonLabel="Font"
+                                />
                             </div>
                         </div>
                     </div>
