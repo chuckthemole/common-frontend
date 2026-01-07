@@ -1,9 +1,12 @@
 import React from "react";
 
 export default function SectionRenderer({ section }) {
-    switch (section.type) {
-        case "hero":
-            return (
+    return (
+        <div className={`section-content section-${section.type}`}>
+            {/* Optional: render editable section title */}
+            {section.title && <h2 className="section-header">{section.title}</h2>}
+
+            {section.type === "home" && (
                 <div className="has-text-centered">
                     {section.data.profileImage && (
                         <img
@@ -15,20 +18,18 @@ export default function SectionRenderer({ section }) {
                     <h1 className="title">{section.data.name || "Your Name"}</h1>
                     <p className="subtitle">{section.data.tagline}</p>
                 </div>
-            );
+            )}
 
-        case "about":
-            return (
+            {section.type === "about" && (
                 <div
                     className="content"
                     dangerouslySetInnerHTML={{
                         __html: section.data.content || "<p>Your bio goes here…</p>",
                     }}
                 />
-            );
+            )}
 
-        case "projects":
-            return (
+            {section.type === "projects" && (
                 <div className="columns is-multiline">
                     {section.data.items.map((p, i) => (
                         <div key={i} className="column is-4">
@@ -44,19 +45,16 @@ export default function SectionRenderer({ section }) {
                         </div>
                     ))}
                 </div>
-            );
+            )}
 
-        case "contact":
-            return (
+            {section.type === "contact" && (
                 <p>
                     Contact:{" "}
                     <a href={`mailto:${section.data.email}`}>
                         {section.data.email}
                     </a>
                 </p>
-            );
-
-        default:
-            return null;
-    }
+            )}
+        </div>
+    );
 }

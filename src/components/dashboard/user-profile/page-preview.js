@@ -59,11 +59,11 @@ function PortfolioLayout({ page, containerRef }) {
     return (
         <div className="layout-portfolio">
             <aside className="sidebar">
-                <HeroOnly page={page} />
+                <HomeOnly page={page} />
                 <Nav page={page} containerRef={containerRef} vertical />
             </aside>
             <main className="content">
-                <Sections page={page} skip={["hero"]} />
+                <Sections page={page} skip={["home"]} />
             </main>
         </div>
     );
@@ -95,7 +95,7 @@ function Nav({ page, containerRef, vertical = false }) {
                     .map((s) => (
                         <li key={s.id}>
                             <a href={`#${s.id}`} onClick={(e) => handleClick(e, s.id)}>
-                                {s.type}
+                                {s.title || s.type}  {/* <-- Use the editable title if it exists */}
                             </a>
                         </li>
                     ))}
@@ -103,7 +103,6 @@ function Nav({ page, containerRef, vertical = false }) {
         </nav>
     );
 }
-
 
 function Sections({ page, skip = [] }) {
     return page.sections
@@ -115,11 +114,11 @@ function Sections({ page, skip = [] }) {
         ));
 }
 
-function HeroOnly({ page }) {
-    const hero = page.sections.find((s) => s.id === "hero" && s.enabled);
-    return hero ? (
-        <section className="section-hero">
-            <SectionRenderer section={hero} />
+function HomeOnly({ page }) {
+    const home = page.sections.find((s) => s.id === "home" && s.enabled);
+    return home ? (
+        <section className="section-home">
+            <SectionRenderer section={home} />
         </section>
     ) : null;
 }
