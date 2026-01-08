@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Modal from "react-modal";
 import {
     isModalActive,
@@ -6,6 +6,7 @@ import {
     setModalActive,
     setModalInactive,
 } from "../../modal_manager";
+import { FontSettingsContext } from "./font_settings_context";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
 import logger from "../../../logger";
@@ -17,17 +18,17 @@ import logger from "../../../logger";
  */
 export default function FontSettingsModal({
     preview = false,
-    fontSettings,
     buttonLabel = "Font Settings",
 }) {
     const [modalIsOpen, setModalIsOpen] = useState(false);
+    const context = useContext(FontSettingsContext);
 
-    if (!fontSettings) {
-        logger.warn("FontSettingsModal requires fontSettings prop");
+    if (!context) {
+        logger.warn("FontSettingsModal must be used inside FontSettingsProvider");
         return null;
     }
 
-    const { fonts, values, setFont, enabledSources, toggleSource } = fontSettings;
+    const { fonts, values, setFont, enabledSources, toggleSource } = context;
 
     const openModal = () => {
         if (!isModalActive()) {

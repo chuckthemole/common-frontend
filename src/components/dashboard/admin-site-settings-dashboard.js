@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import FontSettingsModal from "../design-control/font/font_settings_modal";
 import ColorSettingsModal from "../design-control/color/color_settings_modal";
 import LayoutSettingsModal from "../design-control/layout/layout_settings_modal";
-import { useFontSettings } from "../design-control/font/use_font_settings";
 
 /**
  * Admin Site Settings Dashboard
@@ -14,24 +13,6 @@ export default function AdminSiteSettingsDashboard() {
     const [colorSettings, setColorSettings] = useState({});
     const [seoSettings, setSeoSettings] = useState({});
     const [advancedSettings, setAdvancedSettings] = useState({});
-
-    // TODO: Look at App.js, can we move the provider here? If not, do we need this fontSettings with all the params?
-    const fontSettings = useFontSettings({
-        target: document.documentElement,
-        persist: true,
-        slots: {
-            primaryFont: {
-                cssVar: "--primary-font",
-                default: "Inter",
-                storageKey: "primaryFont",
-            },
-            secondaryFont: {
-                cssVar: "--secondary-font",
-                default: "Arial",
-                storageKey: "secondaryFont",
-            },
-        },
-    });
 
     return (
         <div className="admin-site-settings-dashboard container">
@@ -50,7 +31,6 @@ export default function AdminSiteSettingsDashboard() {
                                 <p>Control the global fonts for your site.</p>
                                 <FontSettingsModal
                                     preview={true}
-                                    fontSettings={fontSettings}
                                     buttonLabel="Font"
                                 />
                             </div>
@@ -67,7 +47,9 @@ export default function AdminSiteSettingsDashboard() {
                         <div className="card-content">
                             <div className="content">
                                 <p>Manage primary, secondary, and background colors for the site.</p>
-                                <ColorSettingsModal />
+                                <ColorSettingsModal
+                                    buttonLabel="Color"
+                                />
                             </div>
                         </div>
                     </div>

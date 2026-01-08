@@ -29,6 +29,7 @@ export default function ColorSettingsProvider({
     persistence = LocalPersistence,
     defaultLayout = null,
     slots = {},
+    colorLayouts = predefinedColorLayouts,
     children,
 }) {
     /* ----------------------------
@@ -58,8 +59,8 @@ export default function ColorSettingsProvider({
        Resolve baseline defaults
     ----------------------------- */
     const baseDefaults = useMemo(() => {
-        if (defaultLayout && predefinedColorLayouts[defaultLayout]) {
-            return predefinedColorLayouts[defaultLayout];
+        if (defaultLayout && colorLayouts[defaultLayout]) {
+            return colorLayouts[defaultLayout];
         }
         return colorsJson;
     }, [defaultLayout]);
@@ -197,7 +198,8 @@ export default function ColorSettingsProvider({
                 setColor,    // update a single color slot
                 initColors,  // restore/apply persisted colors
                 slots,       // slot metadata
-                defaults: baseDefaults,
+                defaults: baseDefaults, // durrent layout defaults
+                layouts: colorLayouts
             }}
         >
             {children}

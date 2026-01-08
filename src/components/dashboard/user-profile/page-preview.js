@@ -88,14 +88,15 @@ function Nav({ page, containerRef, vertical = false }) {
     };
 
     return (
-        <nav className={`tabs ${vertical ? "is-vertical" : "is-centered"} mb-5`}>
+        <nav className={`navbar tabs ${vertical ? "is-vertical" : "is-centered"} mb-5`}>
             <ul>
                 {page.sections
                     .filter((s) => s.enabled)
                     .map((s) => (
-                        <li key={s.id}>
+                        <li key={s.id} >
                             <a href={`#${s.id}`} onClick={(e) => handleClick(e, s.id)}>
-                                {s.title || s.type}  {/* <-- Use the editable title if it exists */}
+                                {/* Use the editable title if it exists */}
+                                {s.title || s.type}
                             </a>
                         </li>
                     ))}

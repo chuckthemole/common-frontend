@@ -10,7 +10,9 @@ import PagePreview from "./page-preview";
 import Alert from "../../ui/alerts/alert";
 import FontSettingsModal from "../../design-control/font/font_settings_modal";
 import ColorSettingsModal from "../../design-control/color/color_settings_modal";
-import { useFontSettings, FontSettingsProvider } from "../../../../dist/components/design-control/font";
+import { FontSettingsProvider } from "../../design-control/font";
+import { ColorSettingsProvider } from "../../design-control/color";
+import { previewColorLayouts } from "../../design-control/color/predefined_color_layouts_preview";
 
 // Available themes
 const THEMES = [
@@ -22,8 +24,15 @@ const THEMES = [
 /* ============================================================
    Page Style Controls (Theme + Font + Color)
    ============================================================ */
-function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorSettings }) {
-    const fontSettings = useFontSettings();
+function PageStyleControls(
+    {
+        previewRef,
+        page,
+        setPage,
+        colorSettings,
+        setColorSettings
+    }
+) {
 
     return (
         <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
@@ -42,13 +51,10 @@ function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorS
                 <div className="buttons-grid">
                     <FontSettingsModal
                         preview
-                        fontSettings={fontSettings}
                         buttonLabel="Fonts"
                     />
                     <ColorSettingsModal
-                        onChange={setColorSettings}
-                        currentSettings={colorSettings}
-                        buttonLabel="Colors"
+                        buttonLabel="Color"
                     />
                 </div>
             </div>
@@ -270,17 +276,73 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                             target={previewRef}
                             persist={false}
                             slots={{
-                                body: { cssVar: "--page-font", default: "Inter" },
-                                heading: { cssVar: "--heading-font", default: "Playfair Display" },
+                                body: {
+                                    cssVar: "--page-font",
+                                    default: "Inter"
+                                },
+                                heading: {
+                                    cssVar: "--heading-font",
+                                    default: "Playfair Display"
+                                },
                             }}
                         >
-                            <PageStyleControls
-                                previewRef={previewRef}
-                                page={page}
-                                setPage={setPage}
-                                colorSettings={colorSettings}
-                                setColorSettings={setColorSettings}
-                            />
+                            <ColorSettingsProvider
+                                target={previewRef}
+                                colorLayouts={previewColorLayouts}
+                                slots={{
+                                    /* Page background and main text */
+                                    background: {
+                                        cssVar: "--page-background",
+                                        default: "#ffffff", // white page background
+                                    },
+                                    text: {
+                                        cssVar: "--page-text",
+                                        default: "#333333", // default text color
+                                    },
+
+                                    /* Navigation bar */
+                                    navBackground: {
+                                        cssVar: "--nav-background",
+                                        default: "#1a1a1a", // dark nav
+                                    },
+                                    navText: {
+                                        cssVar: "--nav-text",
+                                        default: "#ffffff", // nav text color
+                                    },
+                                    navHover: {
+                                        cssVar: "--nav-hover",
+                                        default: "#f5f5f5", // hover color for nav links
+                                    },
+
+                                    /* Buttons */
+                                    buttonBackground: {
+                                        cssVar: "--button-background",
+                                        default: "#3273dc", // primary button blue
+                                    },
+                                    buttonText: {
+                                        cssVar: "--button-text",
+                                        default: "#ffffff",
+                                    },
+                                    buttonHover: {
+                                        cssVar: "--button-hover",
+                                        default: "#2759a3", // darker blue on hover
+                                    },
+
+                                    /* Accent color for highlights or links */
+                                    accent: {
+                                        cssVar: "--accent-color",
+                                        default: "#ff3860", // pink/red accent
+                                    },
+                                }}
+                            >
+                                <PageStyleControls
+                                    previewRef={previewRef}
+                                    page={page}
+                                    setPage={setPage}
+                                    colorSettings={colorSettings}
+                                    setColorSettings={setColorSettings}
+                                />
+                            </ColorSettingsProvider>
                         </FontSettingsProvider>
 
                         {/* ---------- Home Section ---------- */}

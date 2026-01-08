@@ -8,7 +8,6 @@ import {
 } from "../../modal_manager";
 import { ColorSettingsContext } from "./color_settings_context";
 import { predefinedColorLayouts } from "./predefined_color_layouts";
-import colorsJson from "../../../constants/colors.json";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import logger from "../../../logger";
 
@@ -35,7 +34,7 @@ export default function ColorSettingsModal({
         return null;
     }
 
-    const { values, setColor, initColors } = colorSettings;
+    const { values, setColor, defaults, layouts } = colorSettings;
 
     /* ----------------------------
        Modal open / close
@@ -58,13 +57,10 @@ export default function ColorSettingsModal({
     const applyLayout = (layoutName) => {
         if (!layoutName) return;
 
-        const layout = predefinedColorLayouts[layoutName];
+        const layout = layouts[layoutName];
         if (!layout) return;
 
-        Object.entries({ ...colorsJson, ...layout }).forEach(
-            ([key, value]) => setColor(key, value)
-        );
-
+        Object.entries(layout).forEach(([key, value]) => setColor(key, value));
         setSelectedLayout(layoutName);
     };
 
@@ -72,11 +68,12 @@ export default function ColorSettingsModal({
        Reset to defaults
     ----------------------------- */
     const resetColors = () => {
-        Object.entries(colorsJson).forEach(([key, value]) =>
+        Object.entries(colorSettings.defaults).forEach(([key, value]) =>
             setColor(key, value)
         );
         setSelectedLayout("");
     };
+
 
     /* ----------------------------
        Render
@@ -121,12 +118,12 @@ export default function ColorSettingsModal({
                     <div className="field mb-4">
                         <label className="label">Predefined Layouts</label>
                         <SingleSelector
-                            options={Object.keys(predefinedColorLayouts).map((name) => ({
+                            options={Object.keys(layouts).map((name) => ({
                                 value: name,
                                 label: name,
                             }))}
-                            value={selectedLayout} // <-- use modal state
-                            onChange={(v) => applyLayout(v)} // <-- call applyLayout
+                            value={selectedLayout}
+                            onChange={(v) => applyLayout(v)}
                             searchable
                             placeholder="— Select a layout —"
                             portalTarget={document.body}
@@ -137,9 +134,9 @@ export default function ColorSettingsModal({
                        Color Pickers
                     ----------------------------- */}
                     <div className="columns is-multiline">
-                        {Object.entries(colorsJson).map(([key]) => {
+                        {Object.entries(colorSettings.slots).map(([key, cfg]) => {
                             const value = values[key];
-
+                            const label = key.replace(/-/g, " ");
                             return (
                                 <div className="column is-one-quarter" key={key}>
                                     <div className="field">
@@ -152,7 +149,7 @@ export default function ColorSettingsModal({
                                                 whiteSpace: "nowrap",
                                             }}
                                         >
-                                            {key.replace(/-/g, " ")}
+                                            {label}
                                         </label>
 
                                         <div
@@ -162,9 +159,7 @@ export default function ColorSettingsModal({
                                             <input
                                                 type="color"
                                                 value={value || "#000000"}
-                                                onChange={(e) =>
-                                                    setColor(key, e.target.value)
-                                                }
+                                                onChange={(e) => setColor(key, e.target.value)}
                                                 style={{ flex: "1 1 auto" }}
                                             />
 
