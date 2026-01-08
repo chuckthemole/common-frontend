@@ -15,7 +15,13 @@ import React, { useState, useEffect } from 'react';
  * @param {string} [props.color='is-info'] - Bulma color class applied when active
  * @param {string} [props.id] - Optional input ID for accessibility
  */
-function ToggleSwitch({ checked: propChecked = false, onChange, color = 'is-info', id, disabled = false }) {
+function ToggleSwitch(
+    {
+        checked: propChecked = false,
+        onChange,
+        color = 'is-info',
+        id, disabled = false }
+) {
     const [checked, setChecked] = useState(propChecked);
 
     const inputId = id || `toggle-${Math.random().toString(36).substring(2, 8)}`;

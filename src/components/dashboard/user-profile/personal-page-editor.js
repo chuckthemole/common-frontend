@@ -3,6 +3,7 @@ import RumpusQuill from "../../ui/editors/rumpus_quill";
 import RumpusQuillForm from "../../ui/editors/rumpus_quill_form";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
+import Tooltip from "../../ui/tooltip/tooltip";
 import { getApi } from "../../../api";
 import logger from "../../../logger";
 import PagePreview from "./page-preview";
@@ -65,15 +66,17 @@ function EditableTitle({ value, defaultValue, onChange }) {
         <div className="editable-title is-flex is-align-items-center">
             {!editing ? (
                 <>
+
                     <span className="mr-2">{value || defaultValue}</span>
-                    <button
-                        type="button"
-                        className="button is-small is-light"
-                        onClick={() => setEditing(true)}
-                        title="Edit title"
-                    >
-                        ✎
-                    </button>
+                    <Tooltip text="Edit title">
+                        <button
+                            type="button"
+                            className="button is-small is-light"
+                            onClick={() => setEditing(true)}
+                            title="Edit title"
+                        >   ✎
+                        </button>
+                    </Tooltip>
                 </>
             ) : (
                 <>
@@ -111,6 +114,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 id: "home",
                 type: "home",
                 enabled: true,
+                showTitle: false,
                 defaultTitle: "Home",
                 title: "Home",
                 data: { name: "", tagline: "", profileImage: "" },
@@ -119,6 +123,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 id: "about",
                 type: "about",
                 enabled: true,
+                showTitle: true,
                 defaultTitle: "About",
                 title: "About",
                 data: { content: "" },
@@ -127,6 +132,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 id: "projects",
                 type: "projects",
                 enabled: true,
+                showTitle: true,
                 defaultTitle: "Projects",
                 title: "Projects",
                 data: { items: [] },
@@ -135,6 +141,7 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 id: "contact",
                 type: "contact",
                 enabled: true,
+                showTitle: true,
                 defaultTitle: "Contact",
                 title: "Contact",
                 data: { email: "" },
@@ -167,6 +174,27 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
             ...prev,
             sections: prev.sections.map((s) => (s.id === id ? { ...s, enabled } : s)),
         }));
+
+    const toggleSectionTitle = (id, showTitle) =>
+        setPage((prev) => ({
+            ...prev,
+            sections: prev.sections.map((s) =>
+                s.id === id ? { ...s, showTitle } : s
+            ),
+        }));
+
+    const ToggleSectionTitleHelper = ({ sectionId, showTitle }) => (
+        <Tooltip text="Show or hide this section’s title in the preview">
+            <div className="is-flex is-flex-direction-column is-align-items-center ml-3">
+                {/* <span className="mb-1 is-size-7 has-text-grey">Show title</span> */}
+                <ToggleSwitch
+                    checked={showTitle}
+                    color="is-info"
+                    onChange={(v) => toggleSectionTitle(sectionId, v)}
+                />
+            </div>
+        </Tooltip>
+    );
 
     // Update section title
     const updateSectionTitle = (id, newTitle) =>
@@ -215,11 +243,13 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
     return (
         <RumpusQuillForm>
             {/* ---------- Header ---------- */}
-            <div className="editor-header global-editor-header">
+            <div className="editor-header global-editor-header box">
                 <h2 className="title is-4 mb-0">Personal Page Editor</h2>
                 <div className="is-flex is-align-items-center">
-                    <span className="mr-2 has-text-grey">Preview</span>
-                    <ToggleSwitch checked={previewVisible} onChange={setPreviewVisible} />
+                    <div className="is-flex is-flex-direction-column is-align-items-center">
+                        <span className="label mr-2 has-text-grey">Preview</span>
+                        <ToggleSwitch checked={previewVisible} onChange={setPreviewVisible} />
+                    </div>
                     <button className="button is-link ml-4" disabled={loading} onClick={handleSubmit}>
                         {loading ? "Saving..." : "Save"}
                     </button>
@@ -258,6 +288,12 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                                     onChange={(val) => updateSectionTitle("home", val)}
                                 />
                             }
+                            headerExtra={
+                                <ToggleSectionTitleHelper
+                                    sectionId="home"
+                                    showTitle={home.showTitle}
+                                />
+                            }
                             enabled={home.enabled}
                             onChange={(v) => toggleSection("home", v)}
                         >
@@ -281,10 +317,17 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                         {/* ---------- About Section ---------- */}
                         <SectionCard
                             title={
+
                                 <EditableTitle
                                     value={about.title}
                                     defaultValue={about.defaultTitle}
                                     onChange={(val) => updateSectionTitle("about", val)}
+                                />
+                            }
+                            headerExtra={
+                                <ToggleSectionTitleHelper
+                                    sectionId="about"
+                                    showTitle={about.showTitle}
                                 />
                             }
                             enabled={about.enabled}
@@ -305,6 +348,12 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                                     value={projects.title}
                                     defaultValue={projects.defaultTitle}
                                     onChange={(val) => updateSectionTitle("projects", val)}
+                                />
+                            }
+                            headerExtra={
+                                <ToggleSectionTitleHelper
+                                    sectionId="projects"
+                                    showTitle={projects.showTitle}
                                 />
                             }
                             enabled={projects.enabled}
@@ -363,6 +412,12 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                                     onChange={(val) => updateSectionTitle("contact", val)}
                                 />
                             }
+                            headerExtra={
+                                <ToggleSectionTitleHelper
+                                    sectionId="contact"
+                                    showTitle={contact.showTitle}
+                                />
+                            }
                             enabled={contact.enabled}
                             onChange={(v) => toggleSection("contact", v)}
                         >
@@ -408,13 +463,19 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
     );
 }
 
-/* ---------- SectionCard Helper ---------- */
-const SectionCard = ({ title, enabled, onChange, children }) => (
+/* ---------- Helpers ---------- */
+const SectionCard = ({ title, enabled, onChange, headerExtra, children }) => (
     <div className="box mb-5">
         <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
-            <h3 className="title is-5 mb-0">{title}</h3>
-            <ToggleSwitch checked={enabled} onChange={onChange} />
+            <div className="is-flex is-align-items-center gap-2">
+                <h3 className="title is-5 mb-0">{title}</h3>
+                {headerExtra}
+            </div>
+            <Tooltip text="Enable/disable section">
+                <ToggleSwitch checked={enabled} onChange={onChange} />
+            </Tooltip>
         </div>
         {enabled && children}
     </div>
 );
+

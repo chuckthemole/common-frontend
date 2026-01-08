@@ -3,8 +3,10 @@ import React from "react";
 export default function SectionRenderer({ section }) {
     return (
         <div className={`section-content section-${section.type}`}>
-            {/* Optional: render editable section title */}
-            {section.title && <h2 className="section-header">{section.title}</h2>}
+            {/* Section title conditionally rendered */}
+            {section.showTitle && section.title && (
+                <h2 className="section-header">{section.title}</h2>
+            )}
 
             {section.type === "home" && (
                 <div className="has-text-centered">
