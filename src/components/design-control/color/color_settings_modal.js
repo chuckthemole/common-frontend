@@ -1,41 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Modal from "react-modal";
-import { isModalActive, modal_style, setModalActive, setModalInactive } from "../../modal_manager";
-import { useColorSettings } from "./use_color_settings";
+import {
+    isModalActive,
+    modal_style,
+    setModalActive,
+    setModalInactive,
+} from "../../modal_manager";
+import { ColorSettingsContext } from "./color_settings_context";
 import { predefinedColorLayouts } from "./predefined_color_layouts";
 import colorsJson from "../../../constants/colors.json";
+import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
+import logger from "../../../logger";
 
 /**
  * ColorSettingsModal
- * -----------------
- * - Full-featured modal for editing global site colors
- * - Applies changes live via CSS variables using useColorSettings
- * - Supports saving/loading named layouts to localStorage
- * - Optional preview swatches next to color pickers
- * - Handles long labels with truncation and tooltips
+ *
+ * - UI-only modal for editing global color values
+ * - Uses ColorSettingsProvider via context
+ * - Uses colors.json as the canonical list of color slots
+ * - Supports predefined color layouts
+ * - Applies changes live via CSS variables
  */
-export default function ColorSettingsModal({ preview = true }) {
-    // Hook to manage live color values
-    const { colors, setColors } = useColorSettings();
-
-    // Modal open state
+export default function ColorSettingsModal({
+    preview = true,
+    buttonLabel = "Color Settings",
+}) {
     const [modalIsOpen, setModalIsOpen] = useState(false);
-
-    // Stored layouts: predefined + user-saved
-    const [savedLayouts, setSavedLayouts] = useState({ ...predefinedColorLayouts });
-
-    // Currently selected layout name
     const [selectedLayout, setSelectedLayout] = useState("");
 
-    // Load saved layouts from localStorage on mount
-    useEffect(() => {
-        const stored = JSON.parse(localStorage.getItem("savedColorLayouts") || "{}");
-        setSavedLayouts((prev) => ({ ...prev, ...stored }));
-    }, []);
+    const colorSettings = useContext(ColorSettingsContext);
 
-    // --------------------
-    // Modal open/close handlers
-    // --------------------
+    if (!colorSettings) {
+        logger.warn("ColorSettingsModal must be used inside ColorSettingsProvider");
+        return null;
+    }
+
+    const { values, setColor, initColors } = colorSettings;
+
+    /* ----------------------------
+       Modal open / close
+    ----------------------------- */
     const openModal = () => {
         if (!isModalActive()) {
             setModalIsOpen(true);
@@ -48,170 +52,163 @@ export default function ColorSettingsModal({ preview = true }) {
         setModalInactive();
     };
 
-    // --------------------
-    // Color update handler
-    // --------------------
-    const handleChange = (key, value) => {
-        setColors((prev) => ({ ...prev, [key]: value }));
+    /* ----------------------------
+       Apply predefined layout
+    ----------------------------- */
+    const applyLayout = (layoutName) => {
+        if (!layoutName) return;
+
+        const layout = predefinedColorLayouts[layoutName];
+        if (!layout) return;
+
+        Object.entries({ ...colorsJson, ...layout }).forEach(
+            ([key, value]) => setColor(key, value)
+        );
+
+        setSelectedLayout(layoutName);
     };
 
-    // --------------------
-    // Layout management handlers
-    // --------------------
-    const handleSaveLayout = () => {
-        const name = prompt("Enter a name for this color layout:");
-        if (!name) return;
-
-        const newLayouts = { ...savedLayouts, [name]: colors };
-        setSavedLayouts(newLayouts);
-        localStorage.setItem("savedColorLayouts", JSON.stringify(newLayouts));
-        setSelectedLayout(name);
+    /* ----------------------------
+       Reset to defaults
+    ----------------------------- */
+    const resetColors = () => {
+        Object.entries(colorsJson).forEach(([key, value]) =>
+            setColor(key, value)
+        );
+        setSelectedLayout("");
     };
 
-    const handleLoadLayout = (name) => {
-        if (!name) return;
-
-        const layout = savedLayouts[name];
-        if (layout) {
-            // Merge user layout with default colors from colors.json
-            setColors({ ...colorsJson, ...layout });
-            setSelectedLayout(name);
-        }
-    };
-
-    const handleDeleteLayout = (name) => {
-        const { [name]: _, ...rest } = savedLayouts;
-        setSavedLayouts(rest);
-        localStorage.setItem("savedColorLayouts", JSON.stringify(rest));
-        if (selectedLayout === name) setSelectedLayout("");
-    };
-
-    // --------------------
-    // Render
-    // --------------------
+    /* ----------------------------
+       Render
+    ----------------------------- */
     return (
         <>
             <button onClick={openModal} className="button is-info">
-                Color Settings
+                {buttonLabel}
             </button>
 
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                contentLabel="Color Selector"
+                contentLabel="Color Settings"
                 style={{
                     ...modal_style,
                     content: {
                         ...modal_style.content,
                         top: "50%",
                         left: "50%",
-                        right: "auto",
-                        bottom: "auto",
                         transform: "translate(-50%, -50%)",
                         maxHeight: "90vh",
                         overflowY: "auto",
                         width: "90vw",
                         maxWidth: "1200px",
                         padding: "2rem",
-                        zIndex: 10000, // ensure content is above header
+                        zIndex: 10000,
                     },
                     overlay: {
                         ...modal_style.overlay,
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        zIndex: 9999, // overlay also above header
+                        zIndex: 9999,
                     },
                 }}
             >
                 <div className="modal-content">
                     <h2 className="title is-4 mb-4">Color Settings</h2>
 
-                    {/* Saved Layouts Dropdown */}
+                    {/* ----------------------------
+                        Predefined Layout Selector
+                    ----------------------------- */}
                     <div className="field mb-4">
-                        <label className="label">Saved Layouts</label>
-                        <div className="control is-flex" style={{ gap: "1rem" }}>
-                            <div className="select is-fullwidth">
-                                <select
-                                    value={selectedLayout}
-                                    onChange={(e) => handleLoadLayout(e.target.value)}
-                                    title={selectedLayout}
-                                    style={{
-                                        textOverflow: "ellipsis",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        maxWidth: "100%",
-                                    }}
-                                >
-                                    <option value="">-- Select a layout --</option>
-                                    {Object.keys(savedLayouts).map((name) => (
-                                        <option key={name} value={name} title={name}>
-                                            {name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            {selectedLayout && (
-                                <button
-                                    className="button is-danger"
-                                    onClick={() => handleDeleteLayout(selectedLayout)}
-                                >
-                                    Delete
-                                </button>
-                            )}
-                        </div>
+                        <label className="label">Predefined Layouts</label>
+                        <SingleSelector
+                            options={Object.keys(predefinedColorLayouts).map((name) => ({
+                                value: name,
+                                label: name,
+                            }))}
+                            value={selectedLayout} // <-- use modal state
+                            onChange={(v) => applyLayout(v)} // <-- call applyLayout
+                            searchable
+                            placeholder="— Select a layout —"
+                            portalTarget={document.body}
+                        />
                     </div>
 
-                    {/* Color Pickers */}
+                    {/* ----------------------------
+                       Color Pickers
+                    ----------------------------- */}
                     <div className="columns is-multiline">
-                        {Object.entries(colors).map(([key, value]) => (
-                            <div className="column is-one-quarter" key={key}>
-                                <div className="field">
-                                    <label
-                                        className="label"
-                                        title={key.charAt(0).toUpperCase() + key.slice(1)}
-                                        style={{
-                                            textOverflow: "ellipsis",
-                                            overflow: "hidden",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                    >
-                                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                                    </label>
-                                    <div
-                                        className="control is-flex is-align-items-center"
-                                        style={{ gap: "1rem" }}
-                                    >
-                                        <input
-                                            type="color"
-                                            value={value}
-                                            onChange={(e) => handleChange(key, e.target.value)}
-                                            style={{ flex: "1 1 auto" }}
-                                        />
-                                        {preview && (
-                                            <div
-                                                style={{
-                                                    width: "50px",
-                                                    height: "25px",
-                                                    backgroundColor: value,
-                                                    border: "1px solid #ccc",
-                                                    flexShrink: 0,
-                                                }}
+                        {Object.entries(colorsJson).map(([key]) => {
+                            const value = values[key];
+
+                            return (
+                                <div className="column is-one-quarter" key={key}>
+                                    <div className="field">
+                                        <label
+                                            className="label"
+                                            title={key}
+                                            style={{
+                                                textOverflow: "ellipsis",
+                                                overflow: "hidden",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {key.replace(/-/g, " ")}
+                                        </label>
+
+                                        <div
+                                            className="control is-flex is-align-items-center"
+                                            style={{ gap: "1rem" }}
+                                        >
+                                            <input
+                                                type="color"
+                                                value={value || "#000000"}
+                                                onChange={(e) =>
+                                                    setColor(key, e.target.value)
+                                                }
+                                                style={{ flex: "1 1 auto" }}
                                             />
-                                        )}
+
+                                            {preview && (
+                                                <div
+                                                    style={{
+                                                        width: "40px",
+                                                        height: "24px",
+                                                        backgroundColor: value,
+                                                        border: "1px solid #ccc",
+                                                        borderRadius: "4px",
+                                                        flexShrink: 0,
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
-                    {/* Save / Done Buttons */}
+                    {/* ----------------------------
+                       Footer Actions
+                    ----------------------------- */}
                     <div
-                        className="field mt-4 has-text-right"
-                        style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}
+                        className="field mt-4"
+                        style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            gap: "1rem",
+                        }}
                     >
-                        <button className="button is-warning" onClick={handleSaveLayout}>
-                            Save Layout
+                        <button
+                            className="button is-light"
+                            onClick={resetColors}
+                        >
+                            Reset
                         </button>
-                        <button className="button is-success" onClick={closeModal}>
+
+                        <button
+                            className="button is-success"
+                            onClick={closeModal}
+                        >
                             Done
                         </button>
                     </div>

@@ -166,6 +166,9 @@
     .card-header {
         background-color: var(--card-header-background-color, var(--missing-debug-var));
     }
+    .card-header-title {
+        font-family: var(--primary-font);
+    }
 }
 
 // Tabs

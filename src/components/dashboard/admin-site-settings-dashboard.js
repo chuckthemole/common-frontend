@@ -15,6 +15,7 @@ export default function AdminSiteSettingsDashboard() {
     const [seoSettings, setSeoSettings] = useState({});
     const [advancedSettings, setAdvancedSettings] = useState({});
 
+    // TODO: Look at App.js, can we move the provider here? If not, do we need this fontSettings with all the params?
     const fontSettings = useFontSettings({
         target: document.documentElement,
         persist: true,

@@ -40,7 +40,11 @@ function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorS
 
                 {/* Font & Color Modals */}
                 <div className="buttons-grid">
-                    <FontSettingsModal preview fontSettings={fontSettings} buttonLabel="Fonts" />
+                    <FontSettingsModal
+                        preview
+                        fontSettings={fontSettings}
+                        buttonLabel="Fonts"
+                    />
                     <ColorSettingsModal
                         onChange={setColorSettings}
                         currentSettings={colorSettings}
