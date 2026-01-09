@@ -1,11 +1,5 @@
 import React, { useContext, useState } from "react";
-import Modal from "react-modal";
-import {
-    isModalActive,
-    modal_style,
-    setModalActive,
-    setModalInactive,
-} from "../../modal_manager";
+import { RumpusModal } from "../../ui/modal";
 import { FontSettingsContext } from "./font_settings_context";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
@@ -13,14 +7,24 @@ import logger from "../../../logger";
 
 /**
  * FontSettingsModal
- * - Uses ToggleSwitch for font sources
- * - Uses SingleSelector for font slot selection
+ *
+ * UI-only modal for configuring font sources and font slots.
+ *
+ * Responsibilities:
+ * - Toggle font sources (google / system / custom)
+ * - Assign fonts to configured font slots
+ * - Optionally preview font output
+ *
+ * Notes:
+ * - Uses RumpusModal for consistent modal behavior
+ * - Relies on FontSettingsProvider via context
+ * - All changes are applied immediately via context
  */
 export default function FontSettingsModal({
     preview = false,
     buttonLabel = "Font Settings",
 }) {
-    const [modalIsOpen, setModalIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const context = useContext(FontSettingsContext);
 
     if (!context) {
@@ -28,114 +32,99 @@ export default function FontSettingsModal({
         return null;
     }
 
-    const { fonts, values, setFont, enabledSources, toggleSource } = context;
+    const {
+        fonts,
+        values,
+        setFont,
+        enabledSources,
+        toggleSource,
+    } = context;
 
-    const openModal = () => {
-        if (!isModalActive()) {
-            setModalIsOpen(true);
-            setModalActive();
-        }
-    };
-
-    const closeModal = () => {
-        setModalIsOpen(false);
-        setModalInactive();
-    };
+    const openModal = () => setIsOpen(true);
+    const closeModal = () => setIsOpen(false);
 
     return (
         <>
+            {/* Trigger button */}
             <button onClick={openModal} className="button is-info">
                 {buttonLabel}
             </button>
 
-            <Modal
-                isOpen={modalIsOpen}
+            <RumpusModal
+                isOpen={isOpen}
                 onRequestClose={closeModal}
-                contentLabel="Font Selector"
-                style={{
-                    ...modal_style,
-                    content: {
-                        ...modal_style.content,
-                        top: "50%",
-                        left: "50%",
-                        right: "auto",
-                        bottom: "auto",
-                        transform: "translate(-50%, -50%)",
-                        maxHeight: "90vh",
-                        overflowY: "auto",
-                        width: "90vw",
-                        maxWidth: "800px",
-                        padding: "2rem",
-                        zIndex: 10000,
-                    },
-                    overlay: {
-                        ...modal_style.overlay,
-                        backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        zIndex: 9999,
-                    },
-                }}
+                title="Font Settings"
+                draggable
+                maxWidth="800px"
             >
-                <div className="modal-content">
-                    <h2 className="title is-4">Font Settings</h2>
-
-                    {/* Font source toggles */}
-                    <div className="columns is-multiline mb-4">
-                        {["google", "system", "custom"].map((src) => (
-                            <div key={src} className="column is-4">
+                {/* ----------------------------
+                   Font source toggles
+                ----------------------------- */}
+                <div className="columns is-multiline mb-5">
+                    {["google", "system", "custom"].map((source) => (
+                        <div key={source} className="column is-4">
+                            <div className="is-flex is-align-items-center">
                                 <ToggleSwitch
-                                    checked={enabledSources[src]}
-                                    onChange={() => toggleSource(src)}
+                                    checked={enabledSources[source]}
+                                    onChange={() => toggleSource(source)}
                                 />
                                 <span className="ml-2">
-                                    {src.charAt(0).toUpperCase() + src.slice(1)} Fonts
+                                    {source.charAt(0).toUpperCase() + source.slice(1)} Fonts
                                 </span>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Font slot selectors */}
-                    {Object.entries(values).map(([slotKey, value]) => (
-                        <div
-                            key={slotKey}
-                            className={`field ${preview ? "is-flex" : ""}`}
-                            style={{ gap: "1rem", alignItems: "center", marginBottom: "1.5rem" }}
-                        >
-                            <div style={{ flex: 1 }}>
-                                <label className="label">
-                                    {slotKey.replace(/([A-Z])/g, " $1")}
-                                </label>
-                                <SingleSelector
-                                    options={fonts.map((f) => ({ value: f.value, label: f.name }))}
-                                    value={value}
-                                    onChange={(v) => setFont(slotKey, v)}
-                                    searchable
-                                    portalTarget={document.body}
-                                />
-                            </div>
-
-                            {preview && (
-                                <div
-                                    className="box"
-                                    style={{
-                                        fontFamily: value,
-                                        minWidth: "200px",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    <p>The quick brown fox</p>
-                                    <p>jumps over the lazy dog.</p>
-                                </div>
-                            )}
                         </div>
                     ))}
-
-                    <div className="field mt-4">
-                        <button className="button is-success" onClick={closeModal}>
-                            Done
-                        </button>
-                    </div>
                 </div>
-            </Modal>
+
+                {/* ----------------------------
+                   Font slot selectors
+                ----------------------------- */}
+                {Object.entries(values).map(([slotKey, value]) => (
+                    <div
+                        key={slotKey}
+                        className={`field ${preview ? "is-flex" : ""}`}
+                        style={{
+                            gap: "1rem",
+                            alignItems: "center",
+                            marginBottom: "1.5rem",
+                        }}
+                    >
+                        {/* Selector */}
+                        <div style={{ flex: 1 }}>
+                            <label className="label">
+                                {slotKey.replace(/([A-Z])/g, " $1")}
+                            </label>
+
+                            <SingleSelector
+                                options={fonts.map((font) => ({
+                                    value: font.value,
+                                    label: font.name,
+                                }))}
+                                value={value}
+                                onChange={(v) => setFont(slotKey, v)}
+                                searchable
+                                placeholder="— Select font —"
+                                portalTarget={document.body}
+                            />
+                        </div>
+
+                        {/* Optional preview */}
+                        {preview && (
+                            <div
+                                className="box"
+                                style={{
+                                    fontFamily: value,
+                                    minWidth: "220px",
+                                    textAlign: "center",
+                                }}
+                            >
+                                <p>The quick brown fox</p>
+                                <p>jumps over the lazy dog.</p>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </RumpusModal>
         </>
     );
 }

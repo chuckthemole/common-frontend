@@ -8,7 +8,7 @@ Modal.setAppElement('#root');
 This is keeping track of modal activity. TODO: see if react-modal has a built in solution for this.
 */
 
-export let is_modal_active; // keeps track if user has a modal open. only allow one at a time.
+export let is_modal_active = false; // keeps track if user has a modal open. only allow one at a time.
 
 /**
  * @returns true if a modal is active

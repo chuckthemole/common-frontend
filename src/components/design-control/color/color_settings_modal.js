@@ -1,17 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { RumpusModal } from "../../ui/modal";
-import Modal from "react-modal";
-import Draggable from "react-draggable";
-import {
-    isModalActive,
-    modal_style,
-    setModalActive,
-    setModalInactive,
-} from "../../modal_manager";
 import { ColorSettingsContext } from "./color_settings_context";
-import { predefinedColorLayouts } from "./predefined_color_layouts";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import logger from "../../../logger";
+import { Tooltip } from "../../ui";
 
 /**
  * ColorSettingsModal
@@ -102,15 +94,11 @@ export default function ColorSettingsModal({
 
                 {/* Footer */}
                 <div className="is-flex is-justify-content-flex-end mt-4">
-                    <button className="button is-light mr-2" onClick={resetColors}>
-                        Reset
-                    </button>
-                    <button
-                        className="button is-success"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        Done
-                    </button>
+                    <Tooltip text={"Reset color options to default"}>
+                        <button className="button is-light mr-2" onClick={resetColors}>
+                            Reset
+                        </button>
+                    </Tooltip>
                 </div>
             </RumpusModal>
         </>
