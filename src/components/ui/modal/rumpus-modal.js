@@ -1,12 +1,6 @@
 import React from "react";
 import Modal from "react-modal";
 import Draggable from "react-draggable";
-import {
-    isModalActive,
-    modal_style,
-    setModalActive,
-    setModalInactive,
-} from "../../modal_manager";
 
 export default function RumpusModal({
     isOpen,
@@ -17,11 +11,6 @@ export default function RumpusModal({
     maxWidth = "1200px",
     children,
 }) {
-    const handleClose = () => {
-        setModalInactive();
-        onRequestClose?.();
-    };
-
     const modalInner = (
         <div
             className="rumpus-modal"
@@ -40,27 +29,23 @@ export default function RumpusModal({
                         padding: "1rem 1.25rem",
                         borderBottom: "1px solid #ccc",
                         userSelect: "none",
-                        background: "#f3f4f6", // light gray
+                        background: "#f3f4f6",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
                     }}
                 >
                     <h2 className="title is-5 mb-0">{title}</h2>
 
-                    {/* Close button */}
                     <button
                         type="button"
-                        onClick={handleClose}
+                        onClick={onRequestClose}
                         aria-label="Close modal"
                         style={{
                             background: "transparent",
                             border: "none",
                             fontSize: "1.25rem",
-                            lineHeight: 1,
                             cursor: "pointer",
-                            color: "#555",
                         }}
                     >
                         ×
@@ -84,11 +69,9 @@ export default function RumpusModal({
     return (
         <Modal
             isOpen={isOpen}
-            onAfterOpen={() => !isModalActive() && setModalActive()}
-            onRequestClose={handleClose}
+            onRequestClose={onRequestClose}
             style={{
                 overlay: {
-                    ...modal_style.overlay,
                     position: "fixed",
                     inset: 0,
                     display: "flex",
@@ -106,7 +89,6 @@ export default function RumpusModal({
                     maxHeight: "90vh",
                     overflow: "hidden",
                     borderRadius: "6px",
-                    zIndex: 10000,
                 },
             }}
             contentElement={

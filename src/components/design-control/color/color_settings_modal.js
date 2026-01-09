@@ -4,31 +4,35 @@ import { ColorSettingsContext } from "./color_settings_context";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import logger from "../../../logger";
 import { Tooltip } from "../../ui";
+import { useRumpusModal } from "../../ui/modal/use-rumpus-modal";
 
 /**
  * ColorSettingsModal
  *
  * - UI-only modal for editing global color values
- * - Uses ColorSettingsProvider via context
- * - Uses colors.json as the canonical list of color slots
- * - Supports predefined color layouts
- * - Applies changes live via CSS variables
+ * - Uses RumpusModal for layout/behavior
+ * - Modal visibility is controlled by RumpusModalProvider
  */
 export default function ColorSettingsModal({
     preview = true,
     buttonLabel = "Color Settings",
 }) {
-    const [isOpen, setIsOpen] = useState(false);
+    const { activeModal, openModal, closeModal } = useRumpusModal();
     const [selectedLayout, setSelectedLayout] = useState("");
 
     const colorSettings = useContext(ColorSettingsContext);
 
     if (!colorSettings) {
-        logger.warn("ColorSettingsModal must be used inside ColorSettingsProvider");
+        logger.warn(
+            "ColorSettingsModal must be used inside ColorSettingsProvider"
+        );
         return null;
     }
 
     const { values, setColor, defaults, layouts, slots } = colorSettings;
+
+    const modalId = "color-settings";
+    const isOpen = activeModal === modalId;
 
     const applyLayout = (layoutName) => {
         const layout = layouts?.[layoutName];
@@ -47,18 +51,18 @@ export default function ColorSettingsModal({
         setSelectedLayout("");
     };
 
-    /* ----------------------------
-       Render
-    ----------------------------- */
     return (
         <>
-            <button onClick={() => setIsOpen(true)} className="button is-info">
+            <button
+                onClick={() => openModal(modalId)}
+                className="button is-info"
+            >
                 {buttonLabel}
             </button>
 
             <RumpusModal
                 isOpen={isOpen}
-                onRequestClose={() => setIsOpen(false)}
+                onRequestClose={() => closeModal(modalId)}
                 title="Color Settings"
                 draggable
             >
@@ -86,7 +90,9 @@ export default function ColorSettingsModal({
                             <input
                                 type="color"
                                 value={values[key]}
-                                onChange={(e) => setColor(key, e.target.value)}
+                                onChange={(e) =>
+                                    setColor(key, e.target.value)
+                                }
                             />
                         </div>
                     ))}
@@ -94,8 +100,11 @@ export default function ColorSettingsModal({
 
                 {/* Footer */}
                 <div className="is-flex is-justify-content-flex-end mt-4">
-                    <Tooltip text={"Reset color options to default"}>
-                        <button className="button is-light mr-2" onClick={resetColors}>
+                    <Tooltip text="Reset color options to default">
+                        <button
+                            className="button is-light mr-2"
+                            onClick={resetColors}
+                        >
                             Reset
                         </button>
                     </Tooltip>
