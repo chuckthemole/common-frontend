@@ -32,21 +32,7 @@ export default function SectionRenderer({ section }) {
             )}
 
             {section.type === "projects" && (
-                <div className="columns is-multiline">
-                    {section.data.items.map((p, i) => (
-                        <div key={i} className="column is-4">
-                            <div className="box">
-                                <strong>{p.title || "Untitled Project"}</strong>
-                                <br />
-                                {p.link && (
-                                    <a href={p.link} target="_blank" rel="noreferrer">
-                                        {p.link}
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <ProjectsRenderer data={section.data} />
             )}
 
             {section.type === "contact" && (
@@ -57,6 +43,79 @@ export default function SectionRenderer({ section }) {
                     </a>
                 </p>
             )}
+        </div>
+    );
+}
+
+function ProjectsRenderer({ data }) {
+    const {
+        items = [],
+        layout = "grid",
+        itemsPerPage = 3,
+    } = data;
+
+    const [page, setPage] = React.useState(0);
+
+    const maxPage = Math.max(
+        0,
+        Math.ceil(items.length / itemsPerPage) - 1
+    );
+
+    const visibleItems =
+        layout === "carousel"
+            ? items.slice(
+                page * itemsPerPage,
+                page * itemsPerPage + itemsPerPage
+            )
+            : items;
+
+    if (layout === "grid") {
+        return (
+            <div className="columns is-multiline">
+                {items.map(renderProject)}
+            </div>
+        );
+    }
+
+    return (
+        <div className="projects-carousel">
+            <button
+                className="carousel-arrow left"
+                disabled={page === 0}
+                onClick={() => setPage(p => Math.max(0, p - 1))}
+                aria-label="Previous projects"
+            >
+                ←
+            </button>
+
+            <div className="carousel-track columns">
+                {visibleItems.map(renderProject)}
+            </div>
+
+            <button
+                className="carousel-arrow right"
+                disabled={page === maxPage}
+                onClick={() => setPage(p => Math.min(maxPage, p + 1))}
+                aria-label="Next projects"
+            >
+                →
+            </button>
+        </div>
+    );
+}
+
+function renderProject(p, i) {
+    return (
+        <div key={i} className="column is-4">
+            <div className="box">
+                <strong>{p.title || "Untitled Project"}</strong>
+                <br />
+                {p.link && (
+                    <a href={p.link} target="_blank" rel="noreferrer">
+                        {p.link}
+                    </a>
+                )}
+            </div>
         </div>
     );
 }

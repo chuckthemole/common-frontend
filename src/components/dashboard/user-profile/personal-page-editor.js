@@ -145,7 +145,11 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                 showTitle: true,
                 defaultTitle: "Projects",
                 title: "Projects",
-                data: { items: [] },
+                data: {
+                    items: [],
+                    layout: "carousel", // "grid" | "carousel"
+                    itemsPerPage: 3
+                },
             },
             {
                 id: "contact",
