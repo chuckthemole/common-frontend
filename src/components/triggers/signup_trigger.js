@@ -1,28 +1,19 @@
-import React, { useState } from 'react';
-import Modal from 'react-modal';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { EMPTY } from '../common';
-import {
-    isModalActive,
-    modal_style,
-    setModalActive,
-    setModalInactive
-} from '../modal_manager';
-
-import Spinner from '../ui/loaders/spinning_wheel';
-import { useAuth } from '../auth_context';
-import { useSignup } from '../hooks/use_signup';
-import { SignupFields } from '../auth/signup_fields';
+import { EMPTY } from "../common";
+import Spinner from "../ui/loaders/spinning_wheel";
+import { useAuth } from "../auth_context";
+import { useSignup } from "../hooks/use_signup";
+import { SignupFields } from "../auth/signup_fields";
+import { RumpusModal } from "../ui/modal";
+import { useRumpusModal } from "../ui/modal/use-rumpus-modal";
 
 /**
  * SignupTrigger
  *
- * Renders a trigger (button/link/text) that opens a signup modal
- * or redirects to a signup route, depending on configuration.
- *
- * This component is backend-safe: it accepts only serializable
- * configuration and never expects JSX from the server.
+ * - Trigger button / link / text that opens signup modal or redirects
+ * - Uses RumpusModal + useRumpusModal in modal mode
  */
 export default function SignupTrigger({
     mode = "modal",                 // "modal" | "redirect"
@@ -41,43 +32,21 @@ export default function SignupTrigger({
     const [password, setPassword] = useState(EMPTY);
     const [confirmPassword, setConfirmPassword] = useState(EMPTY);
 
-    // --- Modal state ---
-    const [modalIsOpen, setModalIsOpen] = useState(false);
-
     const navigate = useNavigate();
     const { isLoading, isAuthenticated, refreshAuth } = useAuth();
+    const { activeModal, openModal, closeModal } = useRumpusModal();
+    const modalId = "signup-trigger-modal";
+    const isOpen = activeModal === modalId;
 
-    /**
-     * Signup hook
-     *
-     * Assumes:
-     *   signup(username, password, confirmPassword)
-     * resolves on success and throws / sets error on failure
-     */
     const { signup, loading, error } = useSignup({
         redirectTo,
         navigate,
         onSignup: () => {
             refreshAuth();
-            closeModal();
-        }
+            closeModal(modalId);
+            clearInput();
+        },
     });
-
-    // --- Modal lifecycle ---
-    const openModal = () => {
-        if (!isModalActive()) {
-            setModalIsOpen(true);
-            setModalActive();
-            onOpen?.();
-        }
-    };
-
-    const closeModal = () => {
-        setModalIsOpen(false);
-        setModalInactive();
-        clearInput();
-        onClose?.();
-    };
 
     const clearInput = () => {
         setUsername(EMPTY);
@@ -94,10 +63,17 @@ export default function SignupTrigger({
 
         if (mode === "modal") {
             e.preventDefault();
-            openModal();
+            openModal(modalId);
+            onOpen?.();
         } else {
             navigate(signupRoute);
         }
+    };
+
+    const handleClose = () => {
+        closeModal(modalId);
+        clearInput();
+        onClose?.();
     };
 
     // --- Form submit ---
@@ -106,23 +82,14 @@ export default function SignupTrigger({
         await signup(username, password, confirmPassword);
     };
 
-    // --- Auth loading states ---
     if (isLoading || isAuthenticated === undefined) {
         return <Spinner size="20px" thickness="2px" color="#333" />;
     }
 
-    // Hide signup trigger if already authenticated
     if (isAuthenticated) return null;
 
-    /**
-     * Renders the trigger element based on triggerType
-     * Keeps markup deterministic and backend-driven.
-     */
     const renderTrigger = () => {
-        const commonProps = {
-            onClick: handleTriggerClick,
-            "aria-disabled": disabled,
-        };
+        const commonProps = { onClick: handleTriggerClick, "aria-disabled": disabled };
 
         switch (triggerType) {
             case "link":
@@ -168,14 +135,14 @@ export default function SignupTrigger({
             {renderTrigger()}
 
             {mode === "modal" && (
-                <Modal
-                    isOpen={modalIsOpen}
-                    onRequestClose={closeModal}
-                    className="modal-content"
-                    style={modal_style}
-                    contentLabel="Sign up"
+                <RumpusModal
+                    isOpen={isOpen}
+                    onRequestClose={handleClose}
+                    title="Sign Up"
+                    maxWidth="480px"
+                    draggable
                 >
-                    <form onSubmit={handleSubmit} className="box">
+                    <form onSubmit={handleSubmit} className="">
                         <SignupFields
                             username={username}
                             password={password}
@@ -188,7 +155,7 @@ export default function SignupTrigger({
                             oauthProviders={oauthProviders}
                         />
                     </form>
-                </Modal>
+                </RumpusModal>
             )}
         </>
     );

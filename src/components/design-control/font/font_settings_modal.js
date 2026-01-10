@@ -4,6 +4,7 @@ import { FontSettingsContext } from "./font_settings_context";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
 import logger from "../../../logger";
+import { useRumpusModal } from "../../ui/modal/use-rumpus-modal";
 
 /**
  * FontSettingsModal
@@ -17,18 +18,21 @@ import logger from "../../../logger";
  *
  * Notes:
  * - Uses RumpusModal for consistent modal behavior
- * - Relies on FontSettingsProvider via context
+ * - Modal visibility is controlled by RumpusModalProvider
  * - All changes are applied immediately via context
  */
 export default function FontSettingsModal({
     preview = false,
     buttonLabel = "Font Settings",
 }) {
-    const [isOpen, setIsOpen] = useState(false);
+    const { activeModal, openModal, closeModal } = useRumpusModal();
+
     const context = useContext(FontSettingsContext);
 
     if (!context) {
-        logger.warn("FontSettingsModal must be used inside FontSettingsProvider");
+        logger.warn(
+            "FontSettingsModal must be used inside FontSettingsProvider"
+        );
         return null;
     }
 
@@ -40,19 +44,22 @@ export default function FontSettingsModal({
         toggleSource,
     } = context;
 
-    const openModal = () => setIsOpen(true);
-    const closeModal = () => setIsOpen(false);
+    const modalId = "font-settings";
+    const isOpen = activeModal === modalId;
 
     return (
         <>
             {/* Trigger button */}
-            <button onClick={openModal} className="button is-info">
+            <button
+                onClick={() => openModal(modalId)}
+                className="button is-info"
+            >
                 {buttonLabel}
             </button>
 
             <RumpusModal
                 isOpen={isOpen}
-                onRequestClose={closeModal}
+                onRequestClose={() => closeModal(modalId)}
                 title="Font Settings"
                 draggable
                 maxWidth="800px"
@@ -69,7 +76,9 @@ export default function FontSettingsModal({
                                     onChange={() => toggleSource(source)}
                                 />
                                 <span className="ml-2">
-                                    {source.charAt(0).toUpperCase() + source.slice(1)} Fonts
+                                    {source.charAt(0).toUpperCase() +
+                                        source.slice(1)}{" "}
+                                    Fonts
                                 </span>
                             </div>
                         </div>

@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
-import Modal from 'react-modal';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { EMPTY } from '../common';
-import {
-    isModalActive,
-    modal_style,
-    setModalActive,
-    setModalInactive
-} from '../modal_manager';
+import { EMPTY } from "../common";
+import { useLogin } from "../hooks/use_login";
+import Spinner from "../ui/loaders/spinning_wheel";
+import { useAuth } from "../auth_context";
+import { LoginFields } from "../auth/login_fields";
+import { RumpusModal } from "../ui/modal";
+import { useRumpusModal } from "../ui/modal/use-rumpus-modal";
 
-import { useLogin } from '../hooks/use_login';
-import Spinner from '../ui/loaders/spinning_wheel';
-import { useAuth } from '../auth_context';
-import { LoginFields } from '../auth/login_fields';
-
+/**
+ * LoginTrigger
+ *
+ * - Handles login either via modal or redirect
+ * - Supports different trigger types: button | link | text
+ * - Uses RumpusModal + useRumpusModal for modal mode
+ */
 export default function LoginTrigger({
     mode = "modal",                 // "modal" | "redirect"
     triggerType = "button",         // "button" | "link" | "text"
@@ -29,34 +30,23 @@ export default function LoginTrigger({
 }) {
     const [username, setUsername] = useState(EMPTY);
     const [password, setPassword] = useState(EMPTY);
-    const [modalIsOpen, setModalIsOpen] = useState(false);
 
     const navigate = useNavigate();
     const { isLoading, isAuthenticated, refreshAuth } = useAuth();
+    const { activeModal, openModal, closeModal } = useRumpusModal();
+
+    const modalId = "login-trigger-modal";
+    const isOpen = activeModal === modalId;
 
     const { login, loading, error } = useLogin({
         redirectTo,
         navigate,
         onLogin: () => {
             refreshAuth();
-            closeModal();
-        }
+            closeModal(modalId);
+            clearInput();
+        },
     });
-
-    const openModal = () => {
-        if (!isModalActive()) {
-            setModalIsOpen(true);
-            setModalActive();
-            onOpen?.();
-        }
-    };
-
-    const closeModal = () => {
-        setModalIsOpen(false);
-        setModalInactive();
-        clearInput();
-        onClose?.();
-    };
 
     const clearInput = () => {
         setUsername(EMPTY);
@@ -71,10 +61,17 @@ export default function LoginTrigger({
 
         if (mode === "modal") {
             e.preventDefault();
-            openModal();
+            openModal(modalId);
+            onOpen?.();
         } else {
             navigate(loginRoute);
         }
+    };
+
+    const handleClose = () => {
+        closeModal(modalId);
+        clearInput();
+        onClose?.();
     };
 
     const handleSubmit = async (e) => {
@@ -89,10 +86,7 @@ export default function LoginTrigger({
     if (isAuthenticated) return null;
 
     const renderTrigger = () => {
-        const commonProps = {
-            onClick: handleTriggerClick,
-            "aria-disabled": disabled,
-        };
+        const commonProps = { onClick: handleTriggerClick, "aria-disabled": disabled };
 
         switch (triggerType) {
             case "link":
@@ -138,14 +132,14 @@ export default function LoginTrigger({
             {renderTrigger()}
 
             {mode === "modal" && (
-                <Modal
-                    isOpen={modalIsOpen}
-                    onRequestClose={closeModal}
-                    className="modal-content"
-                    style={modal_style}
-                    contentLabel="Login"
+                <RumpusModal
+                    isOpen={isOpen}
+                    onRequestClose={handleClose}
+                    title="Login"
+                    maxWidth="480px"
+                    draggable
                 >
-                    <form onSubmit={handleSubmit} className="box">
+                    <form onSubmit={handleSubmit} className="">
                         <LoginFields
                             username={username}
                             password={password}
@@ -156,7 +150,7 @@ export default function LoginTrigger({
                             oauthProviders={oauthProviders}
                         />
                     </form>
-                </Modal>
+                </RumpusModal>
             )}
         </>
     );
