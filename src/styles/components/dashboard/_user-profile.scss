@@ -364,9 +364,23 @@
     gap: 1rem;
 }
 
-.carousel-track {
-    flex: 1;
+.projects-carousel .carousel-track {
+    overflow: visible;
+}
+
+.projects-carousel>.carousel-track {
+    flex-wrap: nowrap;
+}
+
+.carousel-track-wrapper {
     overflow: hidden;
+    flex: 1;
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 500ms cubic-bezier(.22, .61, .36, 1);
+    will-change: transform;
 }
 
 .carousel-arrow {
@@ -380,5 +394,11 @@
     opacity: 0.3;
     cursor: default;
 }
+
+.carousel-viewport {
+    overflow: hidden;
+    flex: 1;
+}
+
 
 /* **************************************** */

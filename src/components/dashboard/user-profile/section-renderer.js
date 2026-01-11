@@ -61,13 +61,7 @@ function ProjectsRenderer({ data }) {
         Math.ceil(items.length / itemsPerPage) - 1
     );
 
-    const visibleItems =
-        layout === "carousel"
-            ? items.slice(
-                page * itemsPerPage,
-                page * itemsPerPage + itemsPerPage
-            )
-            : items;
+    const visibleItems = items;
 
     if (layout === "grid") {
         return (
@@ -88,8 +82,13 @@ function ProjectsRenderer({ data }) {
                 ←
             </button>
 
-            <div className="carousel-track columns">
-                {visibleItems.map(renderProject)}
+            <div className="carousel-viewport">
+                <div className="carousel-track columns"
+                    style={{
+                        transform: `translateX(-${page * 100}%)`
+                    }}>
+                    {visibleItems.map(renderProject)}
+                </div>
             </div>
 
             <button
