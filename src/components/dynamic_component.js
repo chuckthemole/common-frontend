@@ -25,14 +25,14 @@ const COMPONENT_MAP = {
     ),
 
     // Depreciate maybe
-    SignupModal: lazyWithLogging(
-        () => import('./modal/signup_modal'),
-        'SignupModal'
-    ),
-    LoginModal: lazyWithLogging(
-        () => import('./modal/login_modal'),
-        'LoginModal'
-    ),
+    // SignupModal: lazyWithLogging(
+    //     () => import('./modal/signup_modal'),
+    //     'SignupModal'
+    // ),
+    // LoginModal: lazyWithLogging(
+    //     () => import('./modal/login_modal'),
+    //     'LoginModal'
+    // ),
     Logout: lazyWithLogging(
         () => import('./ui/buttons/logout_button'),
         'Logout'
@@ -51,7 +51,7 @@ const COMPONENT_MAP = {
 const REQUIRED_PROPS = {
     LoginTrigger: ['mode', 'triggerType', 'triggerLabel'],
     SignupTrigger: ['mode', 'triggerType', 'triggerLabel'],
-    SignupModal: ['redirectTo'],
+    // SignupModal: ['redirectTo'],
     Logout: ['redirectTo'],
 };
 

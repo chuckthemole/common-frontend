@@ -1,0 +1,71 @@
+.carousel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.carousel-viewport {
+  overflow: hidden;
+  flex: 1;
+}
+
+.carousel-track {
+  display: flex;
+  flex-wrap: nowrap;
+  transition: transform 500ms cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
+}
+
+.carousel-arrow {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+// .projects-carousel {
+//     display: flex;
+//     align-items: center;
+//     gap: 1rem;
+// }
+
+// .projects-carousel .carousel-track {
+//     overflow: visible;
+// }
+
+// .projects-carousel>.carousel-track {
+//     flex-wrap: nowrap;
+// }
+
+// .carousel-track-wrapper {
+//     overflow: hidden;
+//     flex: 1;
+// }
+
+// .carousel-track {
+//     display: flex;
+//     transition: transform 500ms cubic-bezier(.22, .61, .36, 1);
+//     will-change: transform;
+// }
+
+// .carousel-arrow {
+//     background: none;
+//     border: none;
+//     font-size: 2rem;
+//     cursor: pointer;
+// }
+
+// .carousel-arrow:disabled {
+//     opacity: 0.3;
+//     cursor: default;
+// }
+
+// .carousel-viewport {
+//     overflow: hidden;
+//     flex: 1;
+// }

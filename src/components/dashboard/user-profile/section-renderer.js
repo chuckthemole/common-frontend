@@ -72,7 +72,7 @@ function ProjectsRenderer({ data }) {
     }
 
     return (
-        <div className="projects-carousel">
+        <div className="carousel">
             <button
                 className="carousel-arrow left"
                 disabled={page === 0}

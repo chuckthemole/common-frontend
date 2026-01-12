@@ -16,3 +16,34 @@
         flex-shrink: 0; // prevents footer from shrinking
     }
 }
+
+.full-height {
+    height: 100%;
+}
+
+.viewport-height {
+    min-height: 100vh;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.scroll-y {
+    overflow-y: auto;
+}
+
+.scroll-snap-y {
+    scroll-snap-type: y mandatory;
+}
+
+.snap-start {
+    scroll-snap-align: start;
+}

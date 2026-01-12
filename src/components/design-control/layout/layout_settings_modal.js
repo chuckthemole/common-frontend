@@ -1,53 +1,56 @@
 /**
+ * LayoutSettingsModal
+ *
  * Modal for selecting layout preferences.
- * It uses the LayoutSettingsContext to persist and sync layout configuration
- * (e.g., column width) across the app, and modal_manager for consistent modal state tracking.
+ *
+ * - Uses LayoutSettingsContext to persist layout configuration
+ * - Uses RumpusModal + useRumpusModal for modal state (no modal_manager)
+ * - Guards against rendering before layout settings are initialized
  */
 
-import React, { useState, useEffect, useCallback } from "react";
-import Modal from "react-modal";
-import {
-    isModalActive,
-    modal_style,
-    setModalActive,
-    setModalInactive,
-} from "../../modal_manager";
+import React, { useCallback, useEffect } from "react";
+import { RumpusModal } from "../../ui/modal";
+import { useRumpusModal } from "../../ui/modal/use-rumpus-modal";
 import { useLayoutSettings, layoutOptions } from "./layout_settings_context";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 
 export default function LayoutSettingsModal() {
     const { layout, setLayoutSetting, initialized } = useLayoutSettings();
-    const [modalIsOpen, setModalIsOpen] = useState(false);
+    const { activeModal, openModal, closeModal } = useRumpusModal();
 
     /**
-     * Ensure modal never displays before layout settings are initialized.
+     * Unique modal id for Rumpus modal registry
+     */
+    const modalId = "layout-settings-modal";
+    const isOpen = activeModal === modalId;
+
+    /**
+     * Close modal automatically if layout settings become uninitialized
+     * (extra safety for async bootstrap / app reload scenarios)
      */
     useEffect(() => {
-        if (!initialized && modalIsOpen) {
-            setModalIsOpen(false);
+        if (!initialized && isOpen) {
+            closeModal(modalId);
         }
-    }, [initialized, modalIsOpen]);
+    }, [initialized, isOpen, closeModal]);
 
     /**
-     * Opens modal safely — checks global modal manager to avoid overlap.
+     * Open modal handler
      */
-    const openModal = useCallback(() => {
-        if (!isModalActive()) {
-            setModalIsOpen(true);
-            setModalActive();
-        }
-    }, []);
+    const handleOpen = useCallback(() => {
+        if (!initialized) return;
+        openModal(modalId);
+    }, [initialized, openModal]);
 
     /**
-     * Closes modal and updates modal manager state.
+     * Close modal handler
      */
-    const closeModal = useCallback(() => {
-        setModalIsOpen(false);
-        setModalInactive();
-    }, []);
+    const handleClose = useCallback(() => {
+        closeModal(modalId);
+    }, [closeModal]);
 
     /**
-     * Handles selection change and updates the layout context directly.
+     * Update layout setting directly via context
      */
     const handleSelect = useCallback(
         (value) => {
@@ -66,50 +69,25 @@ export default function LayoutSettingsModal() {
 
     return (
         <>
-            {/* Trigger button for opening modal */}
+            {/* Trigger button */}
             <button
-                onClick={openModal}
+                type="button"
+                onClick={handleOpen}
                 className="button is-info"
                 aria-label="Open Layout Settings"
+                disabled={!initialized}
             >
                 Layout Settings
             </button>
 
             {/* Layout Settings Modal */}
-            <Modal
-                isOpen={modalIsOpen}
-                onRequestClose={closeModal}
-                contentLabel="Layout Settings Modal"
-                ariaHideApp={false}
-                shouldCloseOnOverlayClick
-                shouldCloseOnEsc
-                style={{
-                    ...modal_style,
-                    content: {
-                        ...modal_style.content,
-                        top: "50%",
-                        left: "50%",
-                        right: "auto",
-                        bottom: "auto",
-                        transform: "translate(-50%, -50%)",
-                        maxHeight: "80vh",
-                        overflowY: "auto",
-                        width: "400px",
-                        zIndex: 10000,
-                        padding: "2rem",
-                        borderRadius: "12px",
-                        backgroundColor: "#fff",
-                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-                    },
-                    overlay: {
-                        ...modal_style.overlay,
-                        backgroundColor: "rgba(0, 0, 0, 0.5)",
-                        zIndex: 9999,
-                    },
-                }}
+            <RumpusModal
+                isOpen={isOpen}
+                onRequestClose={handleClose}
+                title="Layout Settings"
+                maxWidth="400px"
+                draggable
             >
-                <h2 className="title is-4 mb-4">Layout Settings</h2>
-
                 {!initialized ? (
                     <p>Loading settings…</p>
                 ) : (
@@ -128,14 +106,15 @@ export default function LayoutSettingsModal() {
 
                 <div className="buttons is-right mt-4">
                     <button
+                        type="button"
                         className="button is-success"
-                        onClick={closeModal}
+                        onClick={handleClose}
                         aria-label="Close Layout Settings"
                     >
                         Done
                     </button>
                 </div>
-            </Modal>
+            </RumpusModal>
         </>
     );
 }
