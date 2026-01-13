@@ -18,11 +18,6 @@ import { LocalPersistence } from "../../../persistence/persistence";
 /* ============================================================
    Constants
    ============================================================ */
-
-/**
- * Persistence key for this editor.
- * Change this once if you want multiple drafts / profiles.
- */
 const PAGE_STORAGE_KEY = "personal-page:draft";
 
 /* ============================================================
@@ -56,11 +51,7 @@ const DEFAULT_PAGE = {
             showTitle: true,
             defaultTitle: "Projects",
             title: "Projects",
-            data: {
-                items: [],
-                layout: "carousel",
-                itemsPerPage: 3,
-            },
+            data: { items: [], layout: "carousel", itemsPerPage: 3 },
         },
         {
             id: "contact",
@@ -82,40 +73,24 @@ const THEMES = [
 ];
 
 /* ============================================================
-   Page Style Controls (Theme + Font + Color)
+   Page Style Controls
    ============================================================ */
-function PageStyleControls(
-    {
-        previewRef,
-        page,
-        setPage,
-        colorSettings,
-        setColorSettings
-    }
-) {
-
+function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorSettings }) {
     return (
         <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
             <div className="page-style-controls">
-                {/* Theme selector */}
                 <div className="theme-selector">
                     <SingleSelector
                         options={THEMES}
                         value={page.theme}
                         onChange={(value) => setPage((p) => ({ ...p, theme: value }))}
                         searchable={false}
+                        ui={'scrollable'}
                     />
                 </div>
-
-                {/* Font & Color Modals */}
                 <div className="buttons-grid">
-                    <FontSettingsModal
-                        preview
-                        buttonLabel="Fonts"
-                    />
-                    <ColorSettingsModal
-                        buttonLabel="Color"
-                    />
+                    <FontSettingsModal preview buttonLabel="Fonts" />
+                    <ColorSettingsModal buttonLabel="Color" />
                 </div>
             </div>
         </SectionCard>
@@ -136,7 +111,6 @@ function EditableTitle({ value, defaultValue, onChange }) {
         <div className="editable-title is-flex is-align-items-center">
             {!editing ? (
                 <>
-
                     <span className="mr-2">{value || defaultValue}</span>
                     <Tooltip text="Edit title">
                         <button
@@ -144,7 +118,8 @@ function EditableTitle({ value, defaultValue, onChange }) {
                             className="button is-small is-light"
                             onClick={() => setEditing(true)}
                             title="Edit title"
-                        >   ✎
+                        >
+                            ✎
                         </button>
                     </Tooltip>
                 </>
@@ -174,9 +149,8 @@ function EditableTitle({ value, defaultValue, onChange }) {
 }
 
 /* ============================================================
-   Personal Page Editor
+   PersonalPageEditor
    ============================================================ */
-
 export default function PersonalPageEditor({ onSuccess, persistence: persistenceProp }) {
     const persistence = persistenceProp || LocalPersistence;
     const previewRef = useRef(null);
@@ -189,24 +163,31 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
     const [fontSettings, setFontSettings] = useState({});
+    const [profileId, setProfileId] = useState(""); // New: unique ID for a profile
+    const [savedProfiles, setSavedProfiles] = useState({}); // {id: pageData}
 
     /* ========================================================
-       Load persisted page on mount
+       Load all saved profiles on mount
        ======================================================== */
+    useEffect(() => {
+        try {
+            const storedProfiles = persistence.getItem("personal-page:profiles");
+            if (storedProfiles) setSavedProfiles(JSON.parse(storedProfiles));
+        } catch (err) {
+            logger.error("[PersonalPageEditor] Failed to load profiles:", err);
+        }
+    }, [persistence]);
 
+    /* ========================================================
+       Load a draft page on mount
+       ======================================================== */
     useEffect(() => {
         try {
             const stored = persistence.getItem(PAGE_STORAGE_KEY);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 setPage(parsed);
-                setFontSettings(
-                    parsed.fontSettings ||
-                    {
-                        body: "Inter",
-                        heading: "Playfair Display"
-                    }
-                );
+                setFontSettings(parsed.fontSettings || { body: "Inter", heading: "Playfair Display" });
                 setColorSettings(parsed.colorSettings || {});
             }
         } catch (err) {
@@ -217,42 +198,30 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     /* ========================================================
        Helpers
        ======================================================== */
-
     const sectionById = (id) => page.sections.find((s) => s.id === id);
 
     const updateSection = (id, updater) =>
         setPage((prev) => ({
             ...prev,
-            sections: prev.sections.map((s) =>
-                s.id === id ? { ...s, data: { ...s.data, ...updater } } : s
-            ),
+            sections: prev.sections.map((s) => (s.id === id ? { ...s, data: { ...s.data, ...updater } } : s)),
         }));
 
     const toggleSection = (id, enabled) =>
         setPage((prev) => ({
             ...prev,
-            sections: prev.sections.map((s) =>
-                s.id === id ? { ...s, enabled } : s
-            ),
+            sections: prev.sections.map((s) => (s.id === id ? { ...s, enabled } : s)),
         }));
 
     const toggleSectionTitle = (id, showTitle) =>
         setPage((prev) => ({
             ...prev,
-            sections: prev.sections.map((s) =>
-                s.id === id ? { ...s, showTitle } : s
-            ),
+            sections: prev.sections.map((s) => (s.id === id ? { ...s, showTitle } : s)),
         }));
 
     const ToggleSectionTitleHelper = ({ sectionId, showTitle }) => (
         <Tooltip text="Show or hide this section’s title in the preview">
             <div className="is-flex is-flex-direction-column is-align-items-center ml-3">
-                {/* <span className="mb-1 is-size-7 has-text-grey">Show title</span> */}
-                <ToggleSwitch
-                    checked={showTitle}
-                    color="is-info"
-                    onChange={(v) => toggleSectionTitle(sectionId, v)}
-                />
+                <ToggleSwitch checked={showTitle} color="is-info" onChange={(v) => toggleSectionTitle(sectionId, v)} />
             </div>
         </Tooltip>
     );
@@ -260,17 +229,13 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     const updateSectionTitle = (id, title) =>
         setPage((prev) => ({
             ...prev,
-            sections: prev.sections.map((s) =>
-                s.id === id ? { ...s, title } : s
-            ),
+            sections: prev.sections.map((s) => (s.id === id ? { ...s, title } : s)),
         }));
 
     /* ========================================================
-       Project helpers (unchanged behavior)
+       Project helpers
        ======================================================== */
-
-    const updateProjects = (items) =>
-        updateSection("projects", { items });
+    const updateProjects = (items) => updateSection("projects", { items });
 
     const moveProject = (index, dir) => {
         const items = [...sectionById("projects").data.items];
@@ -281,40 +246,53 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     };
 
     const removeProject = (index) =>
-        updateProjects(
-            sectionById("projects").data.items.filter((_, i) => i !== index)
-        );
+        updateProjects(sectionById("projects").data.items.filter((_, i) => i !== index));
 
     /* ========================================================
-       Save
+       Save current profile
        ======================================================== */
-
-    const handleSubmit = async (e) => {
+    const handleSaveProfile = async (e) => {
         e.preventDefault();
+        if (!profileId.trim()) {
+            setError("Please enter a unique profile ID before saving.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setSuccessMessage(null);
 
         try {
-            persistence.setItem(
-                PAGE_STORAGE_KEY,
-                JSON.stringify(page)
-            );
+            const newProfiles = { ...savedProfiles, [profileId.trim()]: page };
+            setSavedProfiles(newProfiles);
+            persistence.setItem("personal-page:profiles", JSON.stringify(newProfiles));
 
-            setSuccessMessage("Page saved successfully!");
+            setSuccessMessage(`Profile "${profileId}" saved successfully!`);
             onSuccess?.(page);
         } catch (err) {
             logger.error("[PersonalPageEditor] Save failed:", err);
-            setError("Failed to save changes.");
+            setError("Failed to save profile.");
         } finally {
             setLoading(false);
         }
     };
 
     /* ========================================================
+       Load a saved profile by ID
+       ======================================================== */
+    const loadProfile = (id) => {
+        const profile = savedProfiles[id];
+        if (!profile) return;
+
+        setPage(profile);
+        setProfileId(id);
+        setFontSettings(profile.fontSettings || { body: "Inter", heading: "Playfair Display" });
+        setColorSettings(profile.colorSettings || {});
+    };
+
+    /* ========================================================
        Render
        ======================================================== */
-
     const home = sectionById("home");
     const about = sectionById("about");
     const projects = sectionById("projects");
@@ -325,31 +303,59 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
             {/* Header */}
             <div className="editor-header global-editor-header box">
                 <h2 className="title is-4 mb-0">Personal Page Editor</h2>
-
-                <div className="is-flex is-align-items-center">
+                <div className="is-flex is-align-items-center gap-4">
+                    {/* Preview toggle */}
                     <div className="is-flex is-flex-direction-column is-align-items-center">
                         <span className="label has-text-grey">Preview</span>
-                        <ToggleSwitch
-                            checked={previewVisible}
-                            onChange={setPreviewVisible}
-                        />
+                        <ToggleSwitch checked={previewVisible} onChange={setPreviewVisible} />
                     </div>
-
-                    <button
-                        className="button is-link ml-4"
-                        disabled={loading}
-                        onClick={handleSubmit}
-                    >
-                        {loading ? "Saving..." : "Save"}
-                    </button>
                 </div>
             </div>
 
+            {/* ---------- Profile Save Row ---------- */}
+            <div className="profile-save-row box mb-4">
+                <div
+                    className="is-flex is-align-items-center"
+                    style={{ gap: "0.75rem" }} // space between elements
+                >
+                    {/* Profile ID input */}
+                    <input
+                        className="input"
+                        placeholder="Profile ID"
+                        value={profileId}
+                        onChange={(e) => setProfileId(e.target.value)}
+                        style={{ maxWidth: "200px", flex: "0 0 auto" }}
+                    />
+
+                    {/* Save button */}
+                    <button
+                        className="button is-success"
+                        disabled={loading}
+                        onClick={handleSaveProfile}
+                    >
+                        {loading ? "Saving..." : "Save Profile"}
+                    </button>
+
+                    {/* Saved Profiles Selector */}
+                    <div style={{ flex: 1, minWidth: "150px" }}>
+                        <SingleSelector
+                            options={Object.keys(savedProfiles).map((id) => ({ value: id, label: id }))}
+                            value={profileId}
+                            onChange={loadProfile}
+                            placeholder="Select a saved profile..."
+                            searchable={true}
+                        />
+                    </div>
+                </div>
+            </div>
+
+
             {/* ---------- Main Layout ---------- */}
             <div className="columns is-variable is-6">
-                {/* ---------- Editor Column ---------- */}
+                {/* Editor Column */}
                 <div className={`column ${previewVisible ? "is-6" : "is-12"} editor-column`}>
                     <div className="editor-scroll">
+
                         {/* Page Style Controls */}
                         <FontSettingsProvider
                             target={previewRef}
@@ -516,123 +522,44 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
 
                         {/* ---------- Home Section ---------- */}
                         <SectionCard
-                            title={
-                                <EditableTitle
-                                    value={home.title}
-                                    defaultValue={home.defaultTitle}
-                                    onChange={(val) => updateSectionTitle("home", val)}
-                                />
-                            }
-                            headerExtra={
-                                <ToggleSectionTitleHelper
-                                    sectionId="home"
-                                    showTitle={home.showTitle}
-                                />
-                            }
+                            title={<EditableTitle value={home.title} defaultValue={home.defaultTitle} onChange={(val) => updateSectionTitle("home", val)} />}
+                            headerExtra={<ToggleSectionTitleHelper sectionId="home" showTitle={home.showTitle} />}
                             enabled={home.enabled}
                             onChange={(v) => toggleSection("home", v)}
                         >
-                            <input
-                                className="input mb-2"
-                                placeholder="Name"
-                                onChange={(e) => updateSection("home", { name: e.target.value })}
-                            />
-                            <input
-                                className="input mb-2"
-                                placeholder="Tagline"
-                                onChange={(e) => updateSection("home", { tagline: e.target.value })}
-                            />
-                            <input
-                                className="input"
-                                placeholder="Profile Image URL"
-                                onChange={(e) => updateSection("home", { profileImage: e.target.value })}
-                            />
+                            <input className="input mb-2" placeholder="Name" value={home.data.name} onChange={(e) => updateSection("home", { name: e.target.value })} />
+                            <input className="input mb-2" placeholder="Tagline" value={home.data.tagline} onChange={(e) => updateSection("home", { tagline: e.target.value })} />
+                            <input className="input" placeholder="Profile Image URL" value={home.data.profileImage} onChange={(e) => updateSection("home", { profileImage: e.target.value })} />
                         </SectionCard>
 
                         {/* ---------- About Section ---------- */}
                         <SectionCard
-                            title={
-
-                                <EditableTitle
-                                    value={about.title}
-                                    defaultValue={about.defaultTitle}
-                                    onChange={(val) => updateSectionTitle("about", val)}
-                                />
-                            }
-                            headerExtra={
-                                <ToggleSectionTitleHelper
-                                    sectionId="about"
-                                    showTitle={about.showTitle}
-                                />
-                            }
+                            title={<EditableTitle value={about.title} defaultValue={about.defaultTitle} onChange={(val) => updateSectionTitle("about", val)} />}
+                            headerExtra={<ToggleSectionTitleHelper sectionId="about" showTitle={about.showTitle} />}
                             enabled={about.enabled}
                             onChange={(v) => toggleSection("about", v)}
                         >
-                            <RumpusQuill
-                                value={about.data.content}
-                                editor_ref={aboutRef}
-                                setValue={(val) => updateSection("about", { content: val })}
-                                placeholder="Write your bio..."
-                            />
+                            <RumpusQuill value={about.data.content} editor_ref={aboutRef} setValue={(val) => updateSection("about", { content: val })} placeholder="Write your bio..." />
                         </SectionCard>
 
                         {/* ---------- Projects Section ---------- */}
                         <SectionCard
-                            title={
-                                <EditableTitle
-                                    value={projects.title}
-                                    defaultValue={projects.defaultTitle}
-                                    onChange={(val) => updateSectionTitle("projects", val)}
-                                />
-                            }
-                            headerExtra={
-                                <ToggleSectionTitleHelper
-                                    sectionId="projects"
-                                    showTitle={projects.showTitle}
-                                />
-                            }
+                            title={<EditableTitle value={projects.title} defaultValue={projects.defaultTitle} onChange={(val) => updateSectionTitle("projects", val)} />}
+                            headerExtra={<ToggleSectionTitleHelper sectionId="projects" showTitle={projects.showTitle} />}
                             enabled={projects.enabled}
                             onChange={(v) => toggleSection("projects", v)}
                         >
-                            <button
-                                type="button"
-                                className="button is-small mb-3"
-                                onClick={() => updateProjects([...projects.data.items, { title: "", link: "" }])}
-                            >
+                            <button type="button" className="button is-small mb-3" onClick={() => updateProjects([...projects.data.items, { title: "", link: "" }])}>
                                 + Add Project
                             </button>
                             {projects.data.items.map((p, i) => (
                                 <div key={i} className="box mb-3">
-                                    <input
-                                        className="input mb-2"
-                                        placeholder="Project title"
-                                        value={p.title}
-                                        onChange={(e) => {
-                                            const items = [...projects.data.items];
-                                            items[i].title = e.target.value;
-                                            updateProjects(items);
-                                        }}
-                                    />
-                                    <input
-                                        className="input mb-3"
-                                        placeholder="Project link"
-                                        value={p.link}
-                                        onChange={(e) => {
-                                            const items = [...projects.data.items];
-                                            items[i].link = e.target.value;
-                                            updateProjects(items);
-                                        }}
-                                    />
+                                    <input className="input mb-2" placeholder="Project title" value={p.title} onChange={(e) => { const items = [...projects.data.items]; items[i].title = e.target.value; updateProjects(items); }} />
+                                    <input className="input mb-3" placeholder="Project link" value={p.link} onChange={(e) => { const items = [...projects.data.items]; items[i].link = e.target.value; updateProjects(items); }} />
                                     <div className="buttons">
-                                        <button type="button" className="button is-small" onClick={() => moveProject(i, -1)}>
-                                            ↑
-                                        </button>
-                                        <button type="button" className="button is-small" onClick={() => moveProject(i, 1)}>
-                                            ↓
-                                        </button>
-                                        <button type="button" className="button is-small is-danger" onClick={() => removeProject(i)}>
-                                            Remove
-                                        </button>
+                                        <button type="button" className="button is-small" onClick={() => moveProject(i, -1)}>↑</button>
+                                        <button type="button" className="button is-small" onClick={() => moveProject(i, 1)}>↓</button>
+                                        <button type="button" className="button is-small is-danger" onClick={() => removeProject(i)}>Remove</button>
                                     </div>
                                 </div>
                             ))}
@@ -640,63 +567,24 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
 
                         {/* ---------- Contact Section ---------- */}
                         <SectionCard
-                            title={
-                                <EditableTitle
-                                    value={contact.title}
-                                    defaultValue={contact.defaultTitle}
-                                    onChange={(val) => updateSectionTitle("contact", val)}
-                                />
-                            }
-                            headerExtra={
-                                <ToggleSectionTitleHelper
-                                    sectionId="contact"
-                                    showTitle={contact.showTitle}
-                                />
-                            }
+                            title={<EditableTitle value={contact.title} defaultValue={contact.defaultTitle} onChange={(val) => updateSectionTitle("contact", val)} />}
+                            headerExtra={<ToggleSectionTitleHelper sectionId="contact" showTitle={contact.showTitle} />}
                             enabled={contact.enabled}
                             onChange={(v) => toggleSection("contact", v)}
                         >
-                            <input
-                                className="input"
-                                placeholder="Email"
-                                type="email"
-                                onChange={(e) => updateSection("contact", { email: e.target.value })}
-                            />
+                            <input className="input" placeholder="Email" type="email" value={contact.data.email} onChange={(e) => updateSection("contact", { email: e.target.value })} />
                         </SectionCard>
 
-                        {/* ---------- Error Alert ---------- */}
-                        {error && (
-                            <Alert
-                                message={error}
-                                type="error"
-                                persistent={false}
-                                size="medium"
-                                position="bottom"
-                                onClose={() => setError(null)}
-                            />
-                        )}
-
-                        {/* ---------- Success Alert ---------- */}
-                        {successMessage && (
-                            <Alert
-                                message={successMessage}
-                                type="success"
-                                persistent={false}
-                                size="medium"
-                                position="bottom"
-                                onClose={() => setSuccessMessage(null)}
-                            />
-                        )}
-
+                        {/* ---------- Alerts ---------- */}
+                        {error && <Alert message={error} type="error" persistent={false} size="medium" position="bottom" onClose={() => setError(null)} />}
+                        {successMessage && <Alert message={successMessage} type="success" persistent={false} size="medium" position="bottom" onClose={() => setSuccessMessage(null)} />}
                     </div>
                 </div>
 
-                {/* ---------- Preview Column ---------- */}
+                {/* Preview Column */}
                 {previewVisible && (
                     <div className="column is-6" ref={previewRef}>
-                        <div
-                            className="page-preview-frame"
-                        >
+                        <div className="page-preview-frame">
                             <PagePreview page={page} />
                         </div>
                     </div>
@@ -721,4 +609,3 @@ const SectionCard = ({ title, enabled, onChange, headerExtra, children }) => (
         {enabled && children}
     </div>
 );
-
