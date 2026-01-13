@@ -86,6 +86,7 @@ function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorS
                         onChange={(value) => setPage((p) => ({ ...p, theme: value }))}
                         searchable={false}
                         ui={'scrollable'}
+                        visibleRows={2}
                     />
                 </div>
                 <div className="buttons-grid">
@@ -455,6 +456,7 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                 onChange={loadProfile}
                                 placeholder="Select a saved profile..."
                                 searchable={true}
+                                portalTarget={document.body}
                             />
                         </div>
                     </Tooltip>

@@ -25,6 +25,7 @@ function SingleSelector({
     searchable = false,
     portalTarget = null,
     ui = "dropdown", // "dropdown" | "scrollable"
+    visibleRows = 3, // scrollable mode
 }) {
     const [selected, setSelected] = useState(value);
     const [isOpen, setIsOpen] = useState(false);
@@ -92,24 +93,8 @@ function SingleSelector({
         options.find((opt) => opt.value === selected)?.label || "";
 
     /* ---------- Dropdown / Scrollable Options ---------- */
-    const optionsContainer = (
-        <div
-            ref={menuRef}
-            className="single-selector-options box"
-            style={{
-                maxHeight: "220px",
-                overflowY: "auto",
-                padding: "0.25rem",
-                borderRadius: "6px",
-                backgroundColor: "#fff",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                ...(ui === "dropdown"
-                    ? portalTarget
-                        ? menuStyle
-                        : { position: "absolute", top: "100%", marginTop: "0.25rem", width: "100%", zIndex: 15 }
-                    : { position: "relative", marginTop: "0.5rem", width: "100%" }),
-            }}
-        >
+    const dropdownContent = (
+        <>
             {searchable && (
                 <input
                     type="text"
@@ -117,7 +102,6 @@ function SingleSelector({
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search..."
                     className="input is-small"
-                    style={{ marginBottom: "0.5rem" }}
                     onClick={(e) => e.stopPropagation()}
                 />
             )}
@@ -128,16 +112,7 @@ function SingleSelector({
                     return (
                         <div
                             key={opt.value}
-                            className={`single-selector-option ${isSelected ? "has-background-info-light" : ""
-                                }`}
-                            style={{
-                                padding: "0.5rem 0.75rem",
-                                cursor: "pointer",
-                                borderRadius: "4px",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                            }}
+                            className={`single-selector-option ${isSelected ? "has-background-info-light" : ""}`}
                             onClick={() => handleSelect(opt.value)}
                         >
                             {opt.label}
@@ -146,16 +121,21 @@ function SingleSelector({
                     );
                 })
             ) : (
-                <div
-                    style={{
-                        padding: "0.5rem",
-                        color: "#999",
-                        textAlign: "center",
-                    }}
-                >
-                    No results
-                </div>
+                <div className="single-selector-no-results">No results</div>
             )}
+        </>
+    );
+
+    const optionsContainer = (
+        <div
+            ref={menuRef}
+            className={`single-selector-options box ${ui === "scrollable" ? "scrollable-container" : ""}`}
+            style={{
+                maxHeight: ui === "scrollable" ? `${visibleRows * 40}px` : "220px",
+                ...(ui === "dropdown" && portalTarget ? menuStyle : {}),
+            }}
+        >
+            {dropdownContent}
         </div>
     );
 
@@ -168,16 +148,7 @@ function SingleSelector({
             {/* Input */}
             {ui === "dropdown" && (
                 <div
-                    className="single-selector-input box"
-                    style={{
-                        cursor: disabled ? "not-allowed" : "pointer",
-                        minHeight: "2.5rem",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "0.5rem 0.75rem",
-                        backgroundColor: disabled ? "#f5f5f5" : "#fff",
-                    }}
+                    className={`single-selector-input box ${disabled ? "disabled" : ""}`}
                     onClick={() => !disabled && setIsOpen((o) => !o)}
                 >
                     <span className={!selectedLabel ? "has-text-grey-light" : ""}>

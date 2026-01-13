@@ -1,0 +1,100 @@
+/* Container */
+.single-selector-container {
+    position: relative;
+    width: 100%;
+}
+
+.single-selector-container.is-disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Input */
+.single-selector-input {
+    cursor: pointer;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background-color: #fff;
+    border-radius: 6px;
+}
+
+.single-selector-input.disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+/* Dropdown / Scrollable Options */
+.single-selector-options {
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0.25rem;
+    overflow-y: auto;
+    width: 100%;
+    position: relative;
+    /* default, overridden in JS for portal dropdowns */
+    margin-top: 0.5rem;
+    z-index: 15;
+
+    .dropdown-portal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: auto;
+        margin-top: 0;
+        z-index: 11000;
+    }
+}
+
+/* Scrollable container fade */
+.scrollable-container {
+    position: relative;
+    overflow-y: scroll;
+    /* force scrollbar */
+}
+
+/* Optional: style scroll bar (Webkit-based) */
+.scrollable-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Single option */
+.single-selector-option {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;
+    /* fixed row height */
+}
+
+.single-selector-option.has-background-info-light {
+    background-color: #cce5ff;
+    /* or your theme color */
+}
+
+/* No results */
+.single-selector-no-results {
+    padding: 0.5rem;
+    color: #999;
+    text-align: center;
+}
+
+/* Search input inside dropdown */
+.single-selector-options input.input {
+    margin-bottom: 0.5rem;
+}
