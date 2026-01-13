@@ -25,12 +25,6 @@ import { LocalPersistence } from "../../../persistence/persistence";
  */
 const PAGE_STORAGE_KEY = "personal-page:draft";
 
-/**
- * Default persistence strategy.
- * Swap this with ApiPersistence(...) later without refactors.
- */
-const persistence = LocalPersistence;
-
 /* ============================================================
    Default Page Schema
    ============================================================ */
@@ -183,7 +177,8 @@ function EditableTitle({ value, defaultValue, onChange }) {
    Personal Page Editor
    ============================================================ */
 
-export default function PersonalPageEditor({ onSuccess }) {
+export default function PersonalPageEditor({ onSuccess, persistence: persistenceProp }) {
+    const persistence = persistenceProp || LocalPersistence;
     const previewRef = useRef(null);
     const aboutRef = useRef(null);
 
@@ -208,7 +203,7 @@ export default function PersonalPageEditor({ onSuccess }) {
         } catch (err) {
             logger.error("[PersonalPageEditor] Failed to load draft:", err);
         }
-    }, []);
+    }, [persistence]);
 
     /* ========================================================
        Helpers
@@ -289,6 +284,7 @@ export default function PersonalPageEditor({ onSuccess }) {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        setSuccessMessage(null);
 
         try {
             persistence.setItem(
