@@ -393,51 +393,71 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
 
             {/* ---------- Profile Save Row ---------- */}
             <div className="profile-save-row box mb-4">
-                <div
-                    className="is-flex is-align-items-center"
-                    style={{ gap: "0.75rem" }}
-                >
+                <div className="is-flex is-align-items-center" style={{ gap: "0.75rem" }}>
+                    {/* New Profile Button */}
+                    <Tooltip text="Start a new profile">
+                        <button
+                            className="button is-light"
+                            type="button"
+                            onClick={() => {
+                                setProfileId("");
+                                setPage(DEFAULT_PAGE);
+                                setFontSettings({ body: "Inter", heading: "Playfair Display" });
+                                setColorSettings({});
+                            }}
+                        >
+                            +
+                        </button>
+                    </Tooltip>
+
                     {/* Profile ID input */}
-                    <input
-                        className="input"
-                        placeholder="Profile ID"
-                        value={profileId}
-                        onChange={(e) => setProfileId(e.target.value)}
-                        style={{ maxWidth: "200px", flex: "0 0 auto" }}
-                    />
+                    <Tooltip text="Enter a unique ID for this profile">
+                        <input
+                            className="input"
+                            placeholder="Profile ID"
+                            value={profileId}
+                            onChange={(e) => setProfileId(e.target.value)}
+                            style={{ maxWidth: "200px", flex: "0 0 auto" }}
+                        />
+                    </Tooltip>
 
                     {/* Save button */}
-                    <button
-                        className="button is-success"
-                        disabled={loading}
-                        onClick={handleSaveProfile}
-                    >
-                        {loading ? "Saving..." : "Save Profile"}
-                    </button>
+                    <Tooltip text="Save the current profile">
+                        <button
+                            className="button is-success"
+                            disabled={loading}
+                            onClick={handleSaveProfile}
+                        >
+                            {loading ? "Saving..." : "Save Profile"}
+                        </button>
+                    </Tooltip>
 
                     {/* Clear all button */}
-                    <button
-                        className="button is-danger is-light"
-                        disabled={!Object.keys(savedProfiles).length}
-                        onClick={handleClearProfiles}
-                        title="Delete all saved profiles"
-                    >
-                        Clear All
-                    </button>
+                    <Tooltip text="Delete all saved profiles">
+                        <button
+                            className="button is-danger is-light"
+                            disabled={!Object.keys(savedProfiles).length}
+                            onClick={handleClearProfiles}
+                        >
+                            Clear All
+                        </button>
+                    </Tooltip>
 
                     {/* Saved Profiles Selector */}
-                    <div style={{ flex: 1, minWidth: "180px" }}>
-                        <SingleSelector
-                            options={Object.keys(savedProfiles).map((id) => ({
-                                value: id,
-                                label: id,
-                            }))}
-                            value={profileId}
-                            onChange={loadProfile}
-                            placeholder="Select a saved profile..."
-                            searchable={true}
-                        />
-                    </div>
+                    <Tooltip text="Load a previously saved profile">
+                        <div style={{ flex: 1, minWidth: "180px" }}>
+                            <SingleSelector
+                                options={Object.keys(savedProfiles).map((id) => ({
+                                    value: id,
+                                    label: id,
+                                }))}
+                                value={profileId}
+                                onChange={loadProfile}
+                                placeholder="Select a saved profile..."
+                                searchable={true}
+                            />
+                        </div>
+                    </Tooltip>
                 </div>
             </div>
 
