@@ -24,6 +24,7 @@ function SingleSelector({
     disabled = false,
     searchable = false,
     portalTarget = null,
+    ui = "dropdown", // "dropdown" | "scrollable"
 }) {
     const [selected, setSelected] = useState(value);
     const [isOpen, setIsOpen] = useState(false);
@@ -40,15 +41,17 @@ function SingleSelector({
         if (disabled) return;
         setSelected(val);
         onChange?.(val);
-        setIsOpen(false);
+        if (ui === "dropdown") {
+            setIsOpen(false);
+        }
         setSearchTerm("");
     };
 
     /**
-     * Close when clicking outside (works across portals)
+     * Close when clicking outside, dropdown only ** works across portals ** 
      */
     useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || ui !== "dropdown") return;
 
         const handleClickOutside = (e) => {
             if (
@@ -68,7 +71,7 @@ function SingleSelector({
      * Compute dropdown position when opening
      */
     useEffect(() => {
-        if (!isOpen || !portalTarget || !containerRef.current) return;
+        if (!isOpen || !portalTarget || !containerRef.current || ui !== "dropdown") return;
 
         const rect = containerRef.current.getBoundingClientRect();
 
@@ -79,7 +82,7 @@ function SingleSelector({
             width: rect.width,
             zIndex: 11000,
         });
-    }, [isOpen, portalTarget]);
+    }, [isOpen, portalTarget, ui]);
 
     const filteredOptions = options.filter((opt) =>
         opt.label.toLowerCase().includes(searchTerm.toLowerCase())
@@ -88,7 +91,8 @@ function SingleSelector({
     const selectedLabel =
         options.find((opt) => opt.value === selected)?.label || "";
 
-    const dropdown = (
+    /* ---------- Dropdown / Scrollable Options ---------- */
+    const optionsContainer = (
         <div
             ref={menuRef}
             className="single-selector-options box"
@@ -98,15 +102,12 @@ function SingleSelector({
                 padding: "0.25rem",
                 borderRadius: "6px",
                 backgroundColor: "#fff",
-                boxShadow:
-                    "0 4px 12px rgba(0, 0, 0, 0.15)",
-                ...(portalTarget ? menuStyle : {
-                    position: "absolute",
-                    top: "100%",
-                    marginTop: "0.25rem",
-                    width: "100%",
-                    zIndex: 15,
-                }),
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                ...(ui === "dropdown"
+                    ? portalTarget
+                        ? menuStyle
+                        : { position: "absolute", top: "100%", marginTop: "0.25rem", width: "100%", zIndex: 15 }
+                    : { position: "relative", marginTop: "0.5rem", width: "100%" }),
             }}
         >
             {searchable && (
@@ -127,9 +128,8 @@ function SingleSelector({
                     return (
                         <div
                             key={opt.value}
-                            className={`single-selector-option ${
-                                isSelected ? "has-background-info-light" : ""
-                            }`}
+                            className={`single-selector-option ${isSelected ? "has-background-info-light" : ""
+                                }`}
                             style={{
                                 padding: "0.5rem 0.75rem",
                                 cursor: "pointer",
@@ -166,31 +166,35 @@ function SingleSelector({
             style={{ position: "relative", width: "100%" }}
         >
             {/* Input */}
-            <div
-                className="single-selector-input box"
-                style={{
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    minHeight: "2.5rem",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "0.5rem 0.75rem",
-                    backgroundColor: disabled ? "#f5f5f5" : "#fff",
-                }}
-                onClick={() => !disabled && setIsOpen((o) => !o)}
-            >
-                <span className={!selectedLabel ? "has-text-grey-light" : ""}>
-                    {selectedLabel || placeholder}
-                </span>
-                <span style={{ fontSize: "0.8rem" }}>{isOpen ? "▲" : "▼"}</span>
-            </div>
+            {ui === "dropdown" && (
+                <div
+                    className="single-selector-input box"
+                    style={{
+                        cursor: disabled ? "not-allowed" : "pointer",
+                        minHeight: "2.5rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "0.5rem 0.75rem",
+                        backgroundColor: disabled ? "#f5f5f5" : "#fff",
+                    }}
+                    onClick={() => !disabled && setIsOpen((o) => !o)}
+                >
+                    <span className={!selectedLabel ? "has-text-grey-light" : ""}>
+                        {selectedLabel || placeholder}
+                    </span>
+                    <span style={{ fontSize: "0.8rem" }}>{isOpen ? "▲" : "▼"}</span>
+                </div>
+            )}
 
-            {/* Dropdown */}
-            {isOpen &&
-                !disabled &&
-                (portalTarget
-                    ? createPortal(dropdown, portalTarget)
-                    : dropdown)}
+            {/* Options */}
+            {(ui === "dropdown" && isOpen && !disabled
+                ? portalTarget
+                    ? createPortal(optionsContainer, portalTarget)
+                    : optionsContainer
+                : ui === "scrollable"
+                    ? optionsContainer
+                    : null)}
         </div>
     );
 }
