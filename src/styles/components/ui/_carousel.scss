@@ -1,71 +1,72 @@
 .carousel {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .carousel-viewport {
-  overflow: hidden;
-  flex: 1;
+    overflow: hidden;
+    flex: 1;
 }
 
 .carousel-track {
-  display: flex;
-  flex-wrap: nowrap;
-  transition: transform 500ms cubic-bezier(.22,.61,.36,1);
-  will-change: transform;
+    display: flex;
+    flex-wrap: nowrap;
+    transition: transform 500ms cubic-bezier(.22, .61, .36, 1);
+    will-change: transform;
 }
 
 .carousel-arrow {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
+    --arrow-size: 44px;
 
-  &:disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
+    width: var(--arrow-size);
+    height: var(--arrow-size);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+    border: 1px solid var(--carousel-arrow-border, rgba(0, 0, 0, 0.1));
+    background-color: var(--carousel-arrow-bg, var(--card-background, #fff));
+
+    color: var(--carousel-arrow-color, var(--page-text));
+    font-size: 1.25rem;
+    line-height: 1;
+
+    cursor: pointer;
+
+    box-shadow: var(--carousel-arrow-shadow, 0 4px 12px rgba(0, 0, 0, 0.08));
+
+    transition:
+        background-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease,
+        opacity 0.15s ease;
+
+    &:hover:not(:disabled) {
+        background-color: var(--carousel-arrow-hover-bg, var(--accent-color));
+        color: var(--carousel-arrow-hover-color, #fff);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    &:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow:
+            0 0 0 3px color-mix(in srgb,
+                var(--accent-color) 40%,
+                transparent);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+        box-shadow: none;
+    }
 }
-
-// .projects-carousel {
-//     display: flex;
-//     align-items: center;
-//     gap: 1rem;
-// }
-
-// .projects-carousel .carousel-track {
-//     overflow: visible;
-// }
-
-// .projects-carousel>.carousel-track {
-//     flex-wrap: nowrap;
-// }
-
-// .carousel-track-wrapper {
-//     overflow: hidden;
-//     flex: 1;
-// }
-
-// .carousel-track {
-//     display: flex;
-//     transition: transform 500ms cubic-bezier(.22, .61, .36, 1);
-//     will-change: transform;
-// }
-
-// .carousel-arrow {
-//     background: none;
-//     border: none;
-//     font-size: 2rem;
-//     cursor: pointer;
-// }
-
-// .carousel-arrow:disabled {
-//     opacity: 0.3;
-//     cursor: default;
-// }
-
-// .carousel-viewport {
-//     overflow: hidden;
-//     flex: 1;
-// }

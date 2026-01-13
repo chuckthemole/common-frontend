@@ -278,29 +278,81 @@
    Colors must come from variables.
    ============================================================ */
 
-/* ---------- MODERN ---------- */
-
 .theme-modern {
     color: var(--page-text);
 
+    /* ---------- Typography ---------- */
+    h1,
+    h2,
+    h3 {
+        letter-spacing: -0.015em;
+        font-weight: 600;
+    }
+
+    h1 {
+        font-size: clamp(2.4rem, 4vw, 3rem);
+    }
+
+    h2 {
+        font-size: 1.6rem;
+        margin-bottom: 0.75rem;
+    }
+
+    p,
+    .content {
+        font-size: 1.05rem;
+        line-height: 1.75;
+    }
+
+    /* ---------- Layout ---------- */
     .layout-modern {
         max-width: 960px;
         margin: 0 auto;
     }
 
-    nav.tabs {
-        margin-bottom: 4rem;
+    section {
+        padding: 5rem 2rem;
+    }
+
+    /* ---------- Navigation ---------- */
+    .profile-nav {
+        backdrop-filter: blur(6px);
+        background-color: color-mix(in srgb,
+                var(--nav-background) 85%,
+                transparent);
+    }
+
+    /* ---------- Cards ---------- */
+    .card,
+    .box {
+        border-radius: 12px;
+        padding: 1.75rem;
+        box-shadow: var(--card-shadow, 0 8px 24px rgba(0, 0, 0, 0.06));
     }
 }
-
-
-/* ---------- MINIMAL ---------- */
 
 .theme-minimal {
     color: var(--page-text);
 
     scroll-snap-type: none;
 
+    /* ---------- Typography ---------- */
+    h1,
+    h2,
+    h3 {
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        font-size: 0.9em;
+    }
+
+    p,
+    .content {
+        font-size: 1rem;
+        line-height: 1.65;
+    }
+
+    /* ---------- Layout ---------- */
     section {
         min-height: auto;
         padding: 3rem 1.5rem;
@@ -310,20 +362,47 @@
         display: none;
     }
 
+    /* ---------- Hero ---------- */
     .section-hero h1 {
-        font-size: 2rem;
+        font-size: 1.9rem;
         font-weight: 500;
+        letter-spacing: 0.05em;
+    }
+
+    /* ---------- Cards ---------- */
+    .card,
+    .box {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
     }
 }
 
-
-/* ---------- PORTFOLIO ---------- */
-
 .theme-portfolio {
     color: var(--page-text);
-
     scroll-snap-type: none;
 
+    /* ---------- Typography ---------- */
+    h1 {
+        font-size: 2.6rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    p,
+    .content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    /* ---------- Layout ---------- */
     .layout-portfolio {
         display: grid;
         grid-template-columns: 280px 1fr;
@@ -331,26 +410,37 @@
         padding: 3rem;
     }
 
+    section {
+        min-height: auto;
+        padding: 3rem 0;
+    }
+
+    /* ---------- Sidebar ---------- */
     .sidebar {
         position: sticky;
         top: 3rem;
         align-self: start;
     }
 
-    .content {
-        padding-right: 2rem;
+    /* ---------- Navigation ---------- */
+    .profile-nav.vertical a {
+        font-size: 0.9rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
     }
 
-    section {
-        min-height: auto;
-        padding: 3rem 0;
+    /* ---------- Cards ---------- */
+    .card,
+    .box {
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--card-shadow, 0 12px 32px rgba(0, 0, 0, 0.08));
     }
 
     .section-hero img {
         max-width: 120px;
     }
 }
-
 
 /* ============================================================
    Editor UI (Preview Pane Only)
