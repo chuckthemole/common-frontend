@@ -163,8 +163,8 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
     const [fontSettings, setFontSettings] = useState({});
-    const [profileId, setProfileId] = useState(""); // New: unique ID for a profile
-    const [savedProfiles, setSavedProfiles] = useState({}); // {id: pageData}
+    const [profileId, setProfileId] = useState("");
+    const [savedProfiles, setSavedProfiles] = useState({});
 
     /* ========================================================
        Load all saved profiles on mount
@@ -198,7 +198,44 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     /* ========================================================
        Helpers
        ======================================================== */
-    const sectionById = (id) => page.sections.find((s) => s.id === id);
+    const sectionById = (id) => {
+        try {
+            if (!page?.sections || !Array.isArray(page.sections)) {
+                logger.warn("sectionById: page.sections is not available or not an array", {
+                    page,
+                });
+                return undefined;
+            }
+
+            return page.sections.find((s) => s?.id === id);
+        } catch (err) {
+            logger.error("sectionById: failed to resolve section", {
+                id,
+                page,
+                error: err,
+            });
+            return undefined;
+        }
+    };
+
+    const getSectionSafe = (id) => {
+        const section = sectionById(id);
+
+        if (!section) {
+            logger.warn("Missing section, falling back to defaults", { id });
+
+            return DEFAULT_PAGE.sections.find((s) => s.id === id) ?? {
+                id,
+                enabled: false,
+                showTitle: false,
+                title: "",
+                defaultTitle: "",
+                data: {},
+            };
+        }
+
+        return section;
+    };
 
     const updateSection = (id, updater) =>
         setPage((prev) => ({
@@ -263,7 +300,14 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
         setSuccessMessage(null);
 
         try {
-            const newProfiles = { ...savedProfiles, [profileId.trim()]: page };
+            const newProfiles = {
+                ...savedProfiles,
+                [profileId.trim()]: {
+                    page,
+                    fontSettings,
+                    colorSettings,
+                }
+            };
             setSavedProfiles(newProfiles);
             persistence.setItem("personal-page:profiles", JSON.stringify(newProfiles));
 
@@ -278,25 +322,60 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     };
 
     /* ========================================================
+   Clear all saved profiles
+   ======================================================== */
+    const handleClearProfiles = () => {
+        try {
+            if (!Object.keys(savedProfiles).length) {
+                logger.info("[PersonalPageEditor] No profiles to clear");
+                return;
+            }
+
+            const confirmed = window.confirm(
+                "This will permanently delete ALL saved profiles. Are you sure?"
+            );
+
+            if (!confirmed) return;
+
+            setSavedProfiles({});
+            setProfileId("");
+
+            persistence.setItem("personal-page:profiles", JSON.stringify({}));
+
+            setSuccessMessage("All saved profiles have been cleared.");
+            logger.info("[PersonalPageEditor] All profiles cleared");
+        } catch (err) {
+            logger.error("[PersonalPageEditor] Failed to clear profiles:", err);
+            setError("Failed to clear saved profiles.");
+        }
+    };
+
+    /* ========================================================
        Load a saved profile by ID
        ======================================================== */
     const loadProfile = (id) => {
         const profile = savedProfiles[id];
         if (!profile) return;
 
-        setPage(profile);
-        setProfileId(id);
+        setPage(profile.page);
         setFontSettings(profile.fontSettings || { body: "Inter", heading: "Playfair Display" });
         setColorSettings(profile.colorSettings || {});
+        setProfileId(id);
     };
 
     /* ========================================================
        Render
        ======================================================== */
-    const home = sectionById("home");
-    const about = sectionById("about");
-    const projects = sectionById("projects");
-    const contact = sectionById("contact");
+    // const home = sectionById("home");
+    // const about = sectionById("about");
+    // const projects = sectionById("projects");
+    // const contact = sectionById("contact");
+
+    const home = getSectionSafe("home");
+    const about = getSectionSafe("about");
+    const projects = getSectionSafe("projects");
+    const contact = getSectionSafe("contact");
+
 
     return (
         <RumpusQuillForm>
@@ -316,7 +395,7 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
             <div className="profile-save-row box mb-4">
                 <div
                     className="is-flex is-align-items-center"
-                    style={{ gap: "0.75rem" }} // space between elements
+                    style={{ gap: "0.75rem" }}
                 >
                     {/* Profile ID input */}
                     <input
@@ -336,10 +415,23 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                         {loading ? "Saving..." : "Save Profile"}
                     </button>
 
+                    {/* Clear all button */}
+                    <button
+                        className="button is-danger is-light"
+                        disabled={!Object.keys(savedProfiles).length}
+                        onClick={handleClearProfiles}
+                        title="Delete all saved profiles"
+                    >
+                        Clear All
+                    </button>
+
                     {/* Saved Profiles Selector */}
-                    <div style={{ flex: 1, minWidth: "150px" }}>
+                    <div style={{ flex: 1, minWidth: "180px" }}>
                         <SingleSelector
-                            options={Object.keys(savedProfiles).map((id) => ({ value: id, label: id }))}
+                            options={Object.keys(savedProfiles).map((id) => ({
+                                value: id,
+                                label: id,
+                            }))}
                             value={profileId}
                             onChange={loadProfile}
                             placeholder="Select a saved profile..."
@@ -348,7 +440,6 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                     </div>
                 </div>
             </div>
-
 
             {/* ---------- Main Layout ---------- */}
             <div className="columns is-variable is-6">
@@ -359,7 +450,8 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                         {/* Page Style Controls */}
                         <FontSettingsProvider
                             target={previewRef}
-                            persistence={persistence}
+                            value={fontSettings}
+                            onChange={setFontSettings}
                             slots={{
                                 body: {
                                     cssVar: "--page-font",
@@ -375,7 +467,8 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                         >
                             <ColorSettingsProvider
                                 target={previewRef}
-                                persistence={persistence}
+                                value={colorSettings}
+                                onChange={setColorSettings}
                                 colorLayouts={previewColorLayouts}
                                 slots={{
                                     /* ======================================================

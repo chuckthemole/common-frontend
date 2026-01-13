@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { FontSettingsContext } from "./font_settings_context";
 import {
     google_fonts,
@@ -22,6 +22,10 @@ import {
  * - Load font stylesheets if needed
  * - Expose a stable, predictable context API
  *
+ * Controlled usage:
+ * - value?: Record<slotKey, string>
+ * - onChange?: (values) => void
+ *
  * Props:
  * - target: HTMLElement | ref | () => HTMLElement
  * - persistence: LocalPersistence | MemoryPersistence | ApiPersistence(...)
@@ -37,6 +41,8 @@ export default function FontSettingsProvider({
     target,
     persistence = LocalPersistence,
     slots = {},
+    value,
+    onChange,
     children,
 }) {
     /* ----------------------------
@@ -55,7 +61,7 @@ export default function FontSettingsProvider({
         try {
             if (!target) return null;
             if (typeof target === "function") return target();
-            if (target.current instanceof HTMLElement) return target.current;
+            if (target?.current instanceof HTMLElement) return target.current;
             if (target instanceof HTMLElement) return target;
 
             logger.warn(
@@ -72,9 +78,7 @@ export default function FontSettingsProvider({
        Resolve canonical slot definitions
        - Single source of truth for slot metadata
     ----------------------------- */
-    const resolvedSlots = useMemo(() => {
-        return slots;
-    }, [slots]);
+    const resolvedSlots = useMemo(() => slots, [slots]);
 
     /* ----------------------------
        Initialize font values
@@ -88,9 +92,12 @@ export default function FontSettingsProvider({
                     const persisted = cfg.storageKey
                         ? persistence.getItem(cfg.storageKey)
                         : null;
+
                     return [
                         key,
-                        persisted instanceof Promise ? cfg.default : persisted ?? cfg.default,
+                        persisted instanceof Promise
+                            ? cfg.default
+                            : persisted ?? cfg.default,
                     ];
                 } catch (err) {
                     logger.error(
@@ -103,7 +110,11 @@ export default function FontSettingsProvider({
         );
     }, [resolvedSlots, persistence]);
 
-    const [values, setValues] = useState(initialValues);
+    /* ----------------------------
+       Controlled vs uncontrolled values
+    ----------------------------- */
+    const [internalValues, setInternalValues] = useState(initialValues);
+    const values = value ?? internalValues;
 
     /* ----------------------------
        Available fonts
@@ -119,24 +130,32 @@ export default function FontSettingsProvider({
     /* ----------------------------
        Load font stylesheet if needed
     ----------------------------- */
-    const ensureFontLoaded = (fontValue) => {
-        try {
-            const fontObj = fonts.find((f) => f.value === fontValue);
-            if (!fontObj?.url) return;
+    const ensureFontLoaded = useCallback(
+        (fontValue) => {
+            try {
+                const fontObj = fonts.find((f) => f.value === fontValue);
+                if (!fontObj?.url) return;
 
-            const id = `font-${fontObj.name}`;
-            if (!document.getElementById(id)) {
-                const link = document.createElement("link");
-                link.id = id;
-                link.rel = "stylesheet";
-                link.href = fontObj.url;
-                document.head.appendChild(link);
-                logger.info(`FontSettingsProvider: loaded font "${fontObj.name}" from URL`);
+                const id = `font-${fontObj.name}`;
+                if (!document.getElementById(id)) {
+                    const link = document.createElement("link");
+                    link.id = id;
+                    link.rel = "stylesheet";
+                    link.href = fontObj.url;
+                    document.head.appendChild(link);
+                    logger.info(
+                        `FontSettingsProvider: loaded font "${fontObj.name}" from URL`
+                    );
+                }
+            } catch (err) {
+                logger.error(
+                    `FontSettingsProvider: failed to load font "${fontValue}"`,
+                    err
+                );
             }
-        } catch (err) {
-            logger.error(`FontSettingsProvider: failed to load font "${fontValue}"`, err);
-        }
-    };
+        },
+        [fonts]
+    );
 
     /* ----------------------------
        Apply fonts to target + persist updates
@@ -151,8 +170,8 @@ export default function FontSettingsProvider({
         }
 
         Object.entries(resolvedSlots).forEach(([key, cfg]) => {
-            const value = values[key];
-            if (!value) return;
+            const fontValue = values[key];
+            if (!fontValue) return;
 
             try {
                 if (!cfg.cssVar.startsWith("--")) {
@@ -162,14 +181,20 @@ export default function FontSettingsProvider({
                     return;
                 }
 
-                el.style.setProperty(cfg.cssVar, value);
-                ensureFontLoaded(value);
+                el.style.setProperty(cfg.cssVar, fontValue);
+                ensureFontLoaded(fontValue);
 
                 if (cfg.storageKey) {
-                    const maybePromise = persistence.setItem(cfg.storageKey, value);
+                    const maybePromise = persistence.setItem(
+                        cfg.storageKey,
+                        fontValue
+                    );
                     if (maybePromise instanceof Promise) {
                         maybePromise.catch((err) =>
-                            logger.error(`FontSettingsProvider: failed to persist "${key}"`, err)
+                            logger.error(
+                                `FontSettingsProvider: failed to persist "${key}"`,
+                                err
+                            )
                         );
                     }
                 }
@@ -180,18 +205,30 @@ export default function FontSettingsProvider({
                 );
             }
         });
-    }, [values, resolvedSlots, persistence, fonts, target]);
+    }, [values, resolvedSlots, persistence, ensureFontLoaded, target]);
 
     /* ----------------------------
        Public API
     ----------------------------- */
-    const setFont = (slotKey, value) => {
-        try {
-            setValues((prev) => ({ ...prev, [slotKey]: value }));
-        } catch (err) {
-            logger.error(`FontSettingsProvider: failed to set font for slot "${slotKey}"`, err);
-        }
-    };
+    const setFont = useCallback(
+        (slotKey, fontValue) => {
+            try {
+                const next = { ...values, [slotKey]: fontValue };
+
+                if (!value) {
+                    setInternalValues(next);
+                }
+
+                onChange?.(next);
+            } catch (err) {
+                logger.error(
+                    `FontSettingsProvider: failed to set font for slot "${slotKey}"`,
+                    err
+                );
+            }
+        },
+        [values, value, onChange]
+    );
 
     const toggleSource = (source) => {
         try {
@@ -200,7 +237,10 @@ export default function FontSettingsProvider({
                 [source]: !prev[source],
             }));
         } catch (err) {
-            logger.error(`FontSettingsProvider: failed to toggle font source "${source}"`, err);
+            logger.error(
+                `FontSettingsProvider: failed to toggle font source "${source}"`,
+                err
+            );
         }
     };
 
@@ -219,13 +259,15 @@ export default function FontSettingsProvider({
                 const persisted = cfg.storageKey
                     ? await persistence.getItem(cfg.storageKey)
                     : null;
-                const value = persisted ?? cfg.default;
-                restored[key] = value;
+
+                const fontValue = persisted ?? cfg.default;
+                restored[key] = fontValue;
 
                 if (cfg.cssVar.startsWith("--")) {
-                    el.style.setProperty(cfg.cssVar, value);
+                    el.style.setProperty(cfg.cssVar, fontValue);
                 }
-                ensureFontLoaded(value);
+
+                ensureFontLoaded(fontValue);
             } catch (err) {
                 logger.error(
                     `FontSettingsProvider: failed to initialize font for slot "${key}"`,
@@ -234,7 +276,11 @@ export default function FontSettingsProvider({
             }
         }
 
-        setValues(restored);
+        if (!value) {
+            setInternalValues(restored);
+        }
+
+        onChange?.(restored);
     };
 
     return (
