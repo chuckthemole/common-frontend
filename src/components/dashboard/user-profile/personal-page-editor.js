@@ -353,15 +353,17 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                         {/* Page Style Controls */}
                         <FontSettingsProvider
                             target={previewRef}
-                            persist={false}
+                            persistence={persistence}
                             slots={{
                                 body: {
                                     cssVar: "--page-font",
-                                    default: "Inter"
+                                    default: "Inter",
+                                    storageKey: "personal-page:page-font",
                                 },
                                 heading: {
                                     cssVar: "--heading-font",
-                                    default: "Playfair Display"
+                                    default: "Playfair Display",
+                                    storageKey: "personal-page:heading-font",
                                 },
                             }}
                         >
