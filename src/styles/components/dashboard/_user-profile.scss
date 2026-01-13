@@ -1,13 +1,18 @@
 /* ============================================================
-   User Profile Page Preview (PREVIEW ONLY)
-   Depends on:
-   - _layout.scss (layout utilities)
-   - _carousel.scss (carousel component)
+   User Profile Page Preview
+   ------------------------------------------------------------
+   Design principles:
+   - CSS variables define color, themes define structure
+   - No hardcoded colors except as variable fallbacks
+   - Page background flows top-down
+   - Surfaces (cards, modals, nav) get their own tokens
    ============================================================ */
 
 
 /* ============================================================
    Preview Frame (Fake Browser Window)
+   ------------------------------------------------------------
+   Acts as the root boundary for theming variables.
    ============================================================ */
 
 .page-preview-frame {
@@ -17,17 +22,21 @@
     border-radius: 6px;
     overflow: hidden;
 
-    /* Page theming */
+    /* ----------------------------
+       Core page tokens
+       ---------------------------- */
     background-color: var(--page-background, #ffffff);
     color: var(--page-text, #333333);
     font-family: var(--page-font, Inter);
 
-    /* Body text + form elements */
+    /* ----------------------------
+       Typography
+       ---------------------------- */
     .subtitle,
     .content,
-    .button,
     .label,
-    .help .single-selector-container,
+    .help,
+    .single-selector-container,
     .single-selector-input,
     .single-selector-options,
     .single-selector-option {
@@ -35,15 +44,15 @@
         color: var(--page-text, #333333);
     }
 
-    /* Headings & navigation */
     .title,
-    .section-header,
-    .navbar {
+    .section-header {
         font-family: var(--heading-font, "Playfair Display");
         color: var(--page-text, #333333);
     }
 
-    /* Navigation bar */
+    /* ----------------------------
+       Navigation
+       ---------------------------- */
     .navbar {
         background-color: var(--nav-background, #1a1a1a);
         color: var(--nav-text, #ffffff);
@@ -58,7 +67,9 @@
         }
     }
 
-    /* Buttons */
+    /* ----------------------------
+       Buttons
+       ---------------------------- */
     .button {
         background-color: var(--button-background, #3273dc);
         color: var(--button-text, #ffffff);
@@ -70,22 +81,34 @@
         }
     }
 
-    /* Links & accents */
+    /* ----------------------------
+       Links & accents
+       ---------------------------- */
     a,
     .highlight {
         color: var(--accent-color, #ff3860);
 
         &:hover {
-            opacity: 0.8;
+            opacity: 0.85;
         }
     }
 
-    /* Common containers */
-    .card,
-    .modal,
+    /* ----------------------------
+       Common surfaces
+       ---------------------------- */
+    .card {
+        background-color: var(--card-background);
+        color: var(--page-text);
+    }
+
+    .modal {
+        background-color: var(--modal-background);
+        color: var(--page-text);
+    }
+
     .footer {
-        background-color: var(--page-background, #ffffff);
-        color: var(--page-text, #333333);
+        background-color: var(--footer-background);
+        color: var(--page-text);
     }
 
     .bordered {
@@ -96,6 +119,8 @@
 
 /* ============================================================
    Root Preview Container
+   ------------------------------------------------------------
+   Scroll container inside the preview frame.
    ============================================================ */
 
 .user-profile-preview {
@@ -105,16 +130,19 @@
     scroll-snap-type: y mandatory;
 
     padding: 0;
-    background: #ffffff;
+    background-color: var(--page-background, #ffffff);
     font-family: var(--page-font, Inter);
 }
 
 
 /* ============================================================
    Global Section Behavior
+   ------------------------------------------------------------
+   Sections inherit page background by default.
    ============================================================ */
 
 .user-profile-preview section {
+    background-color: inherit;
     min-height: 100vh;
     padding: 4rem 2rem;
 
@@ -129,7 +157,7 @@
 
 
 /* ============================================================
-   Navigation
+   Navigation (Sticky)
    ============================================================ */
 
 .user-profile-preview nav {
@@ -137,7 +165,7 @@
     top: 0;
     z-index: 10;
 
-    background: inherit;
+    background-color: inherit;
     padding: 1rem 0;
     margin-bottom: 2rem;
 }
@@ -166,7 +194,7 @@
 
     p.subtitle {
         font-size: 1.25rem;
-        color: #666;
+        color: var(--page-muted-text, #666);
     }
 }
 
@@ -179,7 +207,7 @@
         margin: 0 auto;
         font-size: 1.05rem;
         line-height: 1.7;
-        color: #333;
+        color: var(--page-text, #333);
     }
 }
 
@@ -194,6 +222,10 @@
     .box {
         height: 100%;
         text-align: center;
+        background-color: var(--card-background);
+        color: var(--surface-text, var(--page-text));
+        border: 1px solid var(--card-border, transparent);
+        box-shadow: var(--card-shadow, none);
 
         strong {
             display: block;
@@ -201,8 +233,7 @@
         }
 
         a {
-            color: #3273dc;
-            word-break: break-word;
+            color: var(--link-color, var(--accent-color));
 
             &:hover {
                 text-decoration: underline;
@@ -219,7 +250,7 @@
     font-size: 1.1rem;
 
     a {
-        color: #3273dc;
+        color: var(--link-color, var(--accent-color));
 
         &:hover {
             text-decoration: underline;
@@ -230,13 +261,15 @@
 
 /* ============================================================
    THEMES
+   ------------------------------------------------------------
+   Themes define layout & spacing only.
+   Colors must come from variables.
    ============================================================ */
 
 /* ---------- MODERN ---------- */
 
 .theme-modern {
-    background: #ffffff;
-    color: #222;
+    color: var(--page-text);
 
     .layout-modern {
         max-width: 960px;
@@ -246,20 +279,14 @@
     nav.tabs {
         margin-bottom: 4rem;
     }
-
-    section {
-        background: #ffffff;
-    }
 }
 
 
 /* ---------- MINIMAL ---------- */
 
 .theme-minimal {
-    background: #f8f8f8;
-    color: #222;
+    color: var(--page-text);
 
-    /* Disable snap scrolling */
     scroll-snap-type: none;
 
     section {
@@ -281,14 +308,9 @@
 /* ---------- PORTFOLIO ---------- */
 
 .theme-portfolio {
-    background: #111;
-    color: #eee;
+    color: var(--page-text);
 
     scroll-snap-type: none;
-
-    a {
-        color: #5fa8ff;
-    }
 
     .layout-portfolio {
         display: grid;
@@ -315,11 +337,6 @@
     .section-hero img {
         max-width: 120px;
     }
-
-    .section-projects .box {
-        background: #1e1e1e;
-        border: none;
-    }
 }
 
 
@@ -338,7 +355,7 @@
     top: 0;
     z-index: 20;
 
-    background: var(--background-color, #ffffff);
+    background-color: var(--surface-background, #ffffff);
     padding-bottom: 1rem;
     margin-bottom: 1rem;
     border-bottom: 1px solid #e5e5e5;
@@ -381,7 +398,6 @@
 
 /* ============================================================
    Carousel Integration
-   Uses shared _carousel.scss component
    ============================================================ */
 
 .projects-carousel {

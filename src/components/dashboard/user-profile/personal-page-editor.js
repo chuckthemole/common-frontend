@@ -294,34 +294,73 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                                 target={previewRef}
                                 colorLayouts={previewColorLayouts}
                                 slots={{
-                                    /* Page background and main text */
+                                    /* ======================================================
+                                       Page-level colors (global background & text)
+                                       ====================================================== */
+
                                     background: {
                                         cssVar: "--page-background",
-                                        default: "#ffffff", // white page background
+                                        default: "#ffffff", // main page background
                                     },
                                     text: {
                                         cssVar: "--page-text",
-                                        default: "#333333", // default text color
+                                        default: "#333333", // primary body text
+                                    },
+                                    mutedText: {
+                                        cssVar: "--page-text-muted",
+                                        default: "#666666", // subtitles, helper text
                                     },
 
-                                    /* Navigation bar */
+                                    /* ======================================================
+                                       Surface & elevation layers
+                                       (cards, modals, inset panels)
+                                       ====================================================== */
+
+                                    surface: {
+                                        cssVar: "--surface-background",
+                                        default: "#f8f9fb", // raised surfaces on light themes
+                                    },
+                                    surfaceText: {
+                                        cssVar: "--surface-text",
+                                        default: "#333333",
+                                    },
+                                    cardBackground: {
+                                        cssVar: "--card-background",
+                                        default: "#ffffff",
+                                    },
+                                    cardBorder: {
+                                        cssVar: "--card-border",
+                                        default: "#e5e7eb", // subtle card outline
+                                    },
+
+                                    /* ======================================================
+                                       Navigation
+                                       ====================================================== */
+
                                     navBackground: {
                                         cssVar: "--nav-background",
-                                        default: "#1a1a1a", // dark nav
+                                        default: "#1a1a1a",
                                     },
                                     navText: {
                                         cssVar: "--nav-text",
-                                        default: "#ffffff", // nav text color
+                                        default: "#ffffff",
                                     },
                                     navHover: {
                                         cssVar: "--nav-hover",
-                                        default: "#f5f5f5", // hover color for nav links
+                                        default: "#f5f5f5",
+                                    },
+                                    navBorder: {
+                                        cssVar: "--nav-border",
+                                        default: "rgba(255,255,255,0.1)",
                                     },
 
-                                    /* Buttons */
+                                    /* ======================================================
+                                       Buttons
+                                       ====================================================== */
+
                                     buttonBackground: {
                                         cssVar: "--button-background",
-                                        default: "#3273dc", // primary button blue
+                                        default: "#3273dc",
                                     },
                                     buttonText: {
                                         cssVar: "--button-text",
@@ -329,13 +368,41 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                                     },
                                     buttonHover: {
                                         cssVar: "--button-hover",
-                                        default: "#2759a3", // darker blue on hover
+                                        default: "#2759a3",
+                                    },
+                                    buttonBorder: {
+                                        cssVar: "--button-border",
+                                        default: "transparent",
                                     },
 
-                                    /* Accent color for highlights or links */
+                                    /* ======================================================
+                                       Links & accents
+                                       ====================================================== */
+
                                     accent: {
                                         cssVar: "--accent-color",
-                                        default: "#ff3860", // pink/red accent
+                                        default: "#ff3860",
+                                    },
+                                    link: {
+                                        cssVar: "--link-color",
+                                        default: "#3273dc",
+                                    },
+                                    linkHover: {
+                                        cssVar: "--link-hover",
+                                        default: "#2759a3",
+                                    },
+
+                                    /* ======================================================
+                                       Dividers & outlines
+                                       ====================================================== */
+
+                                    border: {
+                                        cssVar: "--border-color",
+                                        default: "#e5e7eb",
+                                    },
+                                    focusRing: {
+                                        cssVar: "--focus-ring",
+                                        default: "#3273dc",
                                     },
                                 }}
                             >
@@ -515,10 +582,9 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
 
                 {/* ---------- Preview Column ---------- */}
                 {previewVisible && (
-                    <div className="column is-6">
+                    <div className="column is-6" ref={previewRef}>
                         <div
                             className="page-preview-frame"
-                            ref={previewRef}
                             style={{
                                 "--page-font": "Inter",
                                 "--heading-font": "Playfair Display",

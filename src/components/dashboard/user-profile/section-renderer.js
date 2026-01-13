@@ -65,14 +65,14 @@ function ProjectsRenderer({ data }) {
 
     if (layout === "grid") {
         return (
-            <div className="columns is-multiline">
+            <div className="section-projects columns is-multiline">
                 {items.map(renderProject)}
             </div>
         );
     }
 
     return (
-        <div className="carousel">
+        <div className="section-projects carousel">
             <button
                 className="carousel-arrow left"
                 disabled={page === 0}
