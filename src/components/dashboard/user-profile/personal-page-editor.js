@@ -585,10 +585,6 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                     <div className="column is-6" ref={previewRef}>
                         <div
                             className="page-preview-frame"
-                            style={{
-                                "--page-font": "Inter",
-                                "--heading-font": "Playfair Display",
-                            }}
                         >
                             <PagePreview page={page} />
                         </div>

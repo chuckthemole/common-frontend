@@ -29,6 +29,13 @@
     color: var(--page-text, #333333);
     font-family: var(--page-font, Inter);
 
+    /* Force inheritance for all descendants */
+    *,
+    *::before,
+    *::after {
+        font-family: inherit;
+    }
+
     /* ----------------------------
        Typography
        ---------------------------- */
@@ -44,6 +51,12 @@
         color: var(--page-text, #333333);
     }
 
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
     .title,
     .section-header {
         font-family: var(--heading-font, "Playfair Display");
@@ -165,7 +178,6 @@
     top: 0;
     z-index: 10;
 
-    background-color: inherit;
     padding: 1rem 0;
     margin-bottom: 2rem;
 }
@@ -404,4 +416,151 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+}
+
+/* ============================================================
+   Profile Navigation
+   ------------------------------------------------------------
+   Design goals:
+   - Token-driven (no hardcoded colors)
+   - Sticky-safe inside scroll container
+   - Horizontal + vertical modes
+   - Minimal layout assumptions
+   ============================================================ */
+
+.profile-nav {
+    /* ----------------------------
+       Layout & positioning
+       ---------------------------- */
+    font-family: var(--heading-font, inherit);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    display: flex;
+    justify-content: center;
+
+    /* Prevent layout jump when sticky */
+    background-color: var(--nav-background, #1a1a1a);
+
+    /* Visual separation */
+    border-bottom: 1px solid var(--nav-border, rgba(0, 0, 0, 0.08));
+
+    /* Spacing */
+    padding: 0.75rem 1rem;
+
+    /* Typography */
+    font-family: var(--heading-font, inherit);
+    font-size: 0.95rem;
+
+    /* ----------------------------
+       List reset
+       ---------------------------- */
+    ul {
+        display: flex;
+        gap: 1.5rem;
+
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    li {
+        display: flex;
+    }
+
+    /* ----------------------------
+       Links
+       ---------------------------- */
+    a {
+        font-family: var(--heading-font, inherit);
+
+        position: relative;
+
+        color: var(--nav-text, #ffffff);
+        text-decoration: none;
+        font-weight: 500;
+
+        padding: 0.35rem 0;
+
+        transition:
+            color 0.15s ease,
+            opacity 0.15s ease;
+
+        &:hover {
+            color: var(--nav-hover, #f5f5f5);
+        }
+
+        /* Active / focus underline */
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -0.4rem;
+
+            height: 2px;
+            background-color: var(--nav-accent, var(--accent-color, #ff3860));
+
+            opacity: 0;
+            transform: scaleX(0);
+            transition:
+                opacity 0.15s ease,
+                transform 0.15s ease;
+        }
+
+        &:hover::after,
+        &:focus-visible::after {
+            opacity: 1;
+            transform: scaleX(1);
+        }
+    }
+
+    /* ----------------------------
+       Vertical variant
+       ---------------------------- */
+    &.vertical {
+        position: relative;
+        /* Disable sticky by default in sidebar */
+
+        justify-content: flex-start;
+        border-bottom: none;
+        border-right: 1px solid var(--nav-border, rgba(0, 0, 0, 0.08));
+
+        padding: 1rem 0;
+
+        ul {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        a {
+            padding: 0.4rem 1rem;
+
+            &::after {
+                left: 0.75rem;
+                right: auto;
+                bottom: 0.2rem;
+                width: 4px;
+                height: calc(100% - 0.4rem);
+                transform: scaleY(0);
+            }
+
+            &:hover::after,
+            &:focus-visible::after {
+                transform: scaleY(1);
+            }
+        }
+    }
+
+    /* ----------------------------
+       Reduced motion support
+       ---------------------------- */
+    @media (prefers-reduced-motion: reduce) {
+
+        a,
+        a::after {
+            transition: none;
+        }
+    }
 }

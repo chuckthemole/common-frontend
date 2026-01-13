@@ -37,7 +37,6 @@ export default function SectionRenderer({ section }) {
 
             {section.type === "contact" && (
                 <p>
-                    Contact:{" "}
                     <a href={`mailto:${section.data.email}`}>
                         {section.data.email}
                     </a>

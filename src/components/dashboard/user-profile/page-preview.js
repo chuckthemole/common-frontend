@@ -10,6 +10,7 @@ export default function PagePreview({ page }) {
             ref={containerRef}
             className={`user-profile-preview theme-${page.theme}`}
         >
+            <Nav page={page} containerRef={containerRef} />
             <ThemeLayout page={page} containerRef={containerRef} />
         </div>
     );
@@ -30,7 +31,6 @@ const THEME_LAYOUTS = {
 function DefaultLayout({ page }) {
     return (
         <>
-            <Nav page={page} />
             <Sections page={page} />
         </>
     );
@@ -39,7 +39,6 @@ function DefaultLayout({ page }) {
 function ModernLayout({ page, containerRef }) {
     return (
         <>
-            <Nav page={page} containerRef={containerRef} />
             <main className="layout-modern">
                 <Sections page={page} />
             </main>
@@ -60,7 +59,6 @@ function PortfolioLayout({ page, containerRef }) {
         <div className="layout-portfolio">
             <aside className="sidebar">
                 <HomeOnly page={page} />
-                <Nav page={page} containerRef={containerRef} vertical />
             </aside>
             <main className="content">
                 <Sections page={page} skip={["home"]} />
@@ -71,7 +69,7 @@ function PortfolioLayout({ page, containerRef }) {
 
 /* ---------- Shared Pieces ---------- */
 
-function Nav({ page, containerRef, vertical = false }) {
+function Nav({ page, containerRef, vertical = true }) {
     const handleClick = (e, id) => {
         e.preventDefault();
 
@@ -88,7 +86,7 @@ function Nav({ page, containerRef, vertical = false }) {
     };
 
     return (
-        <nav className={`navbar tabs ${vertical ? "is-vertical" : "is-centered"} mb-5`}>
+        <nav className={`profile-nav ${vertical ? "is-vertical" : "is-centered"} mb-5`}>
             <ul>
                 {page.sections
                     .filter((s) => s.enabled)
