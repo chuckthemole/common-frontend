@@ -1,11 +1,9 @@
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import RumpusQuill from "../../ui/editors/rumpus_quill";
 import RumpusQuillForm from "../../ui/editors/rumpus_quill_form";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
 import Tooltip from "../../ui/tooltip/tooltip";
-import { getApi } from "../../../api";
-import logger from "../../../logger";
 import PagePreview from "./page-preview";
 import Alert from "../../ui/alerts/alert";
 import FontSettingsModal from "../../design-control/font/font_settings_modal";
@@ -13,6 +11,74 @@ import ColorSettingsModal from "../../design-control/color/color_settings_modal"
 import { FontSettingsProvider } from "../../design-control/font";
 import { ColorSettingsProvider } from "../../design-control/color";
 import { previewColorLayouts } from "../../design-control/color/predefined_color_layouts_preview";
+
+import logger from "../../../logger";
+import { LocalPersistence } from "../../../persistence/persistence";
+
+/* ============================================================
+   Constants
+   ============================================================ */
+
+/**
+ * Persistence key for this editor.
+ * Change this once if you want multiple drafts / profiles.
+ */
+const PAGE_STORAGE_KEY = "personal-page:draft";
+
+/**
+ * Default persistence strategy.
+ * Swap this with ApiPersistence(...) later without refactors.
+ */
+const persistence = LocalPersistence;
+
+/* ============================================================
+   Default Page Schema
+   ============================================================ */
+const DEFAULT_PAGE = {
+    theme: "modern",
+    sections: [
+        {
+            id: "home",
+            type: "home",
+            enabled: true,
+            showTitle: false,
+            defaultTitle: "Home",
+            title: "Home",
+            data: { name: "", tagline: "", profileImage: "" },
+        },
+        {
+            id: "about",
+            type: "about",
+            enabled: true,
+            showTitle: true,
+            defaultTitle: "About",
+            title: "About",
+            data: { content: "" },
+        },
+        {
+            id: "projects",
+            type: "projects",
+            enabled: true,
+            showTitle: true,
+            defaultTitle: "Projects",
+            title: "Projects",
+            data: {
+                items: [],
+                layout: "carousel",
+                itemsPerPage: 3,
+            },
+        },
+        {
+            id: "contact",
+            type: "contact",
+            enabled: true,
+            showTitle: true,
+            defaultTitle: "Contact",
+            title: "Contact",
+            data: { email: "" },
+        },
+    ],
+};
 
 // Available themes
 const THEMES = [
@@ -114,66 +180,42 @@ function EditableTitle({ value, defaultValue, onChange }) {
 }
 
 /* ============================================================
-   Main Personal Page Editor
+   Personal Page Editor
    ============================================================ */
-export default function PersonalPageEditor({ endpoint, onSuccess }) {
-    const [page, setPage] = useState({
-        theme: "modern",
-        sections: [
-            {
-                id: "home",
-                type: "home",
-                enabled: true,
-                showTitle: false,
-                defaultTitle: "Home",
-                title: "Home",
-                data: { name: "", tagline: "", profileImage: "" },
-            },
-            {
-                id: "about",
-                type: "about",
-                enabled: true,
-                showTitle: true,
-                defaultTitle: "About",
-                title: "About",
-                data: { content: "" },
-            },
-            {
-                id: "projects",
-                type: "projects",
-                enabled: true,
-                showTitle: true,
-                defaultTitle: "Projects",
-                title: "Projects",
-                data: {
-                    items: [],
-                    layout: "carousel", // "grid" | "carousel"
-                    itemsPerPage: 3
-                },
-            },
-            {
-                id: "contact",
-                type: "contact",
-                enabled: true,
-                showTitle: true,
-                defaultTitle: "Contact",
-                title: "Contact",
-                data: { email: "" },
-            },
-        ],
-    });
 
+export default function PersonalPageEditor({ onSuccess }) {
     const previewRef = useRef(null);
     const aboutRef = useRef(null);
+
+    const [page, setPage] = useState(DEFAULT_PAGE);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
 
-    // Helper: get section by ID
+    /* ========================================================
+       Load persisted page on mount
+       ======================================================== */
+
+    useEffect(() => {
+        try {
+            const stored = persistence.getItem(PAGE_STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                setPage(parsed);
+            }
+        } catch (err) {
+            logger.error("[PersonalPageEditor] Failed to load draft:", err);
+        }
+    }, []);
+
+    /* ========================================================
+       Helpers
+       ======================================================== */
+
     const sectionById = (id) => page.sections.find((s) => s.id === id);
 
-    // Update section data
     const updateSection = (id, updater) =>
         setPage((prev) => ({
             ...prev,
@@ -182,11 +224,12 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
             ),
         }));
 
-    // Toggle section enabled/disabled
     const toggleSection = (id, enabled) =>
         setPage((prev) => ({
             ...prev,
-            sections: prev.sections.map((s) => (s.id === id ? { ...s, enabled } : s)),
+            sections: prev.sections.map((s) =>
+                s.id === id ? { ...s, enabled } : s
+            ),
         }));
 
     const toggleSectionTitle = (id, showTitle) =>
@@ -210,17 +253,21 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
         </Tooltip>
     );
 
-    // Update section title
-    const updateSectionTitle = (id, newTitle) =>
+    const updateSectionTitle = (id, title) =>
         setPage((prev) => ({
             ...prev,
             sections: prev.sections.map((s) =>
-                s.id === id ? { ...s, title: newTitle } : s
+                s.id === id ? { ...s, title } : s
             ),
         }));
 
-    // Project helpers
-    const updateProjects = (items) => updateSection("projects", { items });
+    /* ========================================================
+       Project helpers (unchanged behavior)
+       ======================================================== */
+
+    const updateProjects = (items) =>
+        updateSection("projects", { items });
+
     const moveProject = (index, dir) => {
         const items = [...sectionById("projects").data.items];
         const target = index + dir;
@@ -228,26 +275,40 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
         [items[index], items[target]] = [items[target], items[index]];
         updateProjects(items);
     };
-    const removeProject = (index) =>
-        updateProjects(sectionById("projects").data.items.filter((_, i) => i !== index));
 
-    // Save page
+    const removeProject = (index) =>
+        updateProjects(
+            sectionById("projects").data.items.filter((_, i) => i !== index)
+        );
+
+    /* ========================================================
+       Save
+       ======================================================== */
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
         try {
-            const api = getApi();
-            const res = await api.post(endpoint, page);
-            if (onSuccess) onSuccess(res.data);
+            persistence.setItem(
+                PAGE_STORAGE_KEY,
+                JSON.stringify(page)
+            );
+
+            setSuccessMessage("Page saved successfully!");
+            onSuccess?.(page);
         } catch (err) {
-            logger.error(err);
+            logger.error("[PersonalPageEditor] Save failed:", err);
             setError("Failed to save changes.");
         } finally {
             setLoading(false);
         }
     };
+
+    /* ========================================================
+       Render
+       ======================================================== */
 
     const home = sectionById("home");
     const about = sectionById("about");
@@ -256,15 +317,24 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
 
     return (
         <RumpusQuillForm>
-            {/* ---------- Header ---------- */}
+            {/* Header */}
             <div className="editor-header global-editor-header box">
                 <h2 className="title is-4 mb-0">Personal Page Editor</h2>
+
                 <div className="is-flex is-align-items-center">
                     <div className="is-flex is-flex-direction-column is-align-items-center">
-                        <span className="label mr-2 has-text-grey">Preview</span>
-                        <ToggleSwitch checked={previewVisible} onChange={setPreviewVisible} />
+                        <span className="label has-text-grey">Preview</span>
+                        <ToggleSwitch
+                            checked={previewVisible}
+                            onChange={setPreviewVisible}
+                        />
                     </div>
-                    <button className="button is-link ml-4" disabled={loading} onClick={handleSubmit}>
+
+                    <button
+                        className="button is-link ml-4"
+                        disabled={loading}
+                        onClick={handleSubmit}
+                    >
                         {loading ? "Saving..." : "Save"}
                     </button>
                 </div>
@@ -577,6 +647,19 @@ export default function PersonalPageEditor({ endpoint, onSuccess }) {
                                 onClose={() => setError(null)}
                             />
                         )}
+
+                        {/* ---------- Success Alert ---------- */}
+                        {successMessage && (
+                            <Alert
+                                message={successMessage}
+                                type="success"
+                                persistent={false}
+                                size="medium"
+                                position="bottom"
+                                onClose={() => setSuccessMessage(null)}
+                            />
+                        )}
+
                     </div>
                 </div>
 
