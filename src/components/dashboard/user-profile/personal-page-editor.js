@@ -188,6 +188,7 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     const [successMessage, setSuccessMessage] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
+    const [fontSettings, setFontSettings] = useState({});
 
     /* ========================================================
        Load persisted page on mount
@@ -199,6 +200,14 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
             if (stored) {
                 const parsed = JSON.parse(stored);
                 setPage(parsed);
+                setFontSettings(
+                    parsed.fontSettings ||
+                    {
+                        body: "Inter",
+                        heading: "Playfair Display"
+                    }
+                );
+                setColorSettings(parsed.colorSettings || {});
             }
         } catch (err) {
             logger.error("[PersonalPageEditor] Failed to load draft:", err);
@@ -358,6 +367,7 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                         >
                             <ColorSettingsProvider
                                 target={previewRef}
+                                persistence={persistence}
                                 colorLayouts={previewColorLayouts}
                                 slots={{
                                     /* ======================================================
@@ -367,14 +377,17 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                     background: {
                                         cssVar: "--page-background",
                                         default: "#ffffff", // main page background
+                                        storageKey: "personal-page:background",
                                     },
                                     text: {
                                         cssVar: "--page-text",
                                         default: "#333333", // primary body text
+                                        storageKey: "personal-page:text",
                                     },
                                     mutedText: {
                                         cssVar: "--page-text-muted",
                                         default: "#666666", // subtitles, helper text
+                                        storageKey: "personal-page:mutedText",
                                     },
 
                                     /* ======================================================
@@ -385,18 +398,22 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                     surface: {
                                         cssVar: "--surface-background",
                                         default: "#f8f9fb", // raised surfaces on light themes
+                                        storageKey: "personal-page:surface",
                                     },
                                     surfaceText: {
                                         cssVar: "--surface-text",
                                         default: "#333333",
+                                        storageKey: "personal-page:surfaceText",
                                     },
                                     cardBackground: {
                                         cssVar: "--card-background",
                                         default: "#ffffff",
+                                        storageKey: "personal-page:cardBackground",
                                     },
                                     cardBorder: {
                                         cssVar: "--card-border",
                                         default: "#e5e7eb", // subtle card outline
+                                        storageKey: "personal-page:cardBorder",
                                     },
 
                                     /* ======================================================
@@ -406,18 +423,22 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                     navBackground: {
                                         cssVar: "--nav-background",
                                         default: "#1a1a1a",
+                                        storageKey: "personal-page:navBackground",
                                     },
                                     navText: {
                                         cssVar: "--nav-text",
                                         default: "#ffffff",
+                                        storageKey: "personal-page:navText",
                                     },
                                     navHover: {
                                         cssVar: "--nav-hover",
                                         default: "#f5f5f5",
+                                        storageKey: "personal-page:navHover",
                                     },
                                     navBorder: {
                                         cssVar: "--nav-border",
                                         default: "rgba(255,255,255,0.1)",
+                                        storageKey: "personal-page:navBorder",
                                     },
 
                                     /* ======================================================
@@ -427,18 +448,22 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                     buttonBackground: {
                                         cssVar: "--button-background",
                                         default: "#3273dc",
+                                        storageKey: "personal-page:buttonBackground",
                                     },
                                     buttonText: {
                                         cssVar: "--button-text",
                                         default: "#ffffff",
+                                        storageKey: "personal-page:buttonText",
                                     },
                                     buttonHover: {
                                         cssVar: "--button-hover",
                                         default: "#2759a3",
+                                        storageKey: "personal-page:buttonHover",
                                     },
                                     buttonBorder: {
                                         cssVar: "--button-border",
                                         default: "transparent",
+                                        storageKey: "personal-page:buttonBorder",
                                     },
 
                                     /* ======================================================
@@ -448,14 +473,17 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                     accent: {
                                         cssVar: "--accent-color",
                                         default: "#ff3860",
+                                        storageKey: "personal-page:accent",
                                     },
                                     link: {
                                         cssVar: "--link-color",
                                         default: "#3273dc",
+                                        storageKey: "personal-page:link",
                                     },
                                     linkHover: {
                                         cssVar: "--link-hover",
                                         default: "#2759a3",
+                                        storageKey: "personal-page:linkHover",
                                     },
 
                                     /* ======================================================
@@ -465,10 +493,12 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                                     border: {
                                         cssVar: "--border-color",
                                         default: "#e5e7eb",
+                                        storageKey: "personal-page:border",
                                     },
                                     focusRing: {
                                         cssVar: "--focus-ring",
                                         default: "#3273dc",
+                                        storageKey: "personal-page:focusRing",
                                     },
                                 }}
                             >
