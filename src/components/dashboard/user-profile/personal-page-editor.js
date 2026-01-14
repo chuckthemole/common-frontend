@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import RumpusQuill from "../../ui/editors/rumpus_quill";
 import RumpusQuillForm from "../../ui/editors/rumpus_quill_form";
+import PortalContainer from "../../ui/portal-container";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
 import Tooltip from "../../ui/tooltip/tooltip";
@@ -447,17 +448,21 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                     {/* Saved Profiles Selector */}
                     <Tooltip text="Load a previously saved profile">
                         <div style={{ flex: 1, minWidth: "180px" }}>
-                            <SingleSelector
-                                options={Object.keys(savedProfiles).map((id) => ({
-                                    value: id,
-                                    label: id,
-                                }))}
-                                value={profileId}
-                                onChange={loadProfile}
-                                placeholder="Select a saved profile..."
-                                searchable={true}
-                                portalTarget={document.body}
-                            />
+                            <PortalContainer id="editor-dropdowns">
+                                {(portalTarget) => (
+                                    <SingleSelector
+                                        options={Object.keys(savedProfiles).map((id) => ({
+                                            value: id,
+                                            label: id,
+                                        }))}
+                                        value={profileId}
+                                        onChange={loadProfile}
+                                        placeholder="Select a saved profile..."
+                                        searchable={true}
+                                        portalTarget={portalTarget}
+                                    />
+                                )}
+                            </PortalContainer>
                         </div>
                     </Tooltip>
                 </div>
