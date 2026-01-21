@@ -15,20 +15,27 @@ import 'react-quill/dist/quill.snow.css';
  * 
  * To clear the editor, call editor_ref.current.getEditor().setContents('').
  */
-export default function RumpusQuill({modules, formats, placeholder, value, setValue, editor_ref}) {
+export default function RumpusQuill({
+    modules,
+    formats,
+    placeholder,
+    value,
+    setValue,
+    editor_ref
+}) {
 
     const default_placeholder = 'Compose an epic...';
 
     const default_modules = {
         toolbar: [
             [{ 'header': [1, 2, false] }],
-            ['bold', 'italic', 'underline','strike', 'blockquote'],
-            [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
             ['link', 'image'],
             ['clean']
         ],
     };
-    
+
     const default_formats = [
         'header',
         'bold', 'italic', 'underline', 'strike', 'blockquote',
@@ -36,29 +43,17 @@ export default function RumpusQuill({modules, formats, placeholder, value, setVa
         'link', 'image'
     ];
 
-    let quill = React.createElement(
-
-        // type
-        'div',
-
-        // props
-        {
-            style: {
-                background: "white"
-            }
-        },
-
-        // children
-        <ReactQuill
-            theme='snow'
-            value={value}
-            onChange={setValue}
-            ref={editor_ref}
-            placeholder={placeholder !== undefined ? placeholder : default_placeholder}
-            modules={modules !== undefined ? modules : default_modules}
-            formats={formats !== undefined ? formats : default_formats}
-        />
+    return (
+        <div style={{ background: "white" }}>
+            <ReactQuill
+                theme="snow"
+                value={value}
+                onChange={setValue}
+                ref={editor_ref}
+                placeholder={placeholder ?? default_placeholder}
+                modules={modules ?? default_modules}
+                formats={formats ?? default_formats}
+            />
+        </div>
     );
-
-    return (<>{quill}</>);
 }
