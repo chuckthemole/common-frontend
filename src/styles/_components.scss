@@ -166,6 +166,7 @@
     .card-header {
         background-color: var(--card-header-background-color, var(--missing-debug-var));
     }
+
     .card-header-title {
         font-family: var(--primary-font);
     }
@@ -228,4 +229,22 @@
 .brand-logo {
     width: 200px; // or responsive sizing
     animation: logoColorShift 4s infinite;
+}
+
+// Modal
+/* Pure blur */
+.rumpus-backdrop-blur #root {
+    filter: blur(6px);
+    transition: filter 200ms ease;
+}
+
+/* Blur + dim */
+.rumpus-backdrop-blur-dim #root {
+    filter: blur(6px) brightness(0.9);
+    transition: filter 200ms ease;
+}
+
+/* Safety */
+.ReactModal__Content {
+    filter: none;
 }

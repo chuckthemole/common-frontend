@@ -1,6 +1,13 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import Modal from "react-modal";
 import Draggable from "react-draggable";
+
+export const BackdropMode = Object.freeze({
+    DIM: "dim",           // greyed out
+    BLUR: "blur",         // blur app content
+    BLUR_DIM: "blur-dim", // blur + dim
+    NONE: "none",         // no backdrop
+});
 
 export default function RumpusModal({
     isOpen,
@@ -9,6 +16,7 @@ export default function RumpusModal({
     draggable = false,
     width = "90vw",
     maxWidth = "1200px",
+    backdropMode = BackdropMode.BLUR_DIM,
     children,
 }) {
 
@@ -69,6 +77,58 @@ export default function RumpusModal({
         </div>
     );
 
+    function getOverlayStyle(backdropMode) {
+        switch (backdropMode) {
+            case BackdropMode.NONE:
+                return { backgroundColor: "transparent" };
+
+            case BackdropMode.BLUR:
+                return {
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                };
+
+            case BackdropMode.BLUR_DIM:
+                return {
+                    backgroundColor: "rgba(0,0,0,0.35)",
+                };
+
+            case BackdropMode.DIM:
+            default:
+                return {
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                };
+        }
+    }
+
+    function getBodyClass(backdropMode) {
+        switch (backdropMode) {
+            case BackdropMode.BLUR:
+                return "rumpus-backdrop-blur";
+
+            case BackdropMode.BLUR_DIM:
+                return "rumpus-backdrop-blur-dim";
+
+            default:
+                return null;
+        }
+    }
+
+    const bodyClass = getBodyClass(backdropMode);
+
+    useEffect(() => {
+        if (!bodyClass) return;
+
+        if (isOpen) {
+            document.body.classList.add(bodyClass);
+        } else {
+            document.body.classList.remove(bodyClass);
+        }
+
+        return () => {
+            document.body.classList.remove(bodyClass);
+        };
+    }, [isOpen, bodyClass]);
+
     return (
         <Modal
             isOpen={isOpen}
@@ -80,8 +140,9 @@ export default function RumpusModal({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    // backgroundColor: "rgba(0, 0, 0, 0.5)",
                     zIndex: 9999,
+                    ...getOverlayStyle(backdropMode),
                 },
                 content: {
                     position: "relative",
