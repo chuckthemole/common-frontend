@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import RumpusQuill from "../../ui/editors/rumpus_quill";
-import RumpusQuillForm from "../../ui/editors/rumpus_quill_form";
 import PortalContainer from "../../ui/portal-container";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
@@ -153,9 +152,13 @@ function EditableTitle({ value, defaultValue, onChange }) {
 /* ============================================================
    PersonalPageEditor
    ============================================================ */
-export default function PersonalPageEditor({ onSuccess, persistence: persistenceProp }) {
+export default function PersonalPageEditor({
+    onSuccess,
+    persistence: persistenceProp
+}) {
     const persistence = persistenceProp || LocalPersistence;
-    const previewRef = useRef(null);
+    // const previewRef = useRef(null);
+    const [previewEl, setPreviewEl] = useState(null);
     const aboutRef = useRef(null);
 
     const [page, setPage] = useState(DEFAULT_PAGE);
@@ -168,33 +171,63 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     const [profileId, setProfileId] = useState("");
     const [savedProfiles, setSavedProfiles] = useState({});
 
+    // DEBUG
+    // useEffect(() => {
+    //     logger.debug("[PersonalPageEditor] render", {
+    //         previewVisible,
+    //         hasPreviewEl: !!previewEl,
+    //     });
+    // });
+
     /* ========================================================
-       Load all saved profiles on mount
-       ======================================================== */
+   Load all saved profiles on mount
+   ======================================================== */
     useEffect(() => {
-        try {
-            const storedProfiles = persistence.getItem("personal-page:profiles");
-            if (storedProfiles) setSavedProfiles(JSON.parse(storedProfiles));
-        } catch (err) {
-            logger.error("[PersonalPageEditor] Failed to load profiles:", err);
-        }
+        let cancelled = false;
+
+        const loadProfiles = async () => {
+            try {
+                const storedProfiles = await persistence.getItem("personal-page:profiles");
+                if (!storedProfiles || cancelled) return;
+
+                setSavedProfiles(JSON.parse(storedProfiles));
+            } catch (err) {
+                logger.error("[PersonalPageEditor] Failed to load profiles:", err);
+            }
+        };
+
+        loadProfiles();
+
+        return () => {
+            cancelled = true;
+        };
     }, [persistence]);
 
     /* ========================================================
        Load a draft page on mount
        ======================================================== */
     useEffect(() => {
-        try {
-            const stored = persistence.getItem(PAGE_STORAGE_KEY);
-            if (stored) {
+        let cancelled = false;
+
+        const load = async () => {
+            try {
+                const stored = await persistence.getItem(PAGE_STORAGE_KEY);
+                if (!stored || cancelled) return;
+
                 const parsed = JSON.parse(stored);
                 setPage(parsed);
                 setFontSettings(parsed.fontSettings || { body: "Inter", heading: "Playfair Display" });
                 setColorSettings(parsed.colorSettings || {});
+            } catch (err) {
+                logger.error("[PersonalPageEditor] Failed to load draft:", err);
             }
-        } catch (err) {
-            logger.error("[PersonalPageEditor] Failed to load draft:", err);
-        }
+        };
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
     }, [persistence]);
 
     /* ========================================================
@@ -311,7 +344,10 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                 }
             };
             setSavedProfiles(newProfiles);
-            persistence.setItem("personal-page:profiles", JSON.stringify(newProfiles));
+            await persistence.setItem(
+                "personal-page:profiles",
+                JSON.stringify(newProfiles)
+            );
 
             setSuccessMessage(`Profile "${profileId}" saved successfully!`);
             onSuccess?.(page);
@@ -326,7 +362,7 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
     /* ========================================================
    Clear all saved profiles
    ======================================================== */
-    const handleClearProfiles = () => {
+    const handleClearProfiles = async () => {
         try {
             if (!Object.keys(savedProfiles).length) {
                 logger.info("[PersonalPageEditor] No profiles to clear");
@@ -342,7 +378,10 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
             setSavedProfiles({});
             setProfileId("");
 
-            persistence.setItem("personal-page:profiles", JSON.stringify({}));
+            await persistence.setItem(
+                "personal-page:profiles",
+                JSON.stringify({})
+            );
 
             setSuccessMessage("All saved profiles have been cleared.");
             logger.info("[PersonalPageEditor] All profiles cleared");
@@ -380,7 +419,7 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
 
 
     return (
-        <RumpusQuillForm>
+        <>
             {/* Header */}
             <div className="editor-header global-editor-header box">
                 <h2 className="title is-4 mb-0">Personal Page Editor</h2>
@@ -474,171 +513,175 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                 <div className={`column ${previewVisible ? "is-6" : "is-12"} editor-column`}>
                     <div className="editor-scroll">
 
-                        {/* Page Style Controls */}
-                        <FontSettingsProvider
-                            target={previewRef}
-                            value={fontSettings}
-                            onChange={setFontSettings}
-                            slots={{
-                                body: {
-                                    cssVar: "--page-font",
-                                    default: "Inter",
-                                    storageKey: "personal-page:page-font",
-                                },
-                                heading: {
-                                    cssVar: "--heading-font",
-                                    default: "Playfair Display",
-                                    storageKey: "personal-page:heading-font",
-                                },
-                            }}
-                        >
-                            <ColorSettingsProvider
-                                target={previewRef}
-                                value={colorSettings}
-                                onChange={setColorSettings}
-                                colorLayouts={previewColorLayouts}
-                                slots={{
-                                    /* ======================================================
-                                       Page-level colors (global background & text)
-                                       ====================================================== */
+                        {previewEl && (
+                            <>
+                                {logger.debug("[PersonalPageEditor] Mounting style providers")}
+                                <FontSettingsProvider
+                                    target={previewEl}
+                                    value={fontSettings}
+                                    onChange={setFontSettings}
+                                    slots={{
+                                        body: {
+                                            cssVar: "--page-font",
+                                            default: "Inter",
+                                            storageKey: "personal-page:page-font",
+                                        },
+                                        heading: {
+                                            cssVar: "--heading-font",
+                                            default: "Playfair Display",
+                                            storageKey: "personal-page:heading-font",
+                                        },
+                                    }}
+                                >
+                                    <ColorSettingsProvider
+                                        target={previewEl}
+                                        value={colorSettings}
+                                        onChange={setColorSettings}
+                                        colorLayouts={previewColorLayouts}
+                                        slots={{
+                                            /* ======================================================
+                                               Page-level colors (global background & text)
+                                               ====================================================== */
 
-                                    background: {
-                                        cssVar: "--page-background",
-                                        default: "#ffffff", // main page background
-                                        storageKey: "personal-page:background",
-                                    },
-                                    text: {
-                                        cssVar: "--page-text",
-                                        default: "#333333", // primary body text
-                                        storageKey: "personal-page:text",
-                                    },
-                                    mutedText: {
-                                        cssVar: "--page-text-muted",
-                                        default: "#666666", // subtitles, helper text
-                                        storageKey: "personal-page:mutedText",
-                                    },
+                                            background: {
+                                                cssVar: "--page-background",
+                                                default: "#ffffff", // main page background
+                                                storageKey: "personal-page:background",
+                                            },
+                                            text: {
+                                                cssVar: "--page-text",
+                                                default: "#333333", // primary body text
+                                                storageKey: "personal-page:text",
+                                            },
+                                            mutedText: {
+                                                cssVar: "--page-text-muted",
+                                                default: "#666666", // subtitles, helper text
+                                                storageKey: "personal-page:mutedText",
+                                            },
 
-                                    /* ======================================================
-                                       Surface & elevation layers
-                                       (cards, modals, inset panels)
-                                       ====================================================== */
+                                            /* ======================================================
+                                               Surface & elevation layers
+                                               (cards, modals, inset panels)
+                                               ====================================================== */
 
-                                    surface: {
-                                        cssVar: "--surface-background",
-                                        default: "#f8f9fb", // raised surfaces on light themes
-                                        storageKey: "personal-page:surface",
-                                    },
-                                    surfaceText: {
-                                        cssVar: "--surface-text",
-                                        default: "#333333",
-                                        storageKey: "personal-page:surfaceText",
-                                    },
-                                    cardBackground: {
-                                        cssVar: "--card-background",
-                                        default: "#ffffff",
-                                        storageKey: "personal-page:cardBackground",
-                                    },
-                                    cardBorder: {
-                                        cssVar: "--card-border",
-                                        default: "#e5e7eb", // subtle card outline
-                                        storageKey: "personal-page:cardBorder",
-                                    },
+                                            surface: {
+                                                cssVar: "--surface-background",
+                                                default: "#f8f9fb", // raised surfaces on light themes
+                                                storageKey: "personal-page:surface",
+                                            },
+                                            surfaceText: {
+                                                cssVar: "--surface-text",
+                                                default: "#333333",
+                                                storageKey: "personal-page:surfaceText",
+                                            },
+                                            cardBackground: {
+                                                cssVar: "--card-background",
+                                                default: "#ffffff",
+                                                storageKey: "personal-page:cardBackground",
+                                            },
+                                            cardBorder: {
+                                                cssVar: "--card-border",
+                                                default: "#e5e7eb", // subtle card outline
+                                                storageKey: "personal-page:cardBorder",
+                                            },
 
-                                    /* ======================================================
-                                       Navigation
-                                       ====================================================== */
+                                            /* ======================================================
+                                               Navigation
+                                               ====================================================== */
 
-                                    navBackground: {
-                                        cssVar: "--nav-background",
-                                        default: "#1a1a1a",
-                                        storageKey: "personal-page:navBackground",
-                                    },
-                                    navText: {
-                                        cssVar: "--nav-text",
-                                        default: "#ffffff",
-                                        storageKey: "personal-page:navText",
-                                    },
-                                    navHover: {
-                                        cssVar: "--nav-hover",
-                                        default: "#f5f5f5",
-                                        storageKey: "personal-page:navHover",
-                                    },
-                                    navBorder: {
-                                        cssVar: "--nav-border",
-                                        default: "rgba(255,255,255,0.1)",
-                                        storageKey: "personal-page:navBorder",
-                                    },
+                                            navBackground: {
+                                                cssVar: "--nav-background",
+                                                default: "#1a1a1a",
+                                                storageKey: "personal-page:navBackground",
+                                            },
+                                            navText: {
+                                                cssVar: "--nav-text",
+                                                default: "#ffffff",
+                                                storageKey: "personal-page:navText",
+                                            },
+                                            navHover: {
+                                                cssVar: "--nav-hover",
+                                                default: "#f5f5f5",
+                                                storageKey: "personal-page:navHover",
+                                            },
+                                            navBorder: {
+                                                cssVar: "--nav-border",
+                                                default: "rgba(255,255,255,0.1)",
+                                                storageKey: "personal-page:navBorder",
+                                            },
 
-                                    /* ======================================================
-                                       Buttons
-                                       ====================================================== */
+                                            /* ======================================================
+                                               Buttons
+                                               ====================================================== */
 
-                                    buttonBackground: {
-                                        cssVar: "--button-background",
-                                        default: "#3273dc",
-                                        storageKey: "personal-page:buttonBackground",
-                                    },
-                                    buttonText: {
-                                        cssVar: "--button-text",
-                                        default: "#ffffff",
-                                        storageKey: "personal-page:buttonText",
-                                    },
-                                    buttonHover: {
-                                        cssVar: "--button-hover",
-                                        default: "#2759a3",
-                                        storageKey: "personal-page:buttonHover",
-                                    },
-                                    buttonBorder: {
-                                        cssVar: "--button-border",
-                                        default: "transparent",
-                                        storageKey: "personal-page:buttonBorder",
-                                    },
+                                            buttonBackground: {
+                                                cssVar: "--button-background",
+                                                default: "#3273dc",
+                                                storageKey: "personal-page:buttonBackground",
+                                            },
+                                            buttonText: {
+                                                cssVar: "--button-text",
+                                                default: "#ffffff",
+                                                storageKey: "personal-page:buttonText",
+                                            },
+                                            buttonHover: {
+                                                cssVar: "--button-hover",
+                                                default: "#2759a3",
+                                                storageKey: "personal-page:buttonHover",
+                                            },
+                                            buttonBorder: {
+                                                cssVar: "--button-border",
+                                                default: "transparent",
+                                                storageKey: "personal-page:buttonBorder",
+                                            },
 
-                                    /* ======================================================
-                                       Links & accents
-                                       ====================================================== */
+                                            /* ======================================================
+                                               Links & accents
+                                               ====================================================== */
 
-                                    accent: {
-                                        cssVar: "--accent-color",
-                                        default: "#ff3860",
-                                        storageKey: "personal-page:accent",
-                                    },
-                                    link: {
-                                        cssVar: "--link-color",
-                                        default: "#3273dc",
-                                        storageKey: "personal-page:link",
-                                    },
-                                    linkHover: {
-                                        cssVar: "--link-hover",
-                                        default: "#2759a3",
-                                        storageKey: "personal-page:linkHover",
-                                    },
+                                            accent: {
+                                                cssVar: "--accent-color",
+                                                default: "#ff3860",
+                                                storageKey: "personal-page:accent",
+                                            },
+                                            link: {
+                                                cssVar: "--link-color",
+                                                default: "#3273dc",
+                                                storageKey: "personal-page:link",
+                                            },
+                                            linkHover: {
+                                                cssVar: "--link-hover",
+                                                default: "#2759a3",
+                                                storageKey: "personal-page:linkHover",
+                                            },
 
-                                    /* ======================================================
-                                       Dividers & outlines
-                                       ====================================================== */
+                                            /* ======================================================
+                                               Dividers & outlines
+                                               ====================================================== */
 
-                                    border: {
-                                        cssVar: "--border-color",
-                                        default: "#e5e7eb",
-                                        storageKey: "personal-page:border",
-                                    },
-                                    focusRing: {
-                                        cssVar: "--focus-ring",
-                                        default: "#3273dc",
-                                        storageKey: "personal-page:focusRing",
-                                    },
-                                }}
-                            >
-                                <PageStyleControls
-                                    previewRef={previewRef}
-                                    page={page}
-                                    setPage={setPage}
-                                    colorSettings={colorSettings}
-                                    setColorSettings={setColorSettings}
-                                />
-                            </ColorSettingsProvider>
-                        </FontSettingsProvider>
+                                            border: {
+                                                cssVar: "--border-color",
+                                                default: "#e5e7eb",
+                                                storageKey: "personal-page:border",
+                                            },
+                                            focusRing: {
+                                                cssVar: "--focus-ring",
+                                                default: "#3273dc",
+                                                storageKey: "personal-page:focusRing",
+                                            },
+                                        }}
+                                    >
+                                        <PageStyleControls
+                                            previewRef={previewEl}
+                                            page={page}
+                                            setPage={setPage}
+                                            colorSettings={colorSettings}
+                                            setColorSettings={setColorSettings}
+                                        />
+                                    </ColorSettingsProvider>
+                                </FontSettingsProvider>
+                            </>
+                        )}
 
                         {/* ---------- Home Section ---------- */}
                         <SectionCard
@@ -659,7 +702,58 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
                             enabled={about.enabled}
                             onChange={(v) => toggleSection("about", v)}
                         >
-                            <RumpusQuill value={about.data.content} editor_ref={aboutRef} setValue={(val) => updateSection("about", { content: val })} placeholder="Write your bio..." />
+                            <RumpusQuill
+                                value={about.data.content}
+                                ref={aboutRef}
+                                setValue={(val) => updateSection("about", { content: val })}
+                                placeholder="Write your bio..." />
+
+                            {/* Editor Buttons */}
+                            {/* TODO: can we move these to the RumpusQuill toolbar? */}
+                            <Tooltip text="Clear the contents of the editor">
+                                <button
+                                    type="button"
+                                    className="button is-danger is-light is-small mt-2"
+                                    onClick={() => {
+                                        if (aboutRef.current?.getEditor) { // Use the ref to access the Quill instance and clear it
+                                            aboutRef.current.getEditor().setContents("");
+                                        }
+                                        updateSection("about", { content: "" }); // Also clear the state
+                                    }}
+                                >
+                                    Clear
+                                </button>
+                            </Tooltip>
+                            <Tooltip text="Undo the last change">
+                                <button
+                                    type="button"
+                                    className="button is-light is-small mt-2 ml-2"
+                                    onClick={() => {
+                                        const editor = aboutRef.current?.getEditor?.();
+                                        if (editor) {
+                                            editor.history.undo(); // Undo the last change
+                                        }
+                                    }}
+                                >
+                                    Undo
+                                </button>
+                            </Tooltip>
+                            <Tooltip text="Redo the last undone change">
+                                <button
+                                    type="button"
+                                    className="button is-light is-small mt-2 ml-1"
+                                    onClick={() => {
+                                        const editor = aboutRef.current?.getEditor?.();
+                                        if (editor) {
+                                            editor.history.redo();
+                                            updateSection("about", { content: editor.root.innerHTML });
+                                        }
+                                    }}
+                                >
+                                    Redo
+                                </button>
+                            </Tooltip>
+
                         </SectionCard>
 
                         {/* ---------- Projects Section ---------- */}
@@ -703,14 +797,14 @@ export default function PersonalPageEditor({ onSuccess, persistence: persistence
 
                 {/* Preview Column */}
                 {previewVisible && (
-                    <div className="column is-6" ref={previewRef}>
+                    <div className="column is-6" ref={setPreviewEl}>
                         <div className="page-preview-frame">
                             <PagePreview page={page} />
                         </div>
                     </div>
                 )}
-            </div>
-        </RumpusQuillForm>
+            </div >
+        </>
     );
 }
 

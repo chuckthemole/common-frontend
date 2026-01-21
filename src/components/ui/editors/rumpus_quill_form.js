@@ -12,7 +12,11 @@ import 'react-quill/dist/quill.snow.css';
  * - children: optional, if provided will replace the default form.
  * - titlePlaceholder: optional, default 'Title' (for backward compatibility).
  */
-export default function RumpusQuillForm({ quill, children, titlePlaceholder = 'Title' }) {
+export default function RumpusQuillForm({
+    quill,
+    children,
+    titlePlaceholder = 'Title'
+}) {
     // If children are provided, render them instead of the default form
     if (children) return <div className="rumpus-quill-form">{children}</div>;
 

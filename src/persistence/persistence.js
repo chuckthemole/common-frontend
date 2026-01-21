@@ -22,7 +22,7 @@ import { getApi, getNamedApi } from '../api';
  * - Data sticks across refreshes but is local to each device/browser.
  */
 export const LocalPersistence = {
-    getItem: (key) => {
+    getItem: async (key) => {
         try {
             return localStorage.getItem(key);
         } catch (err) {
@@ -30,11 +30,18 @@ export const LocalPersistence = {
             return null;
         }
     },
-    setItem: (key, value) => {
+    setItem: async (key, value) => {
         try {
             localStorage.setItem(key, value);
         } catch (err) {
             logger.error(`[LocalPersistence] Failed to set "${key}":`, err);
+        }
+    },
+    removeItem: async (key) => {
+        try {
+            localStorage.removeItem(key);
+        } catch (err) {
+            logger.error(`[LocalPersistence] Failed to remove "${key}":`, err);
         }
     }
 };
