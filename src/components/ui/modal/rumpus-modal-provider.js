@@ -1,4 +1,9 @@
-import React, { useCallback, useState } from "react";
+import React, {
+    useEffect,
+    useCallback,
+    useState
+} from "react";
+import Modal from "react-modal";
 import { RumpusModalContext } from "./rumpus-modal-context";
 import logger from "../../../logger";
 
@@ -8,8 +13,44 @@ import logger from "../../../logger";
  * Wrap your app once at a high level.
  * Ensures only one modal can be active at a time.
  */
-export default function RumpusModalProvider({ children }) {
+export default function RumpusModalProvider({
+    appElement,
+    children
+}) {
     const [activeModal, setActiveModal] = useState(null);
+
+    /**
+     * Configure react-modal's app element for accessibility.
+     *
+     * react-modal requires a reference to the root application element so it can
+     * hide background content from screen readers when a modal is open.
+     *
+     * This effect:
+     * - Runs only on the client
+     * - Executes once the appElement is available
+     * - Is safe to reuse across multiple applications
+     * - Avoids hard coding DOM selectors inside the library
+     *
+     * The try/catch prevents crashes in edge cases such as:
+     * - Invalid elements
+     * - Tests or unusual rendering environments
+     */
+    useEffect(() => {
+        if (!appElement) {
+            logger.debug("[RumpusModalProvider] No appElement, returning.")
+            return;
+        }
+
+        try {
+            Modal.setAppElement(appElement);
+            logger.debug("[RumpusModalProvider] App element set for react-modal");
+        } catch (err) {
+            logger.warn(
+                "[RumpusModalProvider] Failed to set app element for react-modal",
+                err
+            );
+        }
+    }, [appElement]);
 
     /**
      * Open a modal by ID
