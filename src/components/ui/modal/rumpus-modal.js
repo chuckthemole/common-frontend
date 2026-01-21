@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import Modal from "react-modal";
 import Draggable from "react-draggable";
 
@@ -11,6 +11,9 @@ export default function RumpusModal({
     maxWidth = "1200px",
     children,
 }) {
+
+    const nodeRef = useRef(null);
+
     const modalInner = (
         <div
             className="rumpus-modal"
@@ -94,8 +97,10 @@ export default function RumpusModal({
             contentElement={
                 draggable
                     ? (props, children) => (
-                        <Draggable handle=".modal-header">
-                            <div {...props}>{children}</div>
+                        <Draggable handle=".modal-header" nodeRef={nodeRef}>
+                            <div {...props} ref={nodeRef}>
+                                {children}
+                            </div>
                         </Draggable>
                     )
                     : undefined
