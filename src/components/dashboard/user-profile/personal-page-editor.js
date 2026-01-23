@@ -25,9 +25,7 @@ export default function PersonalPageEditor({
     persistence: persistenceProp
 }) {
     const persistence = persistenceProp || LocalPersistence;
-    // const previewRef = useRef(null);
     const [previewEl, setPreviewEl] = useState(null);
-
     const [page, setPage] = useState(DEFAULT_PAGE);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -105,34 +103,6 @@ export default function PersonalPageEditor({
             cancelled = true;
         };
     }, [persistence]);
-
-    /* ========================================================
-       Helpers
-       ======================================================== */
-
-    const ToggleSectionTitleHelper = ({ sectionId, showTitle }) => (
-        <Tooltip text="Show or hide this section’s title in the preview">
-            <div className="is-flex is-flex-direction-column is-align-items-center ml-3">
-                <ToggleSwitch checked={showTitle} color="is-info" onChange={(v) => toggleSectionTitle(sectionId, v)} />
-            </div>
-        </Tooltip>
-    );
-
-    /* ========================================================
-       Project helpers
-       ======================================================== */
-    const updateProjects = (items) => updateSection("projects", { items });
-
-    const moveProject = (index, dir) => {
-        const items = [...sectionById("projects").data.items];
-        const target = index + dir;
-        if (target < 0 || target >= items.length) return;
-        [items[index], items[target]] = [items[target], items[index]];
-        updateProjects(items);
-    };
-
-    const removeProject = (index) =>
-        updateProjects(sectionById("projects").data.items.filter((_, i) => i !== index));
 
     /* ========================================================
        Save current profile
@@ -217,14 +187,6 @@ export default function PersonalPageEditor({
         setColorSettings(profile.colorSettings || {});
         setProfileId(id);
     };
-
-    /* ========================================================
-       Render
-       ======================================================== */
-    // const home = sectionById("home");
-    // const about = sectionById("about");
-    // const projects = sectionById("projects");
-    // const contact = sectionById("contact");
 
     const home = getSectionSafe("home");
     const about = getSectionSafe("about");
@@ -364,12 +326,7 @@ export default function PersonalPageEditor({
                             onToggle={(v) => toggleSection("projects", v)}
                             onToggleTitle={(v) => toggleSectionTitle("projects", v)}
                             onUpdateTitle={(val) => updateSectionTitle("projects", val)}
-                            onAddProject={() =>
-                                updateProjects([...projects.data.items, { title: "", link: "" }])
-                            }
-                            onUpdateItems={(items) => updateProjects(items)}
-                            onMoveProject={moveProject}
-                            onRemoveProject={removeProject}
+                            onUpdate={(data) => updateSection("projects", data)}
                         />
 
                         <ContactSection
@@ -381,8 +338,28 @@ export default function PersonalPageEditor({
                         />
 
                         {/* ---------- Alerts ---------- */}
-                        {error && <Alert message={error} type="error" persistent={false} size="medium" position="bottom" onClose={() => setError(null)} />}
-                        {successMessage && <Alert message={successMessage} type="success" persistent={false} size="medium" position="bottom" onClose={() => setSuccessMessage(null)} />}
+                        {error && (
+                            <Alert
+                                message={error}
+                                type="error"
+                                persistent={false}
+                                size="medium"
+                                position="bottom"
+                                onClose={() => setError(null)}
+                            />
+                        )}
+
+                        {successMessage && (
+                            <Alert
+                                message={successMessage}
+                                type="success"
+                                persistent={false}
+                                size="medium"
+                                position="bottom"
+                                onClose={() => setSuccessMessage(null)}
+                            />
+                        )}
+
                     </div>
                 </div>
 

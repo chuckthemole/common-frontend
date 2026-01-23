@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 
 import {
     EditableTitle,
@@ -6,18 +6,103 @@ import {
     SectionCard,
 } from "../../../dashboard-elements";
 import { Tooltip } from "../../../ui";
+import logger from "../../../../logger";
 
+/**
+ * ProjectsSection
+ *
+ * Owns all logic related to editing and ordering projects.
+ * The parent only provides a generic `onUpdate` function.
+ */
 export default function ProjectsSection({
     section,
     onToggle,
     onToggleTitle,
     onUpdateTitle,
-    onUpdateItems,
-    onAddProject,
-    onMoveProject,
-    onRemoveProject,
+    onUpdate,
 }) {
-    const items = section.data.items ?? [];
+    const items = section?.data?.items ?? [];
+
+    /* ======================================================
+       Helpers
+       ====================================================== */
+
+    /**
+     * Persist updated items list to section data
+     */
+    const updateItems = useCallback(
+        (nextItems) => {
+            logger.debug("[ProjectsSection] Updating items", {
+                count: nextItems.length,
+            });
+
+            onUpdate({ items: nextItems });
+        },
+        [onUpdate]
+    );
+
+    /**
+     * Add a new empty project
+     */
+    const addProject = () => {
+        logger.info("[ProjectsSection] Adding project");
+
+        updateItems([
+            ...items,
+            { title: "", link: "" },
+        ]);
+    };
+
+    /**
+     * Remove a project by index
+     */
+    const removeProject = (index) => {
+        logger.info("[ProjectsSection] Removing project", { index });
+
+        updateItems(items.filter((_, i) => i !== index));
+    };
+
+    /**
+     * Move a project up or down in the list
+     */
+    const moveProject = (index, direction) => {
+        const target = index + direction;
+
+        if (target < 0 || target >= items.length) {
+            logger.debug("[ProjectsSection] Move ignored (out of bounds)", {
+                index,
+                direction,
+            });
+            return;
+        }
+
+        const next = [...items];
+        [next[index], next[target]] = [next[target], next[index]];
+
+        logger.debug("[ProjectsSection] Project reordered", {
+            from: index,
+            to: target,
+        });
+
+        updateItems(next);
+    };
+
+    /**
+     * Update a single field on a project
+     */
+    const updateProjectField = (index, field, value) => {
+        const next = [...items];
+        next[index] = {
+            ...next[index],
+            [field]: value,
+        };
+
+        updateItems(next);
+    };
+
+    /* ======================================================
+       Render
+       ====================================================== */
 
     return (
         <SectionCard
@@ -42,63 +127,71 @@ export default function ProjectsSection({
             enabled={section.enabled}
             onToggle={onToggle}
         >
+            {/* Add Project */}
             <button
                 type="button"
                 className="button is-small mb-3"
-                onClick={onAddProject}
+                onClick={addProject}
             >
                 + Add Project
             </button>
 
+            {/* Project List */}
             {items.map((project, index) => (
                 <div key={index} className="box mb-3">
                     <input
                         className="input mb-2"
                         placeholder="Project title"
                         value={project.title}
-                        onChange={(e) => {
-                            const next = [...items];
-                            next[index] = { ...next[index], title: e.target.value };
-                            onUpdateItems(next);
-                        }}
+                        onChange={(e) =>
+                            updateProjectField(index, "title", e.target.value)
+                        }
                     />
 
                     <input
                         className="input mb-3"
                         placeholder="Project link"
                         value={project.link}
-                        onChange={(e) => {
-                            const next = [...items];
-                            next[index] = { ...next[index], link: e.target.value };
-                            onUpdateItems(next);
-                        }}
+                        onChange={(e) =>
+                            updateProjectField(index, "link", e.target.value)
+                        }
                     />
 
                     <div className="buttons">
                         <button
                             type="button"
                             className="button is-small"
-                            onClick={() => onMoveProject(index, -1)}
+                            onClick={() => moveProject(index, -1)}
+                            disabled={index === 0}
                         >
                             ↑
                         </button>
+
                         <button
                             type="button"
                             className="button is-small"
-                            onClick={() => onMoveProject(index, 1)}
+                            onClick={() => moveProject(index, 1)}
+                            disabled={index === items.length - 1}
                         >
                             ↓
                         </button>
+
                         <button
                             type="button"
                             className="button is-small is-danger"
-                            onClick={() => onRemoveProject(index)}
+                            onClick={() => removeProject(index)}
                         >
                             Remove
                         </button>
                     </div>
                 </div>
             ))}
+
+            {!items.length && (
+                <p className="has-text-grey is-size-7">
+                    No projects added yet.
+                </p>
+            )}
         </SectionCard>
     );
 }
