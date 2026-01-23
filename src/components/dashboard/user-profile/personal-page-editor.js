@@ -1,18 +1,21 @@
-import React, { useEffect, useState, useRef } from "react";
-import RumpusQuill from "../../ui/editors/rumpus_quill";
+import React, { useEffect, useState } from "react";
 import PortalContainer from "../../ui/portal-container";
 import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
 import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
 import Tooltip from "../../ui/tooltip/tooltip";
-import PagePreview from "./page-preview";
+import PagePreview from "./preview/page-preview";
 import Alert from "../../ui/alerts/alert";
-
 import logger from "../../../logger";
 import { LocalPersistence } from "../../../persistence/persistence";
 import { DEFAULT_PAGE, PAGE_STORAGE_KEY } from "./personal-page.schema";
-import { HomeSection, PageStylePanel } from "./sections";
+import {
+    HomeSection,
+    AboutSection,
+    ProjectsSection,
+    ContactSection,
+    PageStylePanel,
+} from "./sections";
 import { usePageSections } from "./use-page-sections";
-import { EditableTitle } from "../../dashboard-elements";
 
 /* ============================================================
    PersonalPageEditor
@@ -24,7 +27,6 @@ export default function PersonalPageEditor({
     const persistence = persistenceProp || LocalPersistence;
     // const previewRef = useRef(null);
     const [previewEl, setPreviewEl] = useState(null);
-    const aboutRef = useRef(null);
 
     const [page, setPage] = useState(DEFAULT_PAGE);
     const [loading, setLoading] = useState(false);
@@ -340,7 +342,7 @@ export default function PersonalPageEditor({
                             </>
                         )}
 
-                        {/* ---------- Home Section ---------- */}
+                        {/* ---------- Sections ---------- */}
                         <HomeSection
                             section={home}
                             onToggle={(v) => toggleSection("home", v)}
@@ -349,99 +351,34 @@ export default function PersonalPageEditor({
                             onUpdate={(data) => updateSection("home", data)}
                         />
 
-                        {/* ---------- About Section ---------- */}
-                        <SectionCard
-                            title={<EditableTitle value={about.title} defaultValue={about.defaultTitle} onChange={(val) => updateSectionTitle("about", val)} />}
-                            headerExtra={<ToggleSectionTitleHelper sectionId="about" showTitle={about.showTitle} />}
-                            enabled={about.enabled}
-                            onChange={(v) => toggleSection("about", v)}
-                        >
-                            <RumpusQuill
-                                value={about.data.content}
-                                ref={aboutRef}
-                                setValue={(val) => updateSection("about", { content: val })}
-                                placeholder="Write your bio..." />
+                        <AboutSection
+                            section={about}
+                            onToggle={(v) => toggleSection("about", v)}
+                            onToggleTitle={(v) => toggleSectionTitle("about", v)}
+                            onUpdateTitle={(val) => updateSectionTitle("about", val)}
+                            onUpdate={(data) => updateSection("about", data)}
+                        />
 
-                            {/* Editor Buttons */}
-                            {/* TODO: can we move these to the RumpusQuill toolbar? */}
-                            <Tooltip text="Clear the contents of the editor">
-                                <button
-                                    type="button"
-                                    className="button is-danger is-light is-small mt-2"
-                                    onClick={() => {
-                                        if (aboutRef.current?.getEditor) { // Use the ref to access the Quill instance and clear it
-                                            aboutRef.current.getEditor().setContents("");
-                                        }
-                                        updateSection("about", { content: "" }); // Also clear the state
-                                    }}
-                                >
-                                    Clear
-                                </button>
-                            </Tooltip>
-                            <Tooltip text="Undo the last change">
-                                <button
-                                    type="button"
-                                    className="button is-light is-small mt-2 ml-2"
-                                    onClick={() => {
-                                        const editor = aboutRef.current?.getEditor?.();
-                                        if (editor) {
-                                            editor.history.undo(); // Undo the last change
-                                        }
-                                    }}
-                                >
-                                    Undo
-                                </button>
-                            </Tooltip>
-                            <Tooltip text="Redo the last undone change">
-                                <button
-                                    type="button"
-                                    className="button is-light is-small mt-2 ml-1"
-                                    onClick={() => {
-                                        const editor = aboutRef.current?.getEditor?.();
-                                        if (editor) {
-                                            editor.history.redo();
-                                            updateSection("about", { content: editor.root.innerHTML });
-                                        }
-                                    }}
-                                >
-                                    Redo
-                                </button>
-                            </Tooltip>
+                        <ProjectsSection
+                            section={projects}
+                            onToggle={(v) => toggleSection("projects", v)}
+                            onToggleTitle={(v) => toggleSectionTitle("projects", v)}
+                            onUpdateTitle={(val) => updateSectionTitle("projects", val)}
+                            onAddProject={() =>
+                                updateProjects([...projects.data.items, { title: "", link: "" }])
+                            }
+                            onUpdateItems={(items) => updateProjects(items)}
+                            onMoveProject={moveProject}
+                            onRemoveProject={removeProject}
+                        />
 
-                        </SectionCard>
-
-                        {/* ---------- Projects Section ---------- */}
-                        <SectionCard
-                            title={<EditableTitle value={projects.title} defaultValue={projects.defaultTitle} onChange={(val) => updateSectionTitle("projects", val)} />}
-                            headerExtra={<ToggleSectionTitleHelper sectionId="projects" showTitle={projects.showTitle} />}
-                            enabled={projects.enabled}
-                            onChange={(v) => toggleSection("projects", v)}
-                        >
-                            <button type="button" className="button is-small mb-3" onClick={() => updateProjects([...projects.data.items, { title: "", link: "" }])}>
-                                + Add Project
-                            </button>
-                            {projects.data.items.map((p, i) => (
-                                <div key={i} className="box mb-3">
-                                    <input className="input mb-2" placeholder="Project title" value={p.title} onChange={(e) => { const items = [...projects.data.items]; items[i].title = e.target.value; updateProjects(items); }} />
-                                    <input className="input mb-3" placeholder="Project link" value={p.link} onChange={(e) => { const items = [...projects.data.items]; items[i].link = e.target.value; updateProjects(items); }} />
-                                    <div className="buttons">
-                                        <button type="button" className="button is-small" onClick={() => moveProject(i, -1)}>↑</button>
-                                        <button type="button" className="button is-small" onClick={() => moveProject(i, 1)}>↓</button>
-                                        <button type="button" className="button is-small is-danger" onClick={() => removeProject(i)}>Remove</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </SectionCard>
-
-                        {/* ---------- Contact Section ---------- */}
-                        <SectionCard
-                            title={<EditableTitle value={contact.title} defaultValue={contact.defaultTitle} onChange={(val) => updateSectionTitle("contact", val)} />}
-                            headerExtra={<ToggleSectionTitleHelper sectionId="contact" showTitle={contact.showTitle} />}
-                            enabled={contact.enabled}
-                            onChange={(v) => toggleSection("contact", v)}
-                        >
-                            <input className="input" placeholder="Email" type="email" value={contact.data.email} onChange={(e) => updateSection("contact", { email: e.target.value })} />
-                        </SectionCard>
+                        <ContactSection
+                            section={contact}
+                            onToggle={(v) => toggleSection("contact", v)}
+                            onToggleTitle={(v) => toggleSectionTitle("contact", v)}
+                            onUpdateTitle={(val) => updateSectionTitle("contact", val)}
+                            onUpdate={(data) => updateSection("contact", data)}
+                        />
 
                         {/* ---------- Alerts ---------- */}
                         {error && <Alert message={error} type="error" persistent={false} size="medium" position="bottom" onClose={() => setError(null)} />}
@@ -461,19 +398,3 @@ export default function PersonalPageEditor({
         </>
     );
 }
-
-/* ---------- Helpers ---------- */
-const SectionCard = ({ title, enabled, onChange, headerExtra, children }) => (
-    <div className="box mb-5">
-        <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
-            <div className="is-flex is-align-items-center gap-2">
-                <h3 className="title is-5 mb-0">{title}</h3>
-                {headerExtra}
-            </div>
-            <Tooltip text="Enable/disable section">
-                <ToggleSwitch checked={enabled} onChange={onChange} />
-            </Tooltip>
-        </div>
-        {enabled && children}
-    </div>
-);
