@@ -1,6 +1,9 @@
 import React from "react";
-import { SectionCard } from "./sections-helper";
-import { EditableTitle, ToggleSwitch } from "../../../dashboard-elements";
+import {
+    EditableTitle,
+    ToggleSwitch,
+    SectionCard
+} from "../../../dashboard-elements";
 import { Tooltip } from "../../../ui";
 
 export default function HomeSection({
@@ -20,7 +23,7 @@ export default function HomeSection({
                     onChange={onUpdateTitle}
                 />
             }
-            headerExtra={
+            headerActions={
                 <Tooltip text="Show or hide this section’s title in the preview">
                     <div className="is-flex is-flex-direction-column is-align-items-center ml-3">
                         <ToggleSwitch
@@ -32,7 +35,7 @@ export default function HomeSection({
                 </Tooltip>
             }
             enabled={section.enabled}
-            onChange={onToggle}
+            onToggle={onToggle}
         >
             <input
                 className="input mb-2"
