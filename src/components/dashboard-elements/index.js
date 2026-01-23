@@ -7,3 +7,4 @@ export * from './toggle-switch';
 export * from './filter';
 export * from './multi-selector';
 export * from './single-selector';
+export * from './editable-title';

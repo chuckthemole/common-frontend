@@ -6,92 +6,13 @@ import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
 import Tooltip from "../../ui/tooltip/tooltip";
 import PagePreview from "./page-preview";
 import Alert from "../../ui/alerts/alert";
-import FontSettingsModal from "../../design-control/font/font_settings_modal";
-import ColorSettingsModal from "../../design-control/color/color_settings_modal";
-import { FontSettingsProvider } from "../../design-control/font";
-import { ColorSettingsProvider } from "../../design-control/color";
-import { previewColorLayouts } from "../../design-control/color/predefined_color_layouts_preview";
 
 import logger from "../../../logger";
 import { LocalPersistence } from "../../../persistence/persistence";
-import { DEFAULT_PAGE, THEMES, PAGE_STORAGE_KEY } from "./personal-page.schema";
-
-/* ============================================================
-   Page Style Controls
-   ============================================================ */
-function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorSettings }) {
-    return (
-        <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
-            <div className="page-style-controls">
-                <div className="theme-selector">
-                    <SingleSelector
-                        options={THEMES}
-                        value={page.theme}
-                        onChange={(value) => setPage((p) => ({ ...p, theme: value }))}
-                        searchable={false}
-                        ui={'scrollable'}
-                        visibleRows={2}
-                    />
-                </div>
-                <div className="buttons-grid">
-                    <FontSettingsModal preview buttonLabel="Fonts" />
-                    <ColorSettingsModal buttonLabel="Color" />
-                </div>
-            </div>
-        </SectionCard>
-    );
-}
-
-/* ---------- EditableTitle Component ---------- */
-function EditableTitle({ value, defaultValue, onChange }) {
-    const [editing, setEditing] = useState(false);
-    const [localValue, setLocalValue] = useState(value);
-
-    const handleSave = () => {
-        onChange(localValue.trim() || defaultValue);
-        setEditing(false);
-    };
-
-    return (
-        <div className="editable-title is-flex is-align-items-center">
-            {!editing ? (
-                <>
-                    <span className="mr-2">{value || defaultValue}</span>
-                    <Tooltip text="Edit title">
-                        <button
-                            type="button"
-                            className="button is-small is-light"
-                            onClick={() => setEditing(true)}
-                            title="Edit title"
-                        >
-                            ✎
-                        </button>
-                    </Tooltip>
-                </>
-            ) : (
-                <>
-                    <input
-                        className="input is-small mr-2"
-                        style={{ width: "150px" }}
-                        value={localValue}
-                        onChange={(e) => setLocalValue(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") handleSave();
-                            if (e.key === "Escape") setEditing(false);
-                        }}
-                        autoFocus
-                    />
-                    <button type="button" className="button is-small is-primary mr-1" onClick={handleSave}>
-                        Save
-                    </button>
-                    <button type="button" className="button is-small" onClick={() => setEditing(false)}>
-                        Cancel
-                    </button>
-                </>
-            )}
-        </div>
-    );
-}
+import { DEFAULT_PAGE, PAGE_STORAGE_KEY } from "./personal-page.schema";
+import { HomeSection, PageStylePanel } from "./sections";
+import { usePageSections } from "./use-page-sections";
+import { EditableTitle } from "../../dashboard-elements";
 
 /* ============================================================
    PersonalPageEditor
@@ -114,6 +35,15 @@ export default function PersonalPageEditor({
     const [fontSettings, setFontSettings] = useState({});
     const [profileId, setProfileId] = useState("");
     const [savedProfiles, setSavedProfiles] = useState({});
+
+    const {
+        sectionById,
+        getSectionSafe,
+        updateSection,
+        toggleSection,
+        toggleSectionTitle,
+        updateSectionTitle,
+    } = usePageSections(page, setPage);
 
     // DEBUG
     // useEffect(() => {
@@ -177,62 +107,6 @@ export default function PersonalPageEditor({
     /* ========================================================
        Helpers
        ======================================================== */
-    const sectionById = (id) => {
-        try {
-            if (!page?.sections || !Array.isArray(page.sections)) {
-                logger.warn("sectionById: page.sections is not available or not an array", {
-                    page,
-                });
-                return undefined;
-            }
-
-            return page.sections.find((s) => s?.id === id);
-        } catch (err) {
-            logger.error("sectionById: failed to resolve section", {
-                id,
-                page,
-                error: err,
-            });
-            return undefined;
-        }
-    };
-
-    const getSectionSafe = (id) => {
-        const section = sectionById(id);
-
-        if (!section) {
-            logger.warn("Missing section, falling back to defaults", { id });
-
-            return DEFAULT_PAGE.sections.find((s) => s.id === id) ?? {
-                id,
-                enabled: false,
-                showTitle: false,
-                title: "",
-                defaultTitle: "",
-                data: {},
-            };
-        }
-
-        return section;
-    };
-
-    const updateSection = (id, updater) =>
-        setPage((prev) => ({
-            ...prev,
-            sections: prev.sections.map((s) => (s.id === id ? { ...s, data: { ...s.data, ...updater } } : s)),
-        }));
-
-    const toggleSection = (id, enabled) =>
-        setPage((prev) => ({
-            ...prev,
-            sections: prev.sections.map((s) => (s.id === id ? { ...s, enabled } : s)),
-        }));
-
-    const toggleSectionTitle = (id, showTitle) =>
-        setPage((prev) => ({
-            ...prev,
-            sections: prev.sections.map((s) => (s.id === id ? { ...s, showTitle } : s)),
-        }));
 
     const ToggleSectionTitleHelper = ({ sectionId, showTitle }) => (
         <Tooltip text="Show or hide this section’s title in the preview">
@@ -241,12 +115,6 @@ export default function PersonalPageEditor({
             </div>
         </Tooltip>
     );
-
-    const updateSectionTitle = (id, title) =>
-        setPage((prev) => ({
-            ...prev,
-            sections: prev.sections.map((s) => (s.id === id ? { ...s, title } : s)),
-        }));
 
     /* ========================================================
        Project helpers
@@ -460,184 +328,26 @@ export default function PersonalPageEditor({
                         {previewEl && (
                             <>
                                 {logger.debug("[PersonalPageEditor] Mounting style providers")}
-                                <FontSettingsProvider
-                                    target={previewEl}
-                                    value={fontSettings}
-                                    onChange={setFontSettings}
-                                    slots={{
-                                        body: {
-                                            cssVar: "--page-font",
-                                            default: "Inter",
-                                            storageKey: "personal-page:page-font",
-                                        },
-                                        heading: {
-                                            cssVar: "--heading-font",
-                                            default: "Playfair Display",
-                                            storageKey: "personal-page:heading-font",
-                                        },
-                                    }}
-                                >
-                                    <ColorSettingsProvider
-                                        target={previewEl}
-                                        value={colorSettings}
-                                        onChange={setColorSettings}
-                                        colorLayouts={previewColorLayouts}
-                                        slots={{
-                                            /* ======================================================
-                                               Page-level colors (global background & text)
-                                               ====================================================== */
-
-                                            background: {
-                                                cssVar: "--page-background",
-                                                default: "#ffffff", // main page background
-                                                storageKey: "personal-page:background",
-                                            },
-                                            text: {
-                                                cssVar: "--page-text",
-                                                default: "#333333", // primary body text
-                                                storageKey: "personal-page:text",
-                                            },
-                                            mutedText: {
-                                                cssVar: "--page-text-muted",
-                                                default: "#666666", // subtitles, helper text
-                                                storageKey: "personal-page:mutedText",
-                                            },
-
-                                            /* ======================================================
-                                               Surface & elevation layers
-                                               (cards, modals, inset panels)
-                                               ====================================================== */
-
-                                            surface: {
-                                                cssVar: "--surface-background",
-                                                default: "#f8f9fb", // raised surfaces on light themes
-                                                storageKey: "personal-page:surface",
-                                            },
-                                            surfaceText: {
-                                                cssVar: "--surface-text",
-                                                default: "#333333",
-                                                storageKey: "personal-page:surfaceText",
-                                            },
-                                            cardBackground: {
-                                                cssVar: "--card-background",
-                                                default: "#ffffff",
-                                                storageKey: "personal-page:cardBackground",
-                                            },
-                                            cardBorder: {
-                                                cssVar: "--card-border",
-                                                default: "#e5e7eb", // subtle card outline
-                                                storageKey: "personal-page:cardBorder",
-                                            },
-
-                                            /* ======================================================
-                                               Navigation
-                                               ====================================================== */
-
-                                            navBackground: {
-                                                cssVar: "--nav-background",
-                                                default: "#1a1a1a",
-                                                storageKey: "personal-page:navBackground",
-                                            },
-                                            navText: {
-                                                cssVar: "--nav-text",
-                                                default: "#ffffff",
-                                                storageKey: "personal-page:navText",
-                                            },
-                                            navHover: {
-                                                cssVar: "--nav-hover",
-                                                default: "#f5f5f5",
-                                                storageKey: "personal-page:navHover",
-                                            },
-                                            navBorder: {
-                                                cssVar: "--nav-border",
-                                                default: "rgba(255,255,255,0.1)",
-                                                storageKey: "personal-page:navBorder",
-                                            },
-
-                                            /* ======================================================
-                                               Buttons
-                                               ====================================================== */
-
-                                            buttonBackground: {
-                                                cssVar: "--button-background",
-                                                default: "#3273dc",
-                                                storageKey: "personal-page:buttonBackground",
-                                            },
-                                            buttonText: {
-                                                cssVar: "--button-text",
-                                                default: "#ffffff",
-                                                storageKey: "personal-page:buttonText",
-                                            },
-                                            buttonHover: {
-                                                cssVar: "--button-hover",
-                                                default: "#2759a3",
-                                                storageKey: "personal-page:buttonHover",
-                                            },
-                                            buttonBorder: {
-                                                cssVar: "--button-border",
-                                                default: "transparent",
-                                                storageKey: "personal-page:buttonBorder",
-                                            },
-
-                                            /* ======================================================
-                                               Links & accents
-                                               ====================================================== */
-
-                                            accent: {
-                                                cssVar: "--accent-color",
-                                                default: "#ff3860",
-                                                storageKey: "personal-page:accent",
-                                            },
-                                            link: {
-                                                cssVar: "--link-color",
-                                                default: "#3273dc",
-                                                storageKey: "personal-page:link",
-                                            },
-                                            linkHover: {
-                                                cssVar: "--link-hover",
-                                                default: "#2759a3",
-                                                storageKey: "personal-page:linkHover",
-                                            },
-
-                                            /* ======================================================
-                                               Dividers & outlines
-                                               ====================================================== */
-
-                                            border: {
-                                                cssVar: "--border-color",
-                                                default: "#e5e7eb",
-                                                storageKey: "personal-page:border",
-                                            },
-                                            focusRing: {
-                                                cssVar: "--focus-ring",
-                                                default: "#3273dc",
-                                                storageKey: "personal-page:focusRing",
-                                            },
-                                        }}
-                                    >
-                                        <PageStyleControls
-                                            previewRef={previewEl}
-                                            page={page}
-                                            setPage={setPage}
-                                            colorSettings={colorSettings}
-                                            setColorSettings={setColorSettings}
-                                        />
-                                    </ColorSettingsProvider>
-                                </FontSettingsProvider>
+                                <PageStylePanel
+                                    previewEl={previewEl}
+                                    page={page}
+                                    setPage={setPage}
+                                    fontSettings={fontSettings}
+                                    setFontSettings={setFontSettings}
+                                    colorSettings={colorSettings}
+                                    setColorSettings={setColorSettings}
+                                />
                             </>
                         )}
 
                         {/* ---------- Home Section ---------- */}
-                        <SectionCard
-                            title={<EditableTitle value={home.title} defaultValue={home.defaultTitle} onChange={(val) => updateSectionTitle("home", val)} />}
-                            headerExtra={<ToggleSectionTitleHelper sectionId="home" showTitle={home.showTitle} />}
-                            enabled={home.enabled}
-                            onChange={(v) => toggleSection("home", v)}
-                        >
-                            <input className="input mb-2" placeholder="Name" value={home.data.name} onChange={(e) => updateSection("home", { name: e.target.value })} />
-                            <input className="input mb-2" placeholder="Tagline" value={home.data.tagline} onChange={(e) => updateSection("home", { tagline: e.target.value })} />
-                            <input className="input" placeholder="Profile Image URL" value={home.data.profileImage} onChange={(e) => updateSection("home", { profileImage: e.target.value })} />
-                        </SectionCard>
+                        <HomeSection
+                            section={home}
+                            onToggle={(v) => toggleSection("home", v)}
+                            onToggleTitle={(v) => toggleSectionTitle("home", v)}
+                            onUpdateTitle={(v) => updateSectionTitle("home", v)}
+                            onUpdate={(data) => updateSection("home", data)}
+                        />
 
                         {/* ---------- About Section ---------- */}
                         <SectionCard
