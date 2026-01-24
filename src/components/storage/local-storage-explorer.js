@@ -1,5 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { JsonEditor, PortalContainer } from "../ui";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useState
+} from "react";
+import {
+    JsonEditor,
+    PortalContainer
+} from "../ui";
 import { SingleSelector } from "../dashboard-elements";
 import logger from "../../logger";
 import { tryParseJSON, stringifyValue, isLongValue } from "../../utils";
@@ -198,13 +206,32 @@ export default function LocalStorageExplorer() {
                                                 {stringifyValue(value, true).slice(0, 120)}…
                                             </div>
                                         )}
+
                                         {(!long || expanded) && (
-                                            <pre
-                                                style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }}
-                                            >
-                                                {stringifyValue(value, isJson)}
-                                            </pre>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <pre
+                                                    style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, flex: 1 }}
+                                                >
+                                                    {stringifyValue(value, isJson)}
+                                                </pre>
+
+                                                {/* ---------- Color Picker ---------- */}
+                                                {typeof value === "string" && /^#([0-9A-Fa-f]{3}){1,2}$/.test(value) && (
+                                                    <input
+                                                        type="color"
+                                                        value={value}
+                                                        onChange={(e) => {
+                                                            const newColor = e.target.value;
+                                                            localStorage.setItem(key, newColor);
+                                                            loadStorage(); // refresh the state
+                                                        }}
+                                                        title="Edit color"
+                                                        style={{ width: "36px", height: "36px", border: "none", padding: 0 }}
+                                                    />
+                                                )}
+                                            </div>
                                         )}
+
                                         {long && (
                                             <button
                                                 className="button is-text is-small px-0 mt-1"
