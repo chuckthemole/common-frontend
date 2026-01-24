@@ -4,7 +4,11 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { JsonEditor } from "../ui";
+import {
+    JsonEditor,
+    PortalContainer
+} from "../ui";
+import { SingleSelector } from "../dashboard-elements";
 import logger from "../../logger";
 import {
     tryParseJSON,
@@ -13,12 +17,23 @@ import {
 } from "../../utils";
 
 /* ============================================================
+   Constants
+   ============================================================ */
+
+const SEARCH_SCOPES = {
+    BOTH: "both",
+    KEYS: "keys",
+    VALUES: "values",
+};
+
+/* ============================================================
    LocalStorageExplorer
    ============================================================ */
 
 export default function LocalStorageExplorer() {
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
+    const [searchScope, setSearchScope] = useState(SEARCH_SCOPES.BOTH);
     const [expandedKeys, setExpandedKeys] = useState({});
 
     // JSON editor state (progressive disclosure)
@@ -55,7 +70,6 @@ export default function LocalStorageExplorer() {
     useEffect(() => {
         loadStorage();
 
-        // Sync across tabs/windows
         const onStorage = (e) => {
             logger.debug("[LocalStorageExplorer] storage event", e);
             loadStorage();
@@ -74,13 +88,22 @@ export default function LocalStorageExplorer() {
         const term = search.toLowerCase();
 
         return items.filter(({ key, value }) => {
-            const valueStr = stringifyValue(value, true).toLowerCase();
-            return (
-                key.toLowerCase().includes(term) ||
-                valueStr.includes(term)
-            );
+            const keyMatch = key.toLowerCase().includes(term);
+            const valueMatch = stringifyValue(value, true)
+                .toLowerCase()
+                .includes(term);
+
+            switch (searchScope) {
+                case SEARCH_SCOPES.KEYS:
+                    return keyMatch;
+                case SEARCH_SCOPES.VALUES:
+                    return valueMatch;
+                case SEARCH_SCOPES.BOTH:
+                default:
+                    return keyMatch || valueMatch;
+            }
         });
-    }, [items, search]);
+    }, [items, search, searchScope]);
 
     /* ------------------------------------------------------------
        Actions
@@ -138,13 +161,36 @@ export default function LocalStorageExplorer() {
         <div className="box local-storage-explorer">
             {/* ---------- Header ---------- */}
             <div className="mb-4">
-                <h3 className="title is-5 mb-2">Local Storage Explorer</h3>
-                <input
-                    className="input"
-                    placeholder="Search keys or values…"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
+                <h3 className="title is-5 mb-3">Local Storage Explorer</h3>
+
+                <div className="columns is-mobile">
+                    <div className="column is-two-thirds">
+                        <input
+                            className="input"
+                            placeholder="Search…"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="column">
+                        <PortalContainer id="editor-dropdowns">
+                            {(portalTarget) => (
+                                <SingleSelector
+                                    options={[
+                                        { value: SEARCH_SCOPES.BOTH, label: "Keys & Values" },
+                                        { value: SEARCH_SCOPES.KEYS, label: "Keys only" },
+                                        { value: SEARCH_SCOPES.VALUES, label: "Values only" },
+                                    ]}
+                                    value={searchScope}
+                                    onChange={setSearchScope}
+                                    placeholder="Search scope"
+                                    portalTarget={portalTarget}
+                                />
+                            )}
+                        </PortalContainer>
+                    </div>
+                </div>
             </div>
 
             {/* ---------- Table ---------- */}
@@ -170,14 +216,12 @@ export default function LocalStorageExplorer() {
                                     </td>
 
                                     <td style={{ maxWidth: "480px" }}>
-                                        {/* Collapsed preview */}
                                         {long && !expanded && (
                                             <div className="has-text-grey">
                                                 {stringifyValue(value, true).slice(0, 120)}…
                                             </div>
                                         )}
 
-                                        {/* Expanded or short value */}
                                         {(!long || expanded) && (
                                             <pre
                                                 style={{
@@ -190,7 +234,6 @@ export default function LocalStorageExplorer() {
                                             </pre>
                                         )}
 
-                                        {/* Expand / collapse */}
                                         {long && (
                                             <button
                                                 className="button is-text is-small px-0 mt-1"
@@ -231,10 +274,7 @@ export default function LocalStorageExplorer() {
 
                         {!filteredItems.length && (
                             <tr>
-                                <td
-                                    colSpan={3}
-                                    className="has-text-centered has-text-grey"
-                                >
+                                <td colSpan={3} className="has-text-centered has-text-grey">
                                     No matching localStorage entries
                                 </td>
                             </tr>
@@ -250,7 +290,7 @@ export default function LocalStorageExplorer() {
                 </button>
             </div>
 
-            {/* ---------- JSON Editor Panel ---------- */}
+            {/* ---------- JSON Editor ---------- */}
             {editingKey && (
                 <div className="mt-5">
                     <div className="box">

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import PortalContainer from "../../ui/portal-container";
-import SingleSelector from "../../dashboard-elements/single-selector/single-selector";
-import ToggleSwitch from "../../dashboard-elements/toggle-switch/toggle-switch";
-import Tooltip from "../../ui/tooltip/tooltip";
+import {
+    PortalContainer,
+    Tooltip,
+    Alert
+} from "../../ui";
+import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import PagePreview from "./preview/page-preview";
-import Alert from "../../ui/alerts/alert";
 import logger from "../../../logger";
 import { LocalPersistence } from "../../../persistence/persistence";
 import { DEFAULT_PAGE, PAGE_STORAGE_KEY } from "./personal-page.schema";
@@ -16,6 +17,12 @@ import {
     PageStylePanel,
 } from "./sections";
 import { usePageSections } from "./use-page-sections";
+import { debugImports } from "../../../utils";
+
+/**
+ * DEBUG ONLY — Import Integrity Check
+ */
+// runImportDebug();
 
 /* ============================================================
    PersonalPageEditor
@@ -192,7 +199,6 @@ export default function PersonalPageEditor({
     const about = getSectionSafe("about");
     const projects = getSectionSafe("projects");
     const contact = getSectionSafe("contact");
-
 
     return (
         <>
@@ -389,4 +395,26 @@ export default function PersonalPageEditor({
             </div >
         </>
     );
+}
+
+/**
+ * DEBUG ONLY — Import Integrity Check
+ *
+ * Call this function if you hit runtime errors like:
+ *   - "Element type is invalid"
+ *   - Components rendering as <div> or not rendering
+ *   - Issues after refactoring barrel (index.js) exports
+ *
+ * This logs whether each imported component is undefined or malformed
+ * BEFORE React attempts to render, making import/export issues obvious.
+ */
+function runImportDebug() {
+    debugImports("PersonalPageEditor", {
+        PortalContainer,
+        Tooltip,
+        Alert,
+        SingleSelector,
+        ToggleSwitch,
+        PagePreview,
+    });
 }

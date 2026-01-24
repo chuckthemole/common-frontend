@@ -1,5 +1,3 @@
-// utils/component_debugger.js
-
 /**
  * Utility to validate and log the status of imported React components.
  *
@@ -40,6 +38,47 @@ export function debugComponents(components, sourceName = "Unknown") {
             // Component exists but isn't a function or object (probably wrong import).
             logger.warn(
                 `[${sourceName}] "${name}" is not a valid React component type (typeof = ${typeof comp}).`
+            );
+        }
+    });
+}
+
+/**
+ * Utility to validate and log the status of imported values.
+ *
+ * Useful for diagnosing issues caused by:
+ * - Undefined imports from index/barrel files
+ * - Incorrect default vs named imports
+ * - Circular dependencies resolving to null/undefined
+ *
+ * Usage example:
+ *   import { debugImports } from "../utils/component_debugger";
+ *   import { Tooltip, PortalContainer } from "../../ui";
+ *
+ *   debugImports("PersonalPageEditor", {
+ *       Tooltip,
+ *       PortalContainer,
+ *   });
+ */
+
+/**
+ * Logs the status of each provided import.
+ *
+ * @param {string} scope - Identifier for where this check is run (component/file name).
+ * @param {Record<string, any>} imports - Map of import names to values.
+ * @param {object} [customLogger=logger] - Optional logger override.
+ */
+export function debugImports(scope, imports, customLogger = logger) {
+    Object.entries(imports).forEach(([name, value]) => {
+        if (value == null) {
+            customLogger.error(
+                `[IMPORT ERROR][${scope}] "${name}" is ${value}`,
+                value
+            );
+        } else {
+            customLogger.debug?.(
+                `[IMPORT OK][${scope}] ${name}`,
+                value
             );
         }
     });
