@@ -27,29 +27,49 @@ import {
 export default function ColorSettingsProvider({
     target,
     persistence = LocalPersistence,
-    defaultLayout = null,
+    defaultLayout = null, // look in predefinedColorLayouts for defaultLayout keys
     slots = {},
     colorLayouts = predefinedColorLayouts,
+    onChange,
     children,
 }) {
     const initialSlotsRef = useRef(slots);
+    const didHydrateRef = useRef(false);
+    const didInitRef = useRef(false);
+
     /* --------------------------------------------------
        Resolve DOM target safely
     --------------------------------------------------- */
     const resolveTarget = useCallback(() => {
         try {
-            if (!target) return document.documentElement;
-            if (typeof target === "function") return target();
-            if (target?.current instanceof HTMLElement) return target.current;
-            if (target instanceof HTMLElement) return target;
+            logger.debug("[ColorSettingsProvider]: resolving target", target);
+
+            if (!target) {
+                logger.debug("[ColorSettingsProvider]: no target provided, defaulting to document.documentElement");
+                return document.documentElement;
+            }
+
+            if (typeof target === "function") {
+                const result = target();
+                logger.debug("[ColorSettingsProvider]: target is a function, returned", result);
+                return result;
+            }
+
+            if (target?.current instanceof HTMLElement) {
+                logger.debug("[ColorSettingsProvider]: target is a ref, returning current HTMLElement", target.current);
+                return target.current;
+            }
+
+            if (target instanceof HTMLElement) {
+                logger.debug("[ColorSettingsProvider]: target is an HTMLElement", target);
+                return target;
+            }
+
         } catch (err) {
-            logger.error("ColorSettingsProvider: error resolving target", err);
+            logger.error("[ColorSettingsProvider]: error resolving target", err);
         }
 
-        logger.warn(
-            "ColorSettingsProvider: target is not a valid HTMLElement",
-            target
-        );
+        logger.warn("[ColorSettingsProvider]: target is not a valid HTMLElement", target);
         return null;
     }, [target]);
 
@@ -58,10 +78,15 @@ export default function ColorSettingsProvider({
        - Used ONLY when slots are not provided
     --------------------------------------------------- */
     const baseDefaults = useMemo(() => {
+        let defaults;
         if (defaultLayout && colorLayouts[defaultLayout]) {
-            return colorLayouts[defaultLayout];
+            defaults = colorLayouts[defaultLayout];
+            logger.debug("[ColorSettingsProvider] Using defaultLayout from colorLayouts:", defaultLayout, defaults);
+        } else {
+            defaults = colorsJson;
+            logger.debug("[ColorSettingsProvider] Using colorsJson as baseDefaults:", defaults);
         }
-        return colorsJson;
+        return defaults;
     }, [defaultLayout, colorLayouts]);
 
     /* --------------------------------------------------
@@ -69,71 +94,86 @@ export default function ColorSettingsProvider({
        - Single source of truth for slot metadata
     --------------------------------------------------- */
     const resolvedSlots = useMemo(() => {
-        const slotSource = Object.keys(initialSlotsRef.current).length > 0
-            ? initialSlotsRef.current
-            : null;
+        let resolved;
 
-        if (slotSource) {
-            return slotSource;
+        const hasInitialSlots = Object.keys(initialSlotsRef.current).length > 0;
+        logger.debug("[ColorSettingsProvider] initialSlotsRef.current:", initialSlotsRef.current, "hasInitialSlots:", hasInitialSlots);
+
+        if (hasInitialSlots) {
+            resolved = initialSlotsRef.current;
+            logger.debug("[ColorSettingsProvider] Using initialSlotsRef as resolvedSlots:", resolved);
+        } else {
+            resolved = Object.fromEntries(
+                Object.keys(baseDefaults).map((key) => [
+                    key,
+                    {
+                        cssVar: `--${key}-color`,
+                        default: baseDefaults[key],
+                        storageKey: `color_${key}`, // assign storageKey for persistence
+                    },
+                ])
+            );
+            logger.debug("[ColorSettingsProvider] Created resolvedSlots from baseDefaults:", resolved);
         }
 
-        return Object.fromEntries(
-            Object.keys(baseDefaults).map((key) => [
-                key,
-                {
-                    cssVar: `--${key}-color`,
-                    default: baseDefaults[key],
-                },
-            ])
-        );
-    }, [baseDefaults]);
+        return resolved;
+    }, [JSON.stringify(baseDefaults)]); // stable dependency to avoid unnecessary re-runs
 
     /* --------------------------------------------------
        Initial state = defaults only
        (Persistence hydration is async)
     --------------------------------------------------- */
     const [values, setValues] = useState(() =>
-        Object.fromEntries(
-            Object.entries(resolvedSlots).map(([key, cfg]) => [
-                key,
-                cfg.default,
-            ])
-        )
+        Object.fromEntries(Object.entries(resolvedSlots).map(([key, cfg]) => [key, cfg.default]))
     );
 
     /* --------------------------------------------------
        Hydrate persisted colors (async-safe)
+       - Ensures CSS variables and React state sync
+       - Minimizes effect cancellations due to async
     --------------------------------------------------- */
     useEffect(() => {
+        const resolvedTargetElement = resolveTarget();
+        if (!resolvedTargetElement) {
+            logger.warn("[ColorSettingsProvider] Target element not found, waiting...");
+            return;
+        }
+
         let cancelled = false;
 
         const hydrate = async () => {
-            const el = resolveTarget();
-            if (!el) return;
-
             const restored = {};
 
             for (const [key, cfg] of Object.entries(resolvedSlots)) {
                 try {
-                    const persisted = cfg.storageKey
-                        ? await persistence.getItem(cfg.storageKey)
-                        : null;
+                    if (!cfg.storageKey) {
+                        logger.warn(`[ColorSettingsProvider] Slot "${key}" has no storageKey, persistence skipped`);
+                    }
 
+                    logger.debug(`[Hydrate] Starting key "${key}"`);
+
+                    const persisted = cfg.storageKey ? await persistence.getItem(cfg.storageKey) : null;
                     const value = persisted ?? cfg.default;
                     restored[key] = value;
 
-                    const cssVar = cfg.cssVar || `--${key}-color`;
-                    el.style.setProperty(cssVar, value);
+                    const cssVarName = cfg.cssVar || `--${key}-color`;
+                    resolvedTargetElement.style.setProperty(cssVarName, value);
+
+                    logger.debug(`[ColorSettingsProvider] Hydrated slot "${key}": ${cssVarName} = ${value}`);
                 } catch (err) {
-                    logger.error(
-                        `ColorSettingsProvider: failed to hydrate slot "${key}"`,
-                        err
-                    );
+                    logger.error(`[ColorSettingsProvider] Failed to hydrate slot "${key}"`, err);
                 }
             }
 
             if (!cancelled) {
                 setValues(restored);
+                didHydrateRef.current = true;
+                logger.debug("[ColorSettingsProvider] Hydration complete, restored values:", restored);
+                
+                // Notify parent after hydration
+                onChange?.(restored);
+            } else {
+                logger.warn("[ColorSettingsProvider] Hydration cancelled, state not updated");
             }
         };
 
@@ -141,6 +181,7 @@ export default function ColorSettingsProvider({
 
         return () => {
             cancelled = true;
+            logger.debug("[ColorSettingsProvider] Cleanup: hydration cancelled");
         };
     }, [resolvedSlots, persistence, resolveTarget]);
 
@@ -151,6 +192,9 @@ export default function ColorSettingsProvider({
         const el = resolveTarget();
         if (!el) return;
 
+        // SKIP persisting on first hydration
+        if (!didHydrateRef.current) return;
+
         Object.entries(resolvedSlots).forEach(([key, cfg]) => {
             const value = values[key];
             if (!value) return;
@@ -160,20 +204,15 @@ export default function ColorSettingsProvider({
                 el.style.setProperty(cssVar, value);
 
                 if (cfg.storageKey) {
-                    persistence
-                        .setItem(cfg.storageKey, value)
-                        .catch((err) =>
-                            logger.error(
-                                `ColorSettingsProvider: failed to persist "${key}"`,
-                                err
-                            )
-                        );
+                    // now we only persist changes after hydration
+                    persistence.setItem(cfg.storageKey, value).catch((err) =>
+                        logger.error(`ColorSettingsProvider: failed to persist "${key}"`, err)
+                    );
+                } else {
+                    logger.warn(`[ColorSettingsProvider] Slot "${key}" has no storageKey, persistence skipped`);
                 }
             } catch (err) {
-                logger.error(
-                    `ColorSettingsProvider: failed to apply color for slot "${key}"`,
-                    err
-                );
+                logger.error(`ColorSettingsProvider: failed to apply color for slot "${key}"`, err);
             }
         });
     }, [values, resolvedSlots, persistence, resolveTarget]);
@@ -182,11 +221,12 @@ export default function ColorSettingsProvider({
        Public API
     --------------------------------------------------- */
     const setColor = useCallback((slotKey, value) => {
-        setValues((prev) => ({
-            ...prev,
-            [slotKey]: value,
-        }));
-    }, []);
+        setValues((prev) => {
+            const next = { ...prev, [slotKey]: value };
+            onChange?.(next); // notify parent
+            return next;
+        });
+    }, [onChange]);
 
     /**
      * Explicit re-initialization hook
@@ -197,23 +237,16 @@ export default function ColorSettingsProvider({
         if (!el) return;
 
         const restored = {};
-
         for (const [key, cfg] of Object.entries(resolvedSlots)) {
             try {
-                const persisted = cfg.storageKey
-                    ? await persistence.getItem(cfg.storageKey)
-                    : null;
-
+                const persisted = cfg.storageKey ? await persistence.getItem(cfg.storageKey) : null;
                 const value = persisted ?? cfg.default;
                 restored[key] = value;
 
                 const cssVar = cfg.cssVar || `--${key}-color`;
                 el.style.setProperty(cssVar, value);
             } catch (err) {
-                logger.error(
-                    `ColorSettingsProvider: init failed for slot "${key}"`,
-                    err
-                );
+                logger.error(`ColorSettingsProvider: init failed for slot "${key}"`, err);
             }
         }
 
