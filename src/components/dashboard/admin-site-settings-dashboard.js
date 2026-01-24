@@ -30,7 +30,7 @@ export default function AdminSiteSettingsDashboard() {
                             <div className="content">
                                 <p>Control the global fonts for your site.</p>
                                 <FontSettingsModal
-                                    preview={true}
+                                    preview
                                     buttonLabel="Font"
                                 />
                             </div>

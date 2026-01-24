@@ -2,7 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import logger from "../../../logger";
 import { JsonEditor as Editor } from "json-edit-react";
 
-export default function JsonEditor({ data, onChange, onSave, title = "JSON Editor" }) {
+export default function JsonEditor({
+    data,
+    onChange,
+    onSave,
+    title = "JSON Editor"
+}) {
     const [editorData, setEditorData] = useState(data || {});
     const [error, setError] = useState(null);
     const [viewOnly, setViewOnly] = useState(true); // default: locked (view mode)

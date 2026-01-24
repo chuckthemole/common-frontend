@@ -249,6 +249,21 @@ export default function PersonalPageEditor({
                         </button>
                     </Tooltip>
 
+                    {/* View Profile button */}
+                    <Tooltip text="View the rendered personal page">
+                        <button
+                            className="button is-info"
+                            disabled={!profileId.trim() || !savedProfiles[profileId]}
+                            onClick={() => {
+                                // Replace spaces with hyphens for URL
+                                const safeId = profileId.trim().replace(/\s+/g, "-");
+                                window.open(`/profile/${safeId}`, "_blank");
+                            }}
+                        >
+                            View Profile
+                        </button>
+                    </Tooltip>
+
                     {/* Clear all button */}
                     <Tooltip text="Delete all saved profiles">
                         <button

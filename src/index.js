@@ -32,6 +32,7 @@ export * from './components/common-forms';
 export * from './components/dashboard';
 export * from './components/integrations';
 export * from './components/triggers';
+export * from './components/storage';
 export * from './utils';
 
 export * from './persistence';

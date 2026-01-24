@@ -1,9 +1,11 @@
 import React from "react";
-import { FontSettingsProvider } from "../../../design-control/font";
-import { ColorSettingsProvider } from "../../../design-control/color";
-import FontSettingsModal from "../../../design-control/font/font_settings_modal";
-import ColorSettingsModal from "../../../design-control/color/color_settings_modal";
-import SingleSelector from "../../../dashboard-elements/single-selector/single-selector";
+import {
+    FontSettingsProvider,
+    ColorSettingsProvider,
+    FontSettingsModal,
+    ColorSettingsModal
+} from "../../../design-control";
+import { SingleSelector } from "../../../dashboard-elements";
 import { previewColorLayouts } from "../../../design-control/color/predefined_color_layouts_preview";
 import { SectionCard } from "./sections-helper";
 import { THEMES } from "../personal-page.schema";
@@ -11,7 +13,13 @@ import { THEMES } from "../personal-page.schema";
 /* ============================================================
    Page Style Controls
    ============================================================ */
-function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorSettings }) {
+function PageStyleControls({
+    previewRef,
+    page,
+    setPage,
+    colorSettings,
+    setColorSettings
+}) {
     return (
         <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
             <div className="page-style-controls">
@@ -26,8 +34,13 @@ function PageStyleControls({ previewRef, page, setPage, colorSettings, setColorS
                     />
                 </div>
                 <div className="buttons-grid">
-                    <FontSettingsModal preview buttonLabel="Fonts" />
-                    <ColorSettingsModal buttonLabel="Color" />
+                    <FontSettingsModal
+                        preview
+                        buttonLabel="Fonts"
+                    />
+                    <ColorSettingsModal
+                        buttonLabel="Color"
+                    />
                 </div>
             </div>
         </SectionCard>
