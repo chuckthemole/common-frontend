@@ -1,20 +1,8 @@
-import React, {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
-import {
-    JsonEditor,
-    PortalContainer
-} from "../ui";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { JsonEditor, PortalContainer } from "../ui";
 import { SingleSelector } from "../dashboard-elements";
 import logger from "../../logger";
-import {
-    tryParseJSON,
-    stringifyValue,
-    isLongValue,
-} from "../../utils";
+import { tryParseJSON, stringifyValue, isLongValue } from "../../utils";
 
 /* ============================================================
    Constants
@@ -26,72 +14,63 @@ const SEARCH_SCOPES = {
     VALUES: "values",
 };
 
+const PAGE_SIZE = 20; // Number of rows per page
+
 /* ============================================================
-   LocalStorageExplorer
+   LocalStorageExplorer Component
    ============================================================ */
 
 export default function LocalStorageExplorer() {
+    /* ------------------------
+       State
+    ------------------------ */
     const [items, setItems] = useState([]);
     const [search, setSearch] = useState("");
     const [searchScope, setSearchScope] = useState(SEARCH_SCOPES.BOTH);
     const [expandedKeys, setExpandedKeys] = useState({});
-
-    // JSON editor state (progressive disclosure)
     const [editingKey, setEditingKey] = useState(null);
     const [editingValue, setEditingValue] = useState(null);
+    const [page, setPage] = useState(0); // Pagination page index
 
-    /* ------------------------------------------------------------
-       Load localStorage into memory
-    ------------------------------------------------------------ */
+    /* ------------------------
+       Load localStorage
+    ------------------------ */
     const loadStorage = useCallback(() => {
         const result = [];
-
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             const rawValue = localStorage.getItem(key);
-
             const { parsed, isJson } = tryParseJSON(rawValue);
 
-            result.push({
-                key,
-                rawValue,
-                value: parsed,
-                isJson,
-            });
+            result.push({ key, rawValue, value: parsed, isJson });
         }
-
         setItems(result);
         logger.debug("[LocalStorageExplorer] Loaded items", result);
     }, []);
 
-    /* ------------------------------------------------------------
-       Effects
-    ------------------------------------------------------------ */
+    /* ------------------------
+       Sync across tabs
+    ------------------------ */
     useEffect(() => {
         loadStorage();
-
         const onStorage = (e) => {
             logger.debug("[LocalStorageExplorer] storage event", e);
             loadStorage();
         };
-
         window.addEventListener("storage", onStorage);
         return () => window.removeEventListener("storage", onStorage);
     }, [loadStorage]);
 
-    /* ------------------------------------------------------------
+    /* ------------------------
        Filtering
-    ------------------------------------------------------------ */
+    ------------------------ */
     const filteredItems = useMemo(() => {
         if (!search.trim()) return items;
 
         const term = search.toLowerCase();
-
         return items.filter(({ key, value }) => {
             const keyMatch = key.toLowerCase().includes(term);
-            const valueMatch = stringifyValue(value, true)
-                .toLowerCase()
-                .includes(term);
+            const valueMatch = stringifyValue(value, true).toLowerCase().includes(term);
 
             switch (searchScope) {
                 case SEARCH_SCOPES.KEYS:
@@ -105,14 +84,19 @@ export default function LocalStorageExplorer() {
         });
     }, [items, search, searchScope]);
 
-    /* ------------------------------------------------------------
+    /* ------------------------
+       Paginate filtered items
+    ------------------------ */
+    const paginatedItems = useMemo(() => {
+        const start = page * PAGE_SIZE;
+        return filteredItems.slice(start, start + PAGE_SIZE);
+    }, [filteredItems, page]);
+
+    /* ------------------------
        Actions
-    ------------------------------------------------------------ */
+    ------------------------ */
     const toggleExpand = (key) => {
-        setExpandedKeys((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
+        setExpandedKeys((prev) => ({ ...prev, [key]: !prev[key] }));
     };
 
     const handleCopy = async (value) => {
@@ -155,24 +139,21 @@ export default function LocalStorageExplorer() {
 
     /* ============================================================
        Render
-       ============================================================ */
-
+    ============================================================ */
     return (
         <div className="box local-storage-explorer">
             {/* ---------- Header ---------- */}
             <div className="mb-4">
                 <h3 className="title is-5 mb-3">Local Storage Explorer</h3>
-
                 <div className="columns is-mobile">
                     <div className="column is-two-thirds">
                         <input
                             className="input"
                             placeholder="Search…"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => { setSearch(e.target.value); setPage(0); }}
                         />
                     </div>
-
                     <div className="column">
                         <PortalContainer id="editor-dropdowns">
                             {(portalTarget) => (
@@ -183,7 +164,7 @@ export default function LocalStorageExplorer() {
                                         { value: SEARCH_SCOPES.VALUES, label: "Values only" },
                                     ]}
                                     value={searchScope}
-                                    onChange={setSearchScope}
+                                    onChange={(v) => { setSearchScope(v); setPage(0); }}
                                     placeholder="Search scope"
                                     portalTarget={portalTarget}
                                 />
@@ -203,37 +184,27 @@ export default function LocalStorageExplorer() {
                             <th className="has-text-right">Actions</th>
                         </tr>
                     </thead>
-
                     <tbody>
-                        {filteredItems.map(({ key, value, isJson }) => {
+                        {paginatedItems.map(({ key, value, isJson }) => {
                             const expanded = expandedKeys[key];
                             const long = isLongValue(value);
 
                             return (
                                 <tr key={key}>
-                                    <td className="has-text-weight-semibold">
-                                        {key}
-                                    </td>
-
+                                    <td className="has-text-weight-semibold">{key}</td>
                                     <td style={{ maxWidth: "480px" }}>
                                         {long && !expanded && (
                                             <div className="has-text-grey">
                                                 {stringifyValue(value, true).slice(0, 120)}…
                                             </div>
                                         )}
-
                                         {(!long || expanded) && (
                                             <pre
-                                                style={{
-                                                    whiteSpace: "pre-wrap",
-                                                    wordBreak: "break-word",
-                                                    margin: 0,
-                                                }}
+                                                style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }}
                                             >
                                                 {stringifyValue(value, isJson)}
                                             </pre>
                                         )}
-
                                         {long && (
                                             <button
                                                 className="button is-text is-small px-0 mt-1"
@@ -243,7 +214,6 @@ export default function LocalStorageExplorer() {
                                             </button>
                                         )}
                                     </td>
-
                                     <td className="has-text-right">
                                         <div className="buttons is-right">
                                             {isJson && (
@@ -272,7 +242,7 @@ export default function LocalStorageExplorer() {
                             );
                         })}
 
-                        {!filteredItems.length && (
+                        {!paginatedItems.length && (
                             <tr>
                                 <td colSpan={3} className="has-text-centered has-text-grey">
                                     No matching localStorage entries
@@ -282,6 +252,31 @@ export default function LocalStorageExplorer() {
                     </tbody>
                 </table>
             </div>
+
+            {/* ---------- Pagination Controls ---------- */}
+            {filteredItems.length > PAGE_SIZE && (
+                <div className="mt-3 has-text-centered">
+                    <button
+                        className="button is-small mr-2"
+                        onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                        disabled={page === 0}
+                    >
+                        Previous
+                    </button>
+                    <button
+                        className="button is-small"
+                        onClick={() =>
+                            setPage((p) => ((p + 1) * PAGE_SIZE >= filteredItems.length ? p : p + 1))
+                        }
+                        disabled={(page + 1) * PAGE_SIZE >= filteredItems.length}
+                    >
+                        Next
+                    </button>
+                    <p className="mt-1 is-size-7">
+                        Page {page + 1} of {Math.ceil(filteredItems.length / PAGE_SIZE)}
+                    </p>
+                </div>
+            )}
 
             {/* ---------- Footer ---------- */}
             <div className="mt-3">
@@ -296,20 +291,14 @@ export default function LocalStorageExplorer() {
                     <div className="box">
                         <div className="level mb-3">
                             <div className="level-left">
-                                <h4 className="title is-6">
-                                    Editing JSON: {editingKey}
-                                </h4>
+                                <h4 className="title is-6">Editing JSON: {editingKey}</h4>
                             </div>
                             <div className="level-right">
-                                <button
-                                    className="button is-small"
-                                    onClick={closeJsonEditor}
-                                >
+                                <button className="button is-small" onClick={closeJsonEditor}>
                                     Close
                                 </button>
                             </div>
                         </div>
-
                         <JsonEditor
                             data={editingValue}
                             title="LocalStorage JSON"
