@@ -28,11 +28,13 @@ export default function ColorSettingsProvider({
     target,
     persistence = LocalPersistence,
     defaultLayout = null, // look in predefinedColorLayouts for defaultLayout keys
+    profileId,
     slots = {},
     colorLayouts = predefinedColorLayouts,
     onChange,
     children,
 }) {
+    const BASE_STORAGE_KEY = "COLOR";
     const initialSlotsRef = useRef(slots);
     const didHydrateRef = useRef(false);
     const didInitRef = useRef(false);
@@ -45,8 +47,8 @@ export default function ColorSettingsProvider({
             logger.debug("[ColorSettingsProvider]: resolving target", target);
 
             if (!target) {
-                logger.debug("[ColorSettingsProvider]: no target provided, defaulting to document.documentElement");
-                return document.documentElement;
+                logger.debug("[ColorSettingsProvider]: no target provided, defaulting to null.");
+                return null;
             }
 
             if (typeof target === "function") {
@@ -89,6 +91,11 @@ export default function ColorSettingsProvider({
         return defaults;
     }, [defaultLayout, colorLayouts]);
 
+    function buildStorageKey(profileId, baseKey, slotKey) {
+        if (!profileId) return null; // disables persistence for drafts
+        return `${baseKey}:${profileId}:${slotKey}`;
+    }
+
     /* --------------------------------------------------
        Resolve canonical slot definitions
        - Single source of truth for slot metadata
@@ -109,15 +116,30 @@ export default function ColorSettingsProvider({
                     {
                         cssVar: `--${key}-color`,
                         default: baseDefaults[key],
-                        storageKey: `color_${key}`, // assign storageKey for persistence
+                        // storageKey: `color_${profileId}:${key}`, // assign storageKey for persistence
+                        // storageKey: `${buildStorageKey(profileId, key.storageKey, key)}`,
                     },
                 ])
             );
             logger.debug("[ColorSettingsProvider] Created resolvedSlots from baseDefaults:", resolved);
         }
 
-        return resolved;
-    }, [JSON.stringify(baseDefaults)]); // stable dependency to avoid unnecessary re-runs
+        const normalized = {};
+
+        for (const [slotKey, cfg] of Object.entries(resolved)) {
+            const baseKey = cfg.storageKey || BASE_STORAGE_KEY;
+
+            normalized[slotKey] = {
+                ...cfg,
+                storageKey: buildStorageKey(profileId, baseKey, slotKey),
+            };
+        }
+
+        logger.debug("[ColorSettingsProvider] Resolved & normalized slots:", normalized);
+        return normalized;
+
+        // }, [JSON.stringify(baseDefaults)]); // stable dependency to avoid unnecessary re-runs
+    }, [baseDefaults, profileId]);
 
     /* --------------------------------------------------
        Initial state = defaults only
@@ -135,7 +157,7 @@ export default function ColorSettingsProvider({
     useEffect(() => {
         const resolvedTargetElement = resolveTarget();
         if (!resolvedTargetElement) {
-            logger.warn("[ColorSettingsProvider] Target element not found, waiting...");
+            logger.warn("[ColorSettingsProvider] useEffect 1: Target element not found, waiting...");
             return;
         }
 
@@ -169,7 +191,7 @@ export default function ColorSettingsProvider({
                 setValues(restored);
                 didHydrateRef.current = true;
                 logger.debug("[ColorSettingsProvider] Hydration complete, restored values:", restored);
-                
+
                 // Notify parent after hydration
                 onChange?.(restored);
             } else {
@@ -189,8 +211,11 @@ export default function ColorSettingsProvider({
        Apply updates + persist changes
     --------------------------------------------------- */
     useEffect(() => {
-        const el = resolveTarget();
-        if (!el) return;
+        const resolvedTargetElement = resolveTarget();
+        if (!resolvedTargetElement) {
+            logger.warn("[ColorSettingsProvider] useEffect 2: Target element not found, waiting...");
+            return;
+        }
 
         // SKIP persisting on first hydration
         if (!didHydrateRef.current) return;
@@ -201,7 +226,7 @@ export default function ColorSettingsProvider({
 
             try {
                 const cssVar = cfg.cssVar || `--${key}-color`;
-                el.style.setProperty(cssVar, value);
+                resolvedTargetElement.style.setProperty(cssVar, value);
 
                 if (cfg.storageKey) {
                     // now we only persist changes after hydration

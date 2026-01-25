@@ -9,16 +9,14 @@ import { SingleSelector } from "../../../dashboard-elements";
 import { previewColorLayouts } from "../../../design-control/color/predefined_color_layouts_preview";
 import { SectionCard } from "./sections-helper";
 import { THEMES } from "../personal-page.schema";
+import logger from "../../../../logger";
 
 /* ============================================================
    Page Style Controls
    ============================================================ */
 function PageStyleControls({
-    previewRef,
     page,
     setPage,
-    colorSettings,
-    setColorSettings
 }) {
     return (
         <SectionCard title="Page Style" enabled={true} onChange={() => { }}>
@@ -55,8 +53,12 @@ export default function PageStylePanel({
     setFontSettings,
     colorSettings,
     setColorSettings,
+    profileId,
 }) {
-    if (!previewEl) return null;
+    if (!previewEl) {
+        logger.debug("[PageStylePanel] No previewEl, returning null.");
+        return null;
+    }
 
     return (
         <FontSettingsProvider
@@ -81,6 +83,7 @@ export default function PageStylePanel({
                 value={colorSettings}
                 onChange={setColorSettings}
                 colorLayouts={previewColorLayouts}
+                profileId={profileId}
                 slots={{
                     /* ======================================================
                        Page-level colors (global background & text)
@@ -215,11 +218,8 @@ export default function PageStylePanel({
                 }}
             >
                 <PageStyleControls
-                    previewRef={previewEl}
                     page={page}
                     setPage={setPage}
-                    colorSettings={colorSettings}
-                    setColorSettings={setColorSettings}
                 />
             </ColorSettingsProvider>
         </FontSettingsProvider>

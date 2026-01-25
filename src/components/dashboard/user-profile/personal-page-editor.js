@@ -321,6 +321,7 @@ export default function PersonalPageEditor({
                                     setFontSettings={setFontSettings}
                                     colorSettings={colorSettings}
                                     setColorSettings={setColorSettings}
+                                    profileId={profileId}
                                 />
                             </>
                         )}

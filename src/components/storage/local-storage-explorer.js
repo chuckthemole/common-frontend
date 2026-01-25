@@ -6,7 +6,9 @@ import React, {
 } from "react";
 import {
     JsonEditor,
-    PortalContainer
+    PortalContainer,
+    useRumpusModal,
+    ConfirmModal
 } from "../ui";
 import { SingleSelector } from "../dashboard-elements";
 import logger from "../../logger";
@@ -29,6 +31,10 @@ const PAGE_SIZE = 20; // Number of rows per page
    ============================================================ */
 
 export default function LocalStorageExplorer() {
+
+    const modalId = "clear-local-storage-confirm";
+    const { openModal } = useRumpusModal();
+
     /* ------------------------
        State
     ------------------------ */
@@ -121,6 +127,16 @@ export default function LocalStorageExplorer() {
         localStorage.removeItem(key);
         logger.info("[LocalStorageExplorer] Deleted key", key);
         loadStorage();
+    };
+
+    const handleClearAllConfirmed = () => {
+        try {
+            localStorage.clear();
+            logger.warn("[LocalStorageExplorer] Cleared ALL localStorage");
+            loadStorage();
+        } catch (err) {
+            logger.error("[LocalStorageExplorer] Failed to clear localStorage", err);
+        }
     };
 
     const openJsonEditor = (key, value) => {
@@ -306,11 +322,19 @@ export default function LocalStorageExplorer() {
             )}
 
             {/* ---------- Footer ---------- */}
-            <div className="mt-3">
+            <div className="mt-3 is-flex is-justify-content-space-between">
                 <button className="button is-small" onClick={loadStorage}>
                     Reload
                 </button>
+
+                <button
+                    className="button is-small is-danger is-light"
+                    onClick={() => openModal(modalId)}
+                >
+                    Clear All Local Storage
+                </button>
             </div>
+
 
             {/* ---------- JSON Editor ---------- */}
             {editingKey && (
@@ -335,6 +359,28 @@ export default function LocalStorageExplorer() {
                     </div>
                 </div>
             )}
+
+            {/* ---------- Confirm Modal ---------- */}
+            <ConfirmModal
+                modalId={modalId}
+                title="Clear all local storage?"
+                danger
+                confirmText="Yes, clear everything"
+                cancelText="Cancel"
+                draggable
+                message={
+                    <>
+                        <p>
+                            This will permanently delete <strong>ALL localStorage entries</strong>
+                            for this site.
+                        </p>
+                        <p className="mt-2">
+                            This action cannot be undone.
+                        </p>
+                    </>
+                }
+                onConfirm={handleClearAllConfirmed}
+            />
         </div>
     );
 }

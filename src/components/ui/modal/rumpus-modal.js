@@ -17,6 +17,9 @@ export default function RumpusModal({
     width = "90vw",
     maxWidth = "1200px",
     backdropMode = BackdropMode.BLUR_DIM,
+    className,
+    bodyClassName,
+    headerClassName,
     children,
 }) {
 
@@ -24,7 +27,7 @@ export default function RumpusModal({
 
     const modalInner = (
         <div
-            className="rumpus-modal"
+            className={`rumpus-modal ${className ?? ""}`}
             style={{
                 display: "flex",
                 flexDirection: "column",
@@ -34,13 +37,13 @@ export default function RumpusModal({
         >
             {title && (
                 <div
-                    className="modal-header"
+                    className={`modal-header ${headerClassName ?? ""}`}
                     style={{
                         cursor: draggable ? "move" : "default",
                         padding: "1rem 1.25rem",
                         borderBottom: "1px solid #ccc",
                         userSelect: "none",
-                        background: "#f3f4f6",
+                        // background: "#f3f4f6",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -65,7 +68,7 @@ export default function RumpusModal({
             )}
 
             <div
-                className="modal-body"
+                className={`modal-body ${bodyClassName ?? ""}`}
                 style={{
                     padding: "2rem",
                     overflowY: "auto",

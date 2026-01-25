@@ -248,3 +248,25 @@
 .ReactModal__Content {
     filter: none;
 }
+
+.rumpus-modal {
+    background-color: #fff;
+}
+
+.rumpus-modal .modal-header {
+    background-color: #f3f4f6;
+    border-bottom: 1px solid #ccc;
+}
+
+.rumpus-modal-header--danger {
+    background-color: #fde8e8;
+    border-bottom: 1px solid #f14668;
+}
+
+.rumpus-modal-body--danger {
+    background-color: #fff5f5;
+}
+
+.rumpus-modal--danger {
+    box-shadow: 0 12px 30px rgba(241, 70, 104, 0.25);
+}
