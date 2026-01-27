@@ -26,3 +26,17 @@ export const appendScript = (scriptToAppend) => {
     script.async = true;
     document.body.appendChild(script);
 }
+
+// Colors
+/**
+ * isColor
+ *
+ * Detects if a string is a valid hex color.
+ * Supports #RGB, #RRGGBB formats.
+ *
+ * @param {string} value
+ * @returns {boolean}
+ */
+export function isColor(value) {
+    return typeof value === "string" && /^#([0-9A-Fa-f]{3}){1,2}$/.test(value);
+}

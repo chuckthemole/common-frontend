@@ -12,7 +12,12 @@ import {
 } from "../ui";
 import { SingleSelector } from "../dashboard-elements";
 import logger from "../../logger";
-import { tryParseJSON, stringifyValue, isLongValue } from "../../utils";
+import {
+    tryParseJSON,
+    stringifyValue,
+    isLongValue,
+    isColor
+} from "../../utils";
 
 /* ============================================================
    Constants
@@ -232,7 +237,7 @@ export default function LocalStorageExplorer() {
                                                 </pre>
 
                                                 {/* ---------- Color Picker ---------- */}
-                                                {typeof value === "string" && /^#([0-9A-Fa-f]{3}){1,2}$/.test(value) && (
+                                                {isColor(value) && (
                                                     <input
                                                         type="color"
                                                         value={value}

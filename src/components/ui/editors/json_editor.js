@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import logger from "../../../logger";
 import { JsonEditor as Editor } from "json-edit-react";
+import { isColor } from "../../../utils";
 
 export default function JsonEditor({
     data,
@@ -66,6 +67,43 @@ export default function JsonEditor({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
 
+    const renderColorInputs = (obj) => {
+        // deep walk through object to find colors
+        const walk = (data, path = []) => {
+            if (!data || typeof data !== "object") return [];
+            return Object.entries(data).flatMap(([key, value]) => {
+                const currentPath = [...path, key];
+                if (isColor(value)) {
+                    return (
+                        <div key={currentPath.join(".")} className="mb-1">
+                            <label className="mr-2">{currentPath.join(".")}:</label>
+                            <input
+                                type="color"
+                                value={value}
+                                onChange={(e) => {
+                                    const copy = { ...editorData };
+                                    let cursor = copy;
+                                    for (let i = 0; i < path.length; i++) {
+                                        cursor = cursor[path[i]];
+                                    }
+                                    cursor[key] = e.target.value;
+                                    setEditorData(copy);
+                                    setDirty(true);
+                                    onChange?.(copy);
+                                }}
+                            />
+                            <span className="ml-2">{value}</span>
+                        </div>
+                    );
+                } else if (typeof value === "object") {
+                    return walk(value, currentPath);
+                }
+                return [];
+            });
+        };
+        return walk(obj);
+    };
+
     return (
         <div className="box has-background-white-ter has-text-black p-5">
             <div className="flex justify-between items-center mb-3">
@@ -112,6 +150,8 @@ export default function JsonEditor({
                 }}
                 viewOnly={viewOnly}
             />
+
+            {!viewOnly && renderColorInputs(editorData)}
 
             {!viewOnly && dirty && (
                 <p className="mt-2 has-text-warning-dark italic">

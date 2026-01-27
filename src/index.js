@@ -9,7 +9,6 @@ export { default as CommonUseFetcher } from './components/common_useFetcher';
 export { default as Dnd } from './components/dnd';
 export { default as Dropdown } from './components/dropdown';
 export { get_selected } from './components/dropdown';
-export { default as ErrorPage } from './components/error_page';
 export { default as Footer } from './components/footer';
 export { default as Header } from './components/header';
 export { default as Json } from './components/json';
@@ -33,6 +32,7 @@ export * from './components/dashboard';
 export * from './components/integrations';
 export * from './components/triggers';
 export * from './components/storage';
+export * from './components/pages';
 export * from './utils';
 
 export * from './persistence';

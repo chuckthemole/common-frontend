@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import {
     PortalContainer,
     Tooltip,
-    Alert
+    Alert,
+    ConfirmModal,
+    useRumpusModal
 } from "../../ui";
 import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import PagePreview from "./preview/page-preview";
@@ -18,6 +20,7 @@ import {
 } from "./sections";
 import { usePageSections } from "./use-page-sections";
 import { debugImports } from "../../../utils";
+import { useProfile } from "./profile/useProfile";
 
 /**
  * DEBUG ONLY — Import Integrity Check
@@ -40,8 +43,6 @@ export default function PersonalPageEditor({
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
     const [fontSettings, setFontSettings] = useState({});
-    const [profileId, setProfileId] = useState("");
-    const [savedProfiles, setSavedProfiles] = useState({});
 
     const {
         sectionById,
@@ -52,6 +53,18 @@ export default function PersonalPageEditor({
         updateSectionTitle,
     } = usePageSections(page, setPage);
 
+    const {
+        profiles,
+        activeProfileId,
+        saveProfile,
+        loadProfile,
+        clearProfiles,
+        findProfileById,
+        setActiveProfileId,
+    } = useProfile();
+
+    const { openModal } = useRumpusModal();
+
     // DEBUG
     // useEffect(() => {
     //     logger.debug("[PersonalPageEditor] render", {
@@ -59,30 +72,6 @@ export default function PersonalPageEditor({
     //         hasPreviewEl: !!previewEl,
     //     });
     // });
-
-    /* ========================================================
-   Load all saved profiles on mount
-   ======================================================== */
-    useEffect(() => {
-        let cancelled = false;
-
-        const loadProfiles = async () => {
-            try {
-                const storedProfiles = await persistence.getItem("personal-page:profiles");
-                if (!storedProfiles || cancelled) return;
-
-                setSavedProfiles(JSON.parse(storedProfiles));
-            } catch (err) {
-                logger.error("[PersonalPageEditor] Failed to load profiles:", err);
-            }
-        };
-
-        loadProfiles();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [persistence]);
 
     /* ========================================================
        Load a draft page on mount
@@ -116,7 +105,8 @@ export default function PersonalPageEditor({
        ======================================================== */
     const handleSaveProfile = async (e) => {
         e.preventDefault();
-        if (!profileId.trim()) {
+
+        if (!activeProfileId?.trim()) {
             setError("Please enter a unique profile ID before saving.");
             return;
         }
@@ -126,25 +116,17 @@ export default function PersonalPageEditor({
         setSuccessMessage(null);
 
         try {
-            const newProfiles = {
-                ...savedProfiles,
-                [profileId.trim()]: {
-                    page,
-                    fontSettings,
-                    colorSettings,
-                }
-            };
-            setSavedProfiles(newProfiles);
-            await persistence.setItem(
-                "personal-page:profiles",
-                JSON.stringify(newProfiles)
-            );
+            await saveProfile(activeProfileId, {
+                page,
+                fontSettings,
+                colorSettings,
+            });
 
-            setSuccessMessage(`Profile "${profileId}" saved successfully!`);
+            setSuccessMessage(`Profile "${activeProfileId}" saved successfully!`);
             onSuccess?.(page);
         } catch (err) {
             logger.error("[PersonalPageEditor] Save failed:", err);
-            setError("Failed to save profile.");
+            setError(err.message || "Failed to save profile.");
         } finally {
             setLoading(false);
         }
@@ -154,45 +136,20 @@ export default function PersonalPageEditor({
    Clear all saved profiles
    ======================================================== */
     const handleClearProfiles = async () => {
-        try {
-            if (!Object.keys(savedProfiles).length) {
-                logger.info("[PersonalPageEditor] No profiles to clear");
-                return;
-            }
-
-            const confirmed = window.confirm(
-                "This will permanently delete ALL saved profiles. Are you sure?"
-            );
-
-            if (!confirmed) return;
-
-            setSavedProfiles({});
-            setProfileId("");
-
-            await persistence.setItem(
-                "personal-page:profiles",
-                JSON.stringify({})
-            );
-
-            setSuccessMessage("All saved profiles have been cleared.");
-            logger.info("[PersonalPageEditor] All profiles cleared");
-        } catch (err) {
-            logger.error("[PersonalPageEditor] Failed to clear profiles:", err);
-            setError("Failed to clear saved profiles.");
-        }
+        if (!Object.keys(profiles).length) return;
+        openModal("clearProfilesModal");
     };
 
     /* ========================================================
        Load a saved profile by ID
        ======================================================== */
-    const loadProfile = (id) => {
-        const profile = savedProfiles[id];
+    const handleLoadProfile = (id) => {
+        const profile = loadProfile(id);
         if (!profile) return;
 
         setPage(profile.page);
         setFontSettings(profile.fontSettings || { body: "Inter", heading: "Playfair Display" });
         setColorSettings(profile.colorSettings || {});
-        setProfileId(id);
     };
 
     const home = getSectionSafe("home");
@@ -223,7 +180,7 @@ export default function PersonalPageEditor({
                             className="button is-light"
                             type="button"
                             onClick={() => {
-                                setProfileId("");
+                                setActiveProfileId("");
                                 setPage(DEFAULT_PAGE);
                                 setFontSettings({ body: "Inter", heading: "Playfair Display" });
                                 setColorSettings({});
@@ -233,13 +190,14 @@ export default function PersonalPageEditor({
                         </button>
                     </Tooltip>
 
+
                     {/* Profile ID input */}
                     <Tooltip text="Enter a unique ID for this profile">
                         <input
                             className="input"
                             placeholder="Profile ID"
-                            value={profileId}
-                            onChange={(e) => setProfileId(e.target.value)}
+                            value={activeProfileId || ""}
+                            onChange={(e) => setActiveProfileId(e.target.value)}
                             style={{ maxWidth: "200px", flex: "0 0 auto" }}
                         />
                     </Tooltip>
@@ -259,10 +217,10 @@ export default function PersonalPageEditor({
                     <Tooltip text="View the rendered personal page">
                         <button
                             className="button is-info"
-                            disabled={!profileId.trim() || !savedProfiles[profileId]}
+                            disabled={!activeProfileId?.trim() || !findProfileById(activeProfileId)}
                             onClick={() => {
                                 // Replace spaces with hyphens for URL
-                                const safeId = profileId.trim().replace(/\s+/g, "-");
+                                const safeId = activeProfileId.trim().replace(/\s+/g, "-");
                                 window.open(`/profile/${safeId}`, "_blank");
                             }}
                         >
@@ -274,12 +232,13 @@ export default function PersonalPageEditor({
                     <Tooltip text="Delete all saved profiles">
                         <button
                             className="button is-danger is-light"
-                            disabled={!Object.keys(savedProfiles).length}
+                            disabled={!Object.keys(profiles).length}
                             onClick={handleClearProfiles}
                         >
                             Clear All
                         </button>
                     </Tooltip>
+
 
                     {/* Saved Profiles Selector */}
                     <Tooltip text="Load a previously saved profile">
@@ -287,12 +246,12 @@ export default function PersonalPageEditor({
                             <PortalContainer id="editor-dropdowns">
                                 {(portalTarget) => (
                                     <SingleSelector
-                                        options={Object.keys(savedProfiles).map((id) => ({
+                                        options={Object.keys(profiles).map((id) => ({
                                             value: id,
                                             label: id,
                                         }))}
-                                        value={profileId}
-                                        onChange={loadProfile}
+                                        value={activeProfileId}
+                                        onChange={handleLoadProfile}
                                         placeholder="Select a saved profile..."
                                         searchable={true}
                                         portalTarget={portalTarget}
@@ -321,7 +280,7 @@ export default function PersonalPageEditor({
                                     setFontSettings={setFontSettings}
                                     colorSettings={colorSettings}
                                     setColorSettings={setColorSettings}
-                                    profileId={profileId}
+                                    profileId={activeProfileId}
                                 />
                             </>
                         )}
@@ -394,6 +353,25 @@ export default function PersonalPageEditor({
                     </div>
                 )}
             </div >
+
+            <ConfirmModal
+                modalId="clearProfilesModal"
+                title="Delete All Profiles?"
+                message="This will permanently delete ALL saved profiles. Are you sure?"
+                confirmText="Delete All"
+                cancelText="Cancel"
+                danger
+                onConfirm={async () => {
+                    try {
+                        await clearProfiles();
+                        setSuccessMessage("All saved profiles have been cleared.");
+                    } catch (err) {
+                        logger.error("[PersonalPageEditor] Failed to clear profiles:", err);
+                        setError("Failed to clear saved profiles.");
+                    }
+                }}
+            />
+
         </>
     );
 }
