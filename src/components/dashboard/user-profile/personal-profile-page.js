@@ -187,7 +187,7 @@ export default function PersonalProfilePage({ persistence: persistenceProp }) {
                 <Alert
                     message={error}
                     type="error"
-                    persistent={false}
+                    duration={null}
                     size="medium"
                     position="top"
                     onClose={() => setError(null)}

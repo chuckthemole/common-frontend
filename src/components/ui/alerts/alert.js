@@ -24,12 +24,31 @@ const Alert = ({
 }) => {
     const [visible, setVisible] = useState(true);
 
+    const normalizedDuration =
+        persistent === true ? null : duration;
+
     useEffect(() => {
-        if (!persistent && duration) {
-            const timer = setTimeout(() => handleClose(), duration);
+        if (persistent !== false) {
+            console.warn(
+                "[Alert] 'persistent' is deprecated. Use `duration={null}` instead."
+            );
+        }
+    }, [persistent]);
+
+    useEffect(() => {
+        if (normalizedDuration != null) {
+            const timer = setTimeout(handleClose, normalizedDuration);
             return () => clearTimeout(timer);
         }
-    }, [duration, persistent]);
+    }, [normalizedDuration]);
+
+    // Eventually change to this when we phase out 'persistent'
+    // useEffect(() => {
+    //     if (duration != null) {
+    //         const timer = setTimeout(() => handleClose(), duration);
+    //         return () => clearTimeout(timer);
+    //     }
+    // }, [duration]);
 
     const handleClose = () => {
         setVisible(false);
