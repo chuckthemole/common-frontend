@@ -40,3 +40,9 @@ export const appendScript = (scriptToAppend) => {
 export function isColor(value) {
     return typeof value === "string" && /^#([0-9A-Fa-f]{3}){1,2}$/.test(value);
 }
+
+export const toKebabCase = (str) =>
+    str
+        .replace(/([a-z0-9])([A-Z])/g, "$1-$2") // handle camelCase
+        .replace(/[_\s]+/g, "-")               // handle snake_case / spaces
+        .toLowerCase();
