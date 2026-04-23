@@ -5,7 +5,7 @@
  * These define ALL CSS variable names used in the app.
  *
  * RULES:
- * - JS uses camelCase keys (e.g. pageBackground)
+ * - Keys are simplified + semantic (background, text, nav-text, etc.)
  * - CSS uses kebab-case variables (e.g. --page-background)
  * - SCSS must reference ONLY these variables
  *
@@ -24,19 +24,19 @@ export const COLOR_TOKENS = {
        - .page-preview-frame
        - .user-profile-preview
        ====================================================== */
-    pageBackground: {
+    background: {
         cssVar: "--page-background",
-        fallback: "#ffffff",
+        default: "#ffffff",
         description: "Main page background",
     },
-    pageText: {
+    text: {
         cssVar: "--page-text",
-        fallback: "#333333",
+        default: "#333333",
         description: "Primary text color",
     },
-    pageTextMuted: {
+    "text-muted": {
         cssVar: "--page-text-muted",
-        fallback: "#666666",
+        default: "#666666",
         description: "Muted / secondary text (subtitles, helpers)",
     },
 
@@ -47,24 +47,24 @@ export const COLOR_TOKENS = {
        - .modal
        - .editor-header
        ====================================================== */
-    surfaceBackground: {
+    "surface-background": {
         cssVar: "--surface-background",
-        fallback: "#f8f9fb",
+        default: "#f8f9fb",
         description: "Background for elevated surfaces",
     },
-    surfaceText: {
+    "surface-text": {
         cssVar: "--surface-text",
-        fallback: "#333333",
+        default: "#333333",
         description: "Text on surface backgrounds",
     },
-    cardBackground: {
+    "card-background": {
         cssVar: "--card-background",
-        fallback: "#ffffff",
+        default: "#ffffff",
         description: "Card background",
     },
-    cardBorder: {
+    "card-border": {
         cssVar: "--card-border",
-        fallback: "#e5e7eb",
+        default: "#e5e7eb",
         description: "Card border color",
     },
 
@@ -74,24 +74,24 @@ export const COLOR_TOKENS = {
        - .navbar
        - .profile-nav
        ====================================================== */
-    navBackground: {
+    "nav-background": {
         cssVar: "--nav-background",
-        fallback: "#1a1a1a",
+        default: "#1a1a1a",
         description: "Navigation background",
     },
-    navText: {
+    "nav-text": {
         cssVar: "--nav-text",
-        fallback: "#ffffff",
+        default: "#ffffff",
         description: "Navigation text",
     },
-    navHover: {
+    "nav-hover": {
         cssVar: "--nav-hover",
-        fallback: "#f5f5f5",
+        default: "#f5f5f5",
         description: "Nav hover text color",
     },
-    navBorder: {
+    "nav-border": {
         cssVar: "--nav-border",
-        fallback: "rgba(255,255,255,0.1)",
+        default: "rgba(255,255,255,0.1)",
         description: "Nav border / divider",
     },
 
@@ -100,24 +100,24 @@ export const COLOR_TOKENS = {
        Used in:
        - .button
        ====================================================== */
-    buttonBackground: {
+    "button-background": {
         cssVar: "--button-background",
-        fallback: "#3273dc",
+        default: "#3273dc",
         description: "Button background",
     },
-    buttonText: {
+    "button-text": {
         cssVar: "--button-text",
-        fallback: "#ffffff",
+        default: "#ffffff",
         description: "Button text",
     },
-    buttonHover: {
+    "button-hover": {
         cssVar: "--button-hover",
-        fallback: "#2759a3",
+        default: "#2759a3",
         description: "Button hover background",
     },
-    buttonBorder: {
+    "button-border": {
         cssVar: "--button-border",
-        fallback: "transparent",
+        default: "transparent",
         description: "Button border",
     },
 
@@ -128,19 +128,19 @@ export const COLOR_TOKENS = {
        - .highlight
        - project links
        ====================================================== */
-    accentColor: {
+    accent: {
         cssVar: "--accent-color",
-        fallback: "#ff3860",
+        default: "#ff3860",
         description: "Primary accent color",
     },
-    linkColor: {
+    link: {
         cssVar: "--link-color",
-        fallback: "#3273dc",
+        default: "#3273dc",
         description: "Link color",
     },
-    linkHover: {
+    "link-hover": {
         cssVar: "--link-hover",
-        fallback: "#2759a3",
+        default: "#2759a3",
         description: "Link hover color",
     },
 
@@ -150,14 +150,14 @@ export const COLOR_TOKENS = {
        - .bordered
        - general UI
        ====================================================== */
-    borderColor: {
+    border: {
         cssVar: "--border-color",
-        fallback: "#e5e7eb",
+        default: "#e5e7eb",
         description: "Default border color",
     },
-    focusRing: {
+    "focus-ring": {
         cssVar: "--focus-ring",
-        fallback: "#3273dc",
+        default: "#3273dc",
         description: "Focus outline color",
     },
 };
