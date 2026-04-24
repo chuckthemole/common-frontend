@@ -5,25 +5,11 @@ import { Alert } from "../../ui";
 import { LocalPersistence } from "../../../persistence/persistence";
 import { PageThemeProvider } from "./page-theme-provider";
 import logger from "../../../logger";
-
-/**
- * ThemedPagePreview
- * -----------------
- * Thin composition layer:
- * - Applies theming
- * - Delegates rendering to PagePreview
- * - Never owns data loading
- */
-function ThemedPagePreview({ page, colorSettings, fontSettings }) {
-    return (
-        <PageThemeProvider
-            colorSettings={colorSettings}
-            fontSettings={fontSettings}
-        >
-            <PagePreview page={page} />
-        </PageThemeProvider>
-    );
-}
+import {
+    FontSettingsProvider,
+    ColorSettingsProvider,
+    mapToColorSlots
+} from "../../design-control";
 
 /**
  * PersonalProfilePage
@@ -43,6 +29,8 @@ export default function PersonalProfilePage({ persistence: persistenceProp }) {
     const [profile, setProfile] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    const [element, setElement] = useState(null);
 
     /**
      * Normalize route param
@@ -210,16 +198,33 @@ export default function PersonalProfilePage({ persistence: persistenceProp }) {
         );
     }
 
+    logger.debug('[PersonalProfilePage] profile object');
+    logger.debug(profile);
+
     /* ---------------- Safe Render ---------------- */
 
     try {
         return (
-            <div className="page-preview-frame">
-                <ThemedPagePreview
-                    page={profile.page}
-                    colorSettings={profile.colorSettings}
-                    fontSettings={profile.fontSettings}
-                />
+            <div className="page-preview-frame" ref={setElement}>
+                <PagePreview page={profile.page} />
+                <FontSettingsProvider
+                    target={element}
+                    value={profile.fontSettings}
+                >
+
+                    <ColorSettingsProvider
+                        target={element}
+                        slots={
+                            mapToColorSlots(
+                                profile.colorSettings,
+                                { storageKeyBase = "personal-page", user: "Chuck" }
+                            )
+                        }
+                        profileId={profile.id}
+                    >
+
+                    </ColorSettingsProvider>
+                </FontSettingsProvider>
             </div>
         );
     } catch (renderErr) {

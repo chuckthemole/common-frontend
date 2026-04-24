@@ -89,20 +89,20 @@ export default function PageStylePanel({
                        Page-level colors (global background & text)
                        ====================================================== */
 
-                    background: {
+                    "background": {
                         cssVar: "--page-background",
                         default: "#ffffff", // main page background
                         storageKey: "personal-page:background",
                     },
-                    text: {
+                    "text": {
                         cssVar: "--page-text",
                         default: "#333333", // primary body text
                         storageKey: "personal-page:text",
                     },
-                    mutedText: {
+                    "muted-text": {
                         cssVar: "--page-text-muted",
                         default: "#666666", // subtitles, helper text
-                        storageKey: "personal-page:mutedText",
+                        storageKey: "personal-page:muted-text",
                     },
 
                     /* ======================================================
@@ -110,110 +110,110 @@ export default function PageStylePanel({
                        (cards, modals, inset panels)
                        ====================================================== */
 
-                    surface: {
+                    "surface": {
                         cssVar: "--surface-background",
                         default: "#f8f9fb", // raised surfaces on light themes
                         storageKey: "personal-page:surface",
                     },
-                    surfaceText: {
+                    "surface-text": {
                         cssVar: "--surface-text",
                         default: "#333333",
-                        storageKey: "personal-page:surfaceText",
+                        storageKey: "personal-page:surface-text",
                     },
-                    cardBackground: {
+                    "card-background": {
                         cssVar: "--card-background",
                         default: "#ffffff",
-                        storageKey: "personal-page:cardBackground",
+                        storageKey: "personal-page:card-background",
                     },
-                    cardBorder: {
+                    "card-border": {
                         cssVar: "--card-border",
                         default: "#e5e7eb", // subtle card outline
-                        storageKey: "personal-page:cardBorder",
+                        storageKey: "personal-page:card-border",
                     },
 
                     /* ======================================================
                        Navigation
                        ====================================================== */
 
-                    navBackground: {
+                    "nav-background": {
                         cssVar: "--nav-background",
                         default: "#1a1a1a",
-                        storageKey: "personal-page:navBackground",
+                        storageKey: "personal-page:nav-background",
                     },
-                    navText: {
+                    "nav-text": {
                         cssVar: "--nav-text",
                         default: "#ffffff",
-                        storageKey: "personal-page:navText",
+                        storageKey: "personal-page:nav-text",
                     },
-                    navHover: {
+                    "nav-hover": {
                         cssVar: "--nav-hover",
                         default: "#f5f5f5",
-                        storageKey: "personal-page:navHover",
+                        storageKey: "personal-page:nav-hover",
                     },
-                    navBorder: {
+                    "nav-border": {
                         cssVar: "--nav-border",
                         default: "rgba(255,255,255,0.1)",
-                        storageKey: "personal-page:navBorder",
+                        storageKey: "personal-page:nav-border",
                     },
 
                     /* ======================================================
                        Buttons
                        ====================================================== */
 
-                    buttonBackground: {
+                    "button-background": {
                         cssVar: "--button-background",
                         default: "#3273dc",
-                        storageKey: "personal-page:buttonBackground",
+                        storageKey: "personal-page:button-background",
                     },
-                    buttonText: {
+                    "button-text": {
                         cssVar: "--button-text",
                         default: "#ffffff",
-                        storageKey: "personal-page:buttonText",
+                        storageKey: "personal-page:button-text",
                     },
-                    buttonHover: {
+                    "button-hover": {
                         cssVar: "--button-hover",
                         default: "#2759a3",
-                        storageKey: "personal-page:buttonHover",
+                        storageKey: "personal-page:button-hover",
                     },
-                    buttonBorder: {
+                    "button-border": {
                         cssVar: "--button-border",
                         default: "transparent",
-                        storageKey: "personal-page:buttonBorder",
+                        storageKey: "personal-page:button-border",
                     },
 
                     /* ======================================================
                        Links & accents
                        ====================================================== */
 
-                    accent: {
+                    "accent": {
                         cssVar: "--accent-color",
                         default: "#ff3860",
                         storageKey: "personal-page:accent",
                     },
-                    link: {
+                    "link": {
                         cssVar: "--link-color",
                         default: "#3273dc",
                         storageKey: "personal-page:link",
                     },
-                    linkHover: {
+                    "link-hover": {
                         cssVar: "--link-hover",
                         default: "#2759a3",
-                        storageKey: "personal-page:linkHover",
+                        storageKey: "personal-page:link-hover",
                     },
 
                     /* ======================================================
                        Dividers & outlines
                        ====================================================== */
 
-                    border: {
+                    "border": {
                         cssVar: "--border-color",
                         default: "#e5e7eb",
                         storageKey: "personal-page:border",
                     },
-                    focusRing: {
+                    "focus-ring": {
                         cssVar: "--focus-ring",
                         default: "#3273dc",
-                        storageKey: "personal-page:focusRing",
+                        storageKey: "personal-page:focus-ring",
                     },
                 }}
             >

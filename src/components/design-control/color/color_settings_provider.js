@@ -11,31 +11,17 @@ import {
 import { toKebabCase } from "../../../utils";
 import { COLOR_TOKENS } from "../../../constants/color-tokens";
 
-export function createColorSlots(colorMap, options = {}) {
-    const {
-        prefix,
-        storageKeyBase = "COLOR",
-        transformKey = toKebabCase,
-    } = options;
-
-    return Object.fromEntries(
-        Object.entries(colorMap).map(([key, value]) => {
-            const transformedKey = transformKey(key);
-
-            return [
-                key, // keep original key for JS access
-                {
-                    cssVar: prefix
-                        ? `--${prefix}-${transformedKey}`
-                        : `--${transformedKey}`,
-                    default: value,
-                    storageKey: storageKeyBase,
-                },
-            ];
-        })
-    );
-}
-
+/**
+ * Maps a given input object of color values to the standardized COLOR_TOKENS structure.
+ *
+ * For each token key, returns an object containing:
+ * - cssVar: the CSS custom property name used for styling
+ * - default: the corresponding value from the input object
+ * - storageKey: a namespaced key used for persistence (e.g., localStorage)
+ *
+ * This ensures all color slots follow a consistent shape for applying styles
+ * and saving user-specific preferences.
+ */
 export function mapToColorSlots(input, options = {}) {
     const {
         storageKeyBase = "personal-page",
@@ -47,8 +33,8 @@ export function mapToColorSlots(input, options = {}) {
             key,
             {
                 cssVar: config.cssVar,
-                default: config.default,
-                storageKey: `${storageKeyBase}:${key}:${user}:${key}`,
+                default: input[key],
+                storageKey: `${storageKeyBase}:${key}:${user}:${key}`, // TODO: why are we appending key at end, twice?
             },
         ])
     );
