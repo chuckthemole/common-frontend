@@ -11,6 +11,11 @@ import {
 import { toKebabCase } from "../../../utils";
 import { COLOR_TOKENS } from "../../../constants/color-tokens";
 
+function buildStorageKey(profileId, baseKey, slotKey) {
+    if (!profileId) return null; // disables persistence for drafts
+    return `${baseKey}:${profileId}:${slotKey}`;
+}
+
 /**
  * Maps a given input object of color values to the standardized COLOR_TOKENS structure.
  *
@@ -34,7 +39,8 @@ export function mapToColorSlots(input, options = {}) {
             {
                 cssVar: config.cssVar,
                 default: input[key],
-                storageKey: `${storageKeyBase}:${key}:${user}:${key}`, // TODO: why are we appending key at end, twice?
+                storageKey: buildStorageKey(user, storageKeyBase, key)
+                // storageKey: `${storageKeyBase}:${key}:${user}`,
             },
         ])
     );
@@ -78,6 +84,7 @@ export default function ColorSettingsProvider({
        Resolve DOM target safely
     --------------------------------------------------- */
     const resolveTarget = useCallback(() => {
+        logger.groupCollapsed?.("[ColorSettingsProvider] resolveTarget", target);
         try {
             logger.debug("[ColorSettingsProvider]: resolving target", target);
 
@@ -104,6 +111,9 @@ export default function ColorSettingsProvider({
 
         } catch (err) {
             logger.error("[ColorSettingsProvider]: error resolving target", err);
+            return null;
+        } finally {
+            logger.groupEnd?.();
         }
 
         logger.warn("[ColorSettingsProvider]: target is not a valid HTMLElement", target);
@@ -126,16 +136,12 @@ export default function ColorSettingsProvider({
         return defaults;
     }, [defaultLayout, colorLayouts]);
 
-    function buildStorageKey(profileId, baseKey, slotKey) {
-        if (!profileId) return null; // disables persistence for drafts
-        return `${baseKey}:${profileId}:${slotKey}`;
-    }
-
     /* --------------------------------------------------
        Resolve canonical slot definitions
        - Single source of truth for slot metadata
     --------------------------------------------------- */
     const resolvedSlots = useMemo(() => {
+        logger.groupCollapsed?.("[ColorSettingsProvider] resolveSlots");
         let resolved;
 
         const hasInitialSlots = Object.keys(initialSlotsRef.current).length > 0;
@@ -171,6 +177,8 @@ export default function ColorSettingsProvider({
         }
 
         logger.debug("[ColorSettingsProvider] Resolved & normalized slots:", normalized);
+        logger.groupEnd?.();
+
         return normalized;
 
         // }, [JSON.stringify(baseDefaults)]); // stable dependency to avoid unnecessary re-runs
@@ -191,8 +199,12 @@ export default function ColorSettingsProvider({
     --------------------------------------------------- */
     useEffect(() => {
         const resolvedTargetElement = resolveTarget();
+
+        logger.groupCollapsed?.("[ColorSettingsProvider] Hydration cycle");
+
         if (!resolvedTargetElement) {
-            logger.warn("[ColorSettingsProvider] useEffect 1: Target element not found, waiting...");
+            logger.warn("Target element not found, waiting...");
+            logger.groupEnd?.();
             return;
         }
 
@@ -201,36 +213,55 @@ export default function ColorSettingsProvider({
         const hydrate = async () => {
             const restored = {};
 
-            for (const [key, cfg] of Object.entries(resolvedSlots)) {
-                try {
-                    if (!cfg.storageKey) {
-                        logger.warn(`[ColorSettingsProvider] Slot "${key}" has no storageKey, persistence skipped`);
+            try {
+                logger.debug("Resolved target element:", resolvedTargetElement);
+                logger.debug("Resolved slots:", resolvedSlots);
+
+                for (const [key, cfg] of Object.entries(resolvedSlots)) {
+                    try {
+                        if (!cfg.storageKey) {
+                            logger.warn(`Slot "${key}" has no storageKey, persistence skipped`);
+                        }
+
+                        logger.debug(`[Hydrate] Starting key "${key}"`, {
+                            storageKey: cfg.storageKey,
+                            default: cfg.default,
+                        });
+
+                        const persisted = cfg.storageKey
+                            ? await persistence.getItem(cfg.storageKey)
+                            : null;
+
+                        const value = persisted ?? cfg.default;
+                        restored[key] = value;
+
+                        const cssVarName = cfg.cssVar || `--${key}-color`;
+                        resolvedTargetElement.style.setProperty(cssVarName, value);
+
+                        logger.debug(`Hydrated "${key}" → ${cssVarName}`, {
+                            value,
+                            persisted,
+                        });
+                    } catch (err) {
+                        logger.error(`Failed to hydrate slot "${key}"`, err);
                     }
-
-                    logger.debug(`[Hydrate] Starting key "${key}"`);
-
-                    const persisted = cfg.storageKey ? await persistence.getItem(cfg.storageKey) : null;
-                    const value = persisted ?? cfg.default;
-                    restored[key] = value;
-
-                    const cssVarName = cfg.cssVar || `--${key}-color`;
-                    resolvedTargetElement.style.setProperty(cssVarName, value);
-
-                    logger.debug(`[ColorSettingsProvider] Hydrated slot "${key}": ${cssVarName} = ${value}`);
-                } catch (err) {
-                    logger.error(`[ColorSettingsProvider] Failed to hydrate slot "${key}"`, err);
                 }
-            }
 
-            if (!cancelled) {
-                setValues(restored);
-                didHydrateRef.current = true;
-                logger.debug("[ColorSettingsProvider] Hydration complete, restored values:", restored);
+                if (!cancelled) {
+                    setValues(restored);
+                    didHydrateRef.current = true;
 
-                // Notify parent after hydration
-                onChange?.(restored);
-            } else {
-                logger.warn("[ColorSettingsProvider] Hydration cancelled, state not updated");
+                    logger.debug("Hydration complete", restored);
+
+                    // Notify parent after hydration
+                    onChange?.(restored);
+                } else {
+                    logger.warn("Hydration cancelled, state not updated");
+                }
+            } catch (err) {
+                logger.error("Hydration process failed", err);
+            } finally {
+                logger.groupEnd?.();
             }
         };
 
@@ -238,7 +269,7 @@ export default function ColorSettingsProvider({
 
         return () => {
             cancelled = true;
-            logger.debug("[ColorSettingsProvider] Cleanup: hydration cancelled");
+            logger.debug("Cleanup: hydration cancelled");
         };
     }, [resolvedSlots, persistence, resolveTarget]);
 
@@ -246,76 +277,76 @@ export default function ColorSettingsProvider({
        Apply updates + persist changes
     --------------------------------------------------- */
     useEffect(() => {
+        logger.groupCollapsed?.("[ColorSettingsProvider] Apply + Persist cycle");
+
         const resolvedTargetElement = resolveTarget();
+
         if (!resolvedTargetElement) {
             logger.warn("[ColorSettingsProvider] useEffect 2: Target element not found, waiting...");
             logger.debug("[ColorSettingsProvider] Skipping effect: no target element resolved");
+            logger.groupEnd?.();
             return;
         }
 
         // SKIP persisting on first hydration
         if (!didHydrateRef.current) {
             logger.debug("[ColorSettingsProvider] Skipping effect: initial hydration not complete");
+            logger.groupEnd?.();
             return;
         }
 
-        Object.entries(resolvedSlots).forEach(([key, cfg]) => {
-            const value = values[key];
+        try {
+            logger.debug("Resolved target element:", resolvedTargetElement);
+            logger.debug("Current values:", values);
+            logger.debug("Resolved slots:", resolvedSlots);
 
-            if (!value) {
-                logger.debug(`[ColorSettingsProvider] Skipping slot "${key}": no value found`);
-                return;
-            }
+            Object.entries(resolvedSlots).forEach(([key, cfg]) => {
+                const value = values[key];
 
-            try {
-                const cssVar = cfg.cssVar || `--${key}-color`;
-                logger.debug(`[ColorSettingsProvider] Applying slot "${key}"`, {
-                    cssVar,
-                    value,
-                    storageKey: cfg.storageKey,
-                });
+                if (!value) {
+                    logger.debug(`[ColorSettingsProvider] Skipping slot "${key}": no value found`);
+                    return;
+                }
 
-                // Sets a CSS custom property (variable) on the target element.
-                // Example:
-                //   If cssVar = "--primary-color" and value = "#ff0000",
-                //   this sets: --primary-color: #ff0000;
-                //
-                // This will only visually change anything if your CSS is using the variable, e.g.:
-                //   .button {
-                //     background-color: var(--primary-color);
-                //   }
-                //
-                // Note: CSS variables are scoped. If this is set on a specific element,
-                // only that element and its children can use it. For global usage,
-                // set it on document.documentElement instead.
-                resolvedTargetElement.style.setProperty(cssVar, value);
+                try {
+                    const cssVar = cfg.cssVar || `--${key}-color`;
 
-                if (cfg.storageKey) {
-                    logger.debug(`[ColorSettingsProvider] Persisting slot "${key}"`, {
-                        storageKey: cfg.storageKey,
+                    logger.debug(`[ColorSettingsProvider] Applying slot "${key}"`, {
+                        cssVar,
                         value,
+                        storageKey: cfg.storageKey,
                     });
 
-                    // now we only persist changes after hydration
-                    persistence
-                        .setItem(cfg.storageKey, value)
-                        .then(() => {
-                            logger.debug(`[ColorSettingsProvider] Successfully persisted "${key}"`, {
-                                storageKey: cfg.storageKey,
-                                value,
-                            });
-                        })
-                        .catch((err) =>
-                            logger.error(`ColorSettingsProvider: failed to persist "${key}"`, err)
-                        );
-                } else {
-                    logger.warn(`[ColorSettingsProvider] Slot "${key}" has no storageKey, persistence skipped`);
-                    logger.debug(`[ColorSettingsProvider] Skipped persistence for slot "${key}" due to missing storageKey`);
+                    resolvedTargetElement.style.setProperty(cssVar, value);
+
+                    if (cfg.storageKey) {
+                        logger.debug(`[ColorSettingsProvider] Persisting slot "${key}"`, {
+                            storageKey: cfg.storageKey,
+                            value,
+                        });
+
+                        persistence
+                            .setItem(cfg.storageKey, value)
+                            .then(() => {
+                                logger.debug(`[ColorSettingsProvider] Successfully persisted "${key}"`, {
+                                    storageKey: cfg.storageKey,
+                                    value,
+                                });
+                            })
+                            .catch((err) =>
+                                logger.error(`ColorSettingsProvider: failed to persist "${key}"`, err)
+                            );
+                    } else {
+                        logger.warn(`[ColorSettingsProvider] Slot "${key}" has no storageKey, persistence skipped`);
+                        logger.debug(`[ColorSettingsProvider] Skipped persistence for slot "${key}" due to missing storageKey`);
+                    }
+                } catch (err) {
+                    logger.error(`ColorSettingsProvider: failed to apply color for slot "${key}"`, err);
                 }
-            } catch (err) {
-                logger.error(`ColorSettingsProvider: failed to apply color for slot "${key}"`, err);
-            }
-        });
+            });
+        } finally {
+            logger.groupEnd?.();
+        }
     }, [values, resolvedSlots, persistence, resolveTarget]);
 
     /* --------------------------------------------------
