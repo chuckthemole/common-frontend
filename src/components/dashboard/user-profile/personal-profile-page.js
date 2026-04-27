@@ -217,7 +217,7 @@ export default function PersonalProfilePage({ persistence: persistenceProp }) {
                         slots={
                             mapToColorSlots(
                                 profile.colorSettings,
-                                { storageKeyBase = "personal-page", user: "Chuck" }
+                                { storageKeyBase: "personal-page", user: "Chuck" }
                             )
                         }
                         profileId={profile.id}

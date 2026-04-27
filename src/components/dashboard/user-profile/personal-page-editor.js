@@ -21,6 +21,7 @@ import {
 import { usePageSections } from "./use-page-sections";
 import { debugImports } from "../../../utils";
 import { useProfile } from "./profile/useProfile";
+import { useEventLogger } from "../../event-logger/useEventLogger";
 
 /**
  * DEBUG ONLY — Import Integrity Check
@@ -43,6 +44,8 @@ export default function PersonalPageEditor({
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
     const [fontSettings, setFontSettings] = useState({});
+
+    const { logEvent } = useEventLogger();
 
     const {
         sectionById,
@@ -122,6 +125,13 @@ export default function PersonalPageEditor({
                 colorSettings,
             });
 
+            logEvent("personal_profile_page.saved", {
+                profileId: activeProfileId,
+                hasFontSettings: !!fontSettings,
+                hasColorSettings: !!colorSettings,
+                // TODO: add the user who is doing this save action
+            });
+            
             setSuccessMessage(`Profile "${activeProfileId}" saved successfully!`);
             onSuccess?.(page);
         } catch (err) {

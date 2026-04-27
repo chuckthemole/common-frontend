@@ -43,6 +43,81 @@ export const LocalPersistence = {
         } catch (err) {
             logger.error(`[LocalPersistence] Failed to remove "${key}":`, err);
         }
+    },
+
+    /**
+     * Append item to a named collection
+     */
+    append: async (collection, value) => {
+        try {
+            const existing = JSON.parse(
+                localStorage.getItem(collection) || "[]"
+            );
+
+            existing.push(value);
+
+            localStorage.setItem(collection, JSON.stringify(existing));
+        } catch (err) {
+            logger.error(
+                `[LocalPersistence] Failed to append to "${collection}":`,
+                err
+            );
+        }
+    },
+
+    /**
+     * Get all items in a collection
+     */
+    getAll: async (collection) => {
+        try {
+            return JSON.parse(localStorage.getItem(collection) || "[]");
+        } catch (err) {
+            logger.error(
+                `[LocalPersistence] Failed to getAll "${collection}":`,
+                err
+            );
+            return [];
+        }
+    },
+
+    /**
+     * Overwrite entire collection
+     */
+    setAll: async (collection, items) => {
+        try {
+            localStorage.setItem(collection, JSON.stringify(items));
+        } catch (err) {
+            logger.error(
+                `[LocalPersistence] Failed to setAll "${collection}":`,
+                err
+            );
+        }
+    },
+
+    /**
+     * Clear a collection
+     */
+    clearCollection: async (collection) => {
+        try {
+            localStorage.removeItem(collection);
+        } catch (err) {
+            logger.error(
+                `[LocalPersistence] Failed to clear "${collection}":`,
+                err
+            );
+        }
+    },
+    
+    /**
+     * allows stores to enumerate keys safely
+     */
+    keys: async () => {
+        try {
+            return Object.keys(localStorage);
+        } catch (err) {
+            logger.error(`[LocalPersistence] Failed to list keys`, err);
+            return [];
+        }
     }
 };
 

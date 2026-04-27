@@ -33,6 +33,7 @@ export * from './components/integrations';
 export * from './components/triggers';
 export * from './components/storage';
 export * from './components/pages';
+export * from './components/event-logger';
 export * from './utils';
 
 export * from './persistence';
