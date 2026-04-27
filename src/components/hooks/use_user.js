@@ -1,70 +1,95 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import logger from '../logger';
-import { ApiPersistence } from '../persistence/api_persistence';
-import { useAuth } from '../auth_context';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import logger from "../../logger";
+import { ApiPersistence } from "../../persistence";
+import { useAuth } from "../auth_context";
 
 /**
  * useUser
  *
- * Central hook for interacting with the current authenticated user.
- * Uses ApiPersistence for CRUD operations.
+ * A persistence-driven hook for the current authenticated user.
  *
- * Responsibilities:
- * - Fetch current user
- * - Update user fields
- * - Delete user
- * - Expose loading + error states
- *
- * This hook does NOT:
- * - Render UI
- * - Handle routing
- * - Handle login/logout
+ * Design:
+ * - Treats user as a singleton resource (no key required)
+ * - Uses ApiPersistence as the abstraction layer
+ * - Allows endpoint injection for flexibility
  */
 export default function useUser({
-    autoFetch = true,     // fetch user on mount
+    autoFetch = true,
+    endpoints = {
+        get: "/api/user/me",
+        update: "/api/user/me",
+        delete: "/api/user/me",
+    },
 } = {}) {
     const { isAuthenticated } = useAuth();
 
-    const userApi = useMemo(
-        () =>
-            ApiPersistence({
-                get: '/api/user/me',
-                update: '/api/user/me',
-                delete: '/api/user/me',
-            }),
-        []
-    );
+    /**
+     * Persistence layer
+     */
+    const userStore = useMemo(() => {
+        return ApiPersistence({
+            get: endpoints.get,
+            update: endpoints.update,
+            delete: endpoints.delete,
+        });
+    }, [endpoints]);
 
+    /**
+     * State
+     */
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     // ---------------------------------------------------------------------
-    // Fetch
+    // FETCH
     // ---------------------------------------------------------------------
     const fetchUser = useCallback(async () => {
+        logger.groupCollapsed?.("[useUser] fetchUser()");
+
         if (!isAuthenticated) {
+            logger.debug("[useUser] Not authenticated → skipping fetch");
             setUser(null);
-            return;
+            logger.groupEnd?.();
+            return null;
         }
 
         setLoading(true);
         setError(null);
 
+        logger.debug("[useUser] Starting fetch...");
+        logger.debug("[useUser] Endpoint:", endpoints.get);
+
         try {
-            const data = await userApi.getItem();
+            const data = await userStore.getItem(null); // singleton
+
+            logger.debug("[useUser] Raw response:", data);
+
+            if (!data) {
+                logger.warn("[useUser] No user returned from API");
+            }
+
             setUser(data);
-            logger.debug('[useUser] User fetched', data);
+
+            logger.debug("[useUser] State updated → user set");
+
+            return data;
         } catch (err) {
-            logger.error('[useUser] Failed to fetch user', err);
-            setError('Failed to load user');
+            logger.error("[useUser] Fetch failed:", err);
+
+            setError("Failed to load user");
+
+            return null;
         } finally {
             setLoading(false);
+
+            logger.debug("[useUser] Loading complete");
+            logger.groupEnd?.();
         }
-    }, [isAuthenticated, userApi]);
+    }, [isAuthenticated, userStore]);
 
     // ---------------------------------------------------------------------
-    // Update (partial)
+    // UPDATE (partial)
     // ---------------------------------------------------------------------
     const updateUser = useCallback(
         async (updates) => {
@@ -74,23 +99,28 @@ export default function useUser({
             setError(null);
 
             try {
-                const updated = await userApi.updateItem(null, updates);
-                setUser((prev) => ({ ...prev, ...updated }));
-                logger.debug('[useUser] User updated', updates);
-                return updated;
+                // NOTE: ApiPersistence.updateItem does NOT return data
+                await userStore.updateItem(null, updates);
+
+                // optimistic merge (safe fallback)
+                setUser((prev) => ({ ...prev, ...updates }));
+
+                logger.debug("[useUser] updated", updates);
+
+                return updates;
             } catch (err) {
-                logger.error('[useUser] Failed to update user', err);
-                setError('Failed to update user');
+                logger.error("[useUser] update failed", err);
+                setError("Failed to update user");
                 return null;
             } finally {
                 setLoading(false);
             }
         },
-        [isAuthenticated, userApi]
+        [isAuthenticated, userStore]
     );
 
     // ---------------------------------------------------------------------
-    // Delete
+    // DELETE
     // ---------------------------------------------------------------------
     const deleteUser = useCallback(async () => {
         if (!isAuthenticated) return false;
@@ -99,21 +129,23 @@ export default function useUser({
         setError(null);
 
         try {
-            await userApi.removeItem();
+            await userStore.removeItem(null);
             setUser(null);
-            logger.warn('[useUser] User deleted');
+
+            logger.warn("[useUser] deleted");
+
             return true;
         } catch (err) {
-            logger.error('[useUser] Failed to delete user', err);
-            setError('Failed to delete user');
+            logger.error("[useUser] delete failed", err);
+            setError("Failed to delete user");
             return false;
         } finally {
             setLoading(false);
         }
-    }, [isAuthenticated, userApi]);
+    }, [isAuthenticated, userStore]);
 
     // ---------------------------------------------------------------------
-    // Effects
+    // EFFECTS
     // ---------------------------------------------------------------------
     useEffect(() => {
         if (autoFetch) {
@@ -122,21 +154,24 @@ export default function useUser({
     }, [autoFetch, fetchUser]);
 
     // ---------------------------------------------------------------------
-    // Public API
+    // DERIVED STATE
+    // ---------------------------------------------------------------------
+    const isLoaded = !loading && user !== null;
+
+    // ---------------------------------------------------------------------
+    // PUBLIC API
     // ---------------------------------------------------------------------
     return {
         user,
         loading,
         error,
 
-        // actions
         fetchUser,
         refresh: fetchUser,
         updateUser,
         deleteUser,
 
-        // derived
         isAuthenticated,
-        isLoaded: !loading && user !== null,
+        isLoaded,
     };
 }

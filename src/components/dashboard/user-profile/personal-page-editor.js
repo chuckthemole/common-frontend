@@ -22,6 +22,7 @@ import { usePageSections } from "./use-page-sections";
 import { debugImports } from "../../../utils";
 import { useProfile } from "./profile/useProfile";
 import { useEventLogger } from "../../event-logger/useEventLogger";
+import useUser from "../../hooks/use_user";
 
 /**
  * DEBUG ONLY — Import Integrity Check
@@ -38,7 +39,7 @@ export default function PersonalPageEditor({
     const persistence = persistenceProp || LocalPersistence;
     const [previewEl, setPreviewEl] = useState(null);
     const [page, setPage] = useState(DEFAULT_PAGE);
-    const [loading, setLoading] = useState(false);
+    const [saveIsLoading, setSaveIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
@@ -67,6 +68,13 @@ export default function PersonalPageEditor({
     } = useProfile();
 
     const { openModal } = useRumpusModal();
+
+    const { fetchUser, user, loading } = useUser({
+        autoFetch: false,
+        endpoints: {
+            get: "/api/current_user",
+        },
+    });
 
     // DEBUG
     // useEffect(() => {
@@ -114,9 +122,12 @@ export default function PersonalPageEditor({
             return;
         }
 
-        setLoading(true);
+        setSaveIsLoading(true);
         setError(null);
         setSuccessMessage(null);
+
+        const user = await fetchUser();
+        logger.debug("[PersonalPageEditor] USER: ", user);
 
         try {
             await saveProfile(activeProfileId, {
@@ -126,19 +137,20 @@ export default function PersonalPageEditor({
             });
 
             logEvent("personal_profile_page.saved", {
+                username: user.username,
+                userId: user.id,
                 profileId: activeProfileId,
-                hasFontSettings: !!fontSettings,
-                hasColorSettings: !!colorSettings,
-                // TODO: add the user who is doing this save action
+                // hasFontSettings: !!fontSettings,
+                // hasColorSettings: !!colorSettings,
             });
-            
+
             setSuccessMessage(`Profile "${activeProfileId}" saved successfully!`);
             onSuccess?.(page);
         } catch (err) {
             logger.error("[PersonalPageEditor] Save failed:", err);
             setError(err.message || "Failed to save profile.");
         } finally {
-            setLoading(false);
+            setSaveIsLoading(false);
         }
     };
 
@@ -216,10 +228,10 @@ export default function PersonalPageEditor({
                     <Tooltip text="Save the current profile">
                         <button
                             className="button is-success"
-                            disabled={loading}
+                            disabled={saveIsLoading}
                             onClick={handleSaveProfile}
                         >
-                            {loading ? "Saving..." : "Save Profile"}
+                            {saveIsLoading ? "Saving..." : "Save Profile"}
                         </button>
                     </Tooltip>
 
