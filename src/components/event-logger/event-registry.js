@@ -21,11 +21,20 @@ export const EventRegistry = {
         action: "created",
     },
     "personal_profile_page.saved": {
-        entity: "Personal Saved",
+        entity: "Personal Page",
         action: "saved",
     },
     "personal_profile_page.deleted": {
         entity: "Personal Page",
+        action: "deleted",
+    },
+
+    "local_storage_explorer.created": {
+        entity: "Local Storage",
+        action: "created",
+    },
+    "local_storage_explorer.deleted": {
+        entity: "Local Storage",
         action: "deleted",
     },
 };

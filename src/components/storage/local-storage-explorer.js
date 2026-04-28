@@ -18,6 +18,7 @@ import {
     isLongValue,
     isColor
 } from "../../utils";
+import { useEventLogger } from "../event-logger/useEventLogger";
 
 /* ============================================================
    Constants
@@ -39,6 +40,7 @@ export default function LocalStorageExplorer() {
 
     const modalId = "clear-local-storage-confirm";
     const { openModal } = useRumpusModal();
+    const { logEvent } = useEventLogger();
 
     /* ------------------------
        State
@@ -129,8 +131,13 @@ export default function LocalStorageExplorer() {
     };
 
     const handleDelete = (key) => {
+        const value = localStorage.getItem(key);
         localStorage.removeItem(key);
         logger.info("[LocalStorageExplorer] Deleted key", key);
+        logEvent("local_storage_explorer.deleted", {
+            key: key,
+            value: value
+        });
         loadStorage();
     };
 

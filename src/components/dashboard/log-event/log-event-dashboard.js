@@ -38,6 +38,7 @@ export default function EventDashboard({
     const [selectedEntity, setSelectedEntity] = useState("ALL");
     const [viewMode, setViewMode] = useState(initialViewMode);
     const [timestampFormat, setTimestampFormat] = useState(TimestampFormat.HUMAN);
+    const [expandedRowIndex, setExpandedRowIndex] = useState(null);
 
     /**
      * Load persisted events on mount
@@ -105,17 +106,41 @@ export default function EventDashboard({
         setSelectedEntity("ALL");
     };
 
+    const isHomogeneous = useMemo(() => {
+        if (!filteredEvents.length) return true;
+
+        const firstKeys = Object.keys(filteredEvents[0]?.metadata || {}).sort().join(",");
+
+        return filteredEvents.every(e => {
+            const keys = Object.keys(e?.metadata || {}).sort().join(",");
+            return keys === firstKeys;
+        });
+    }, [filteredEvents]);
+
     /**
      * Flatten event for table view
      */
-    const flattenEvent = (event) => ({
-        event: event.event,
-        entity: event.entity,
-        action: event.action,
-        timestamp: event.timestamp,
-        ...event.metadata,
-        ...event.context
-    });
+    const flattenEvent = (event) => {
+        const base = {
+            timestamp: event.timestamp,
+            ID: event.context?.userId ?? null,
+            username: event.context?.username ?? null,
+            component: event.entity,
+            action: event.action,
+        };
+
+        if (isHomogeneous) {
+            return {
+                ...base,
+                ...event.metadata,
+            };
+        }
+
+        return {
+            ...base,
+            metadata: event.metadata,
+        };
+    };
 
     const tableRows = useMemo(
         () => filteredEvents.map(flattenEvent),
@@ -131,6 +156,31 @@ export default function EventDashboard({
 
         return Array.from(keys);
     }, [tableRows]);
+
+    const renderCell = (col, row) => {
+        if (col === "timestamp") {
+            return formatTimestamp(row[col]);
+        }
+
+        if (col === "metadata" && typeof row[col] === "object") {
+            return (
+                <button
+                    className="button is-small is-light"
+                    onClick={() =>
+                        setExpandedRowIndex(prev =>
+                            prev === row.__index ? null : row.__index
+                        )
+                    }
+                >
+                    {expandedRowIndex === row.__index ? "Hide" : "View"}
+                </button>
+            );
+        }
+
+        return typeof row[col] === "object"
+            ? JSON.stringify(row[col])
+            : String(row[col] ?? "");
+    };
 
     const formatTimestamp = (ts) => {
         if (!ts) return "";
@@ -381,32 +431,57 @@ export default function EventDashboard({
                                         </thead>
 
                                         <tbody>
-                                            {tableRows.map((row, idx) => (
-                                                <tr
-                                                    key={idx}
-                                                    style={{
-                                                        background:
-                                                            idx % 2 === 0
-                                                                ? "#ffffff"
-                                                                : "#f7f7f7",
-                                                    }}
-                                                >
-                                                    {allColumns.map((col) => (
-                                                        <td
-                                                            key={col}
+                                            {tableRows.map((row, idx) => {
+                                                // attach index so renderCell can access it
+                                                const rowWithIndex = { ...row, __index: idx };
+
+                                                return (
+                                                    <React.Fragment key={idx}>
+                                                        {/* -------- MAIN ROW -------- */}
+                                                        <tr
                                                             style={{
-                                                                whiteSpace: "nowrap",
-                                                                fontSize: "13px",
-                                                                maxWidth: "300px",
-                                                                overflow: "hidden",
-                                                                textOverflow: "ellipsis",
+                                                                background: idx % 2 === 0 ? "#ffffff" : "#f7f7f7",
                                                             }}
                                                         >
-                                                            {useFormatTimestampOrJSONStringify(col, row)}
-                                                        </td>
-                                                    ))}
-                                                </tr>
-                                            ))}
+                                                            {allColumns.map((col) => (
+                                                                <td
+                                                                    key={col}
+                                                                    style={{
+                                                                        whiteSpace: "nowrap",
+                                                                        fontSize: "13px",
+                                                                        maxWidth: "300px",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis",
+                                                                    }}
+                                                                >
+                                                                    {renderCell(col, rowWithIndex)}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+
+                                                        {/* -------- EXPANDED METADATA ROW -------- */}
+                                                        {expandedRowIndex === idx && row.metadata && (
+                                                            <tr>
+                                                                <td colSpan={allColumns.length}>
+                                                                    <pre
+                                                                        style={{
+                                                                            margin: 0,
+                                                                            padding: "12px",
+                                                                            fontSize: "12px",
+                                                                            background: "#fafafa",
+                                                                            borderTop: "1px solid #eee",
+                                                                            whiteSpace: "pre-wrap",
+                                                                            wordBreak: "break-word",
+                                                                        }}
+                                                                    >
+                                                                        {JSON.stringify(row.metadata, null, 2)}
+                                                                    </pre>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 )}
