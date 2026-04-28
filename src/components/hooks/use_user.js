@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import logger from "../../logger";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import logger, { useScopedLogger } from "../../logger";
 import { ApiPersistence } from "../../persistence";
 import { useAuth } from "../auth_context";
 
@@ -21,7 +21,11 @@ export default function useUser({
         delete: "/api/user/me",
     },
 } = {}) {
+
+    const SCOPED_LOGGER = useScopedLogger("useUser", logger);
     const { isAuthenticated } = useAuth();
+    const inFlightRef = useRef(false);
+    const hasLoadedRef = useRef(false);
 
     /**
      * Persistence layer
@@ -45,48 +49,39 @@ export default function useUser({
     // FETCH
     // ---------------------------------------------------------------------
     const fetchUser = useCallback(async () => {
-        logger.groupCollapsed?.("[useUser] fetchUser()");
+        if (inFlightRef.current) return null;
+        if (hasLoadedRef.current) return user;
 
-        if (!isAuthenticated) {
-            logger.debug("[useUser] Not authenticated → skipping fetch");
-            setUser(null);
-            logger.groupEnd?.();
-            return null;
-        }
+        inFlightRef.current = true;
 
-        setLoading(true);
-        setError(null);
-
-        logger.debug("[useUser] Starting fetch...");
-        logger.debug("[useUser] Endpoint:", endpoints.get);
+        SCOPED_LOGGER.groupCollapsed?.("fetchUser start");
 
         try {
-            const data = await userStore.getItem(null); // singleton
-
-            logger.debug("[useUser] Raw response:", data);
-
-            if (!data) {
-                logger.warn("[useUser] No user returned from API");
+            if (!isAuthenticated) {
+                setUser(null);
+                return null;
             }
+
+            setLoading(true);
+            setError(null);
+
+            const data = await userStore.customGet(endpoints.get);
 
             setUser(data);
 
-            logger.debug("[useUser] State updated → user set");
+            hasLoadedRef.current = true;
 
             return data;
         } catch (err) {
-            logger.error("[useUser] Fetch failed:", err);
-
+            SCOPED_LOGGER.error("Fetch failed:", err);
             setError("Failed to load user");
-
             return null;
         } finally {
+            inFlightRef.current = false;
             setLoading(false);
-
-            logger.debug("[useUser] Loading complete");
-            logger.groupEnd?.();
+            SCOPED_LOGGER.groupEnd?.();
         }
-    }, [isAuthenticated, userStore]);
+    }, [isAuthenticated, userStore, endpoints.get]);
 
     // ---------------------------------------------------------------------
     // UPDATE (partial)
@@ -105,11 +100,11 @@ export default function useUser({
                 // optimistic merge (safe fallback)
                 setUser((prev) => ({ ...prev, ...updates }));
 
-                logger.debug("[useUser] updated", updates);
+                SCOPED_LOGGER.debug("updated", updates);
 
                 return updates;
             } catch (err) {
-                logger.error("[useUser] update failed", err);
+                SCOPED_LOGGER.error("update failed", err);
                 setError("Failed to update user");
                 return null;
             } finally {
@@ -132,11 +127,11 @@ export default function useUser({
             await userStore.removeItem(null);
             setUser(null);
 
-            logger.warn("[useUser] deleted");
+            SCOPED_LOGGER.warn("deleted");
 
             return true;
         } catch (err) {
-            logger.error("[useUser] delete failed", err);
+            SCOPED_LOGGER.error("delete failed", err);
             setError("Failed to delete user");
             return false;
         } finally {
@@ -152,6 +147,10 @@ export default function useUser({
             fetchUser();
         }
     }, [autoFetch, fetchUser]);
+
+    useEffect(() => {
+        SCOPED_LOGGER.debug("isAuthenticated changed:", isAuthenticated);
+    }, [isAuthenticated]);
 
     // ---------------------------------------------------------------------
     // DERIVED STATE

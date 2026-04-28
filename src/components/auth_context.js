@@ -1,10 +1,13 @@
-import React from 'react';
-import { createContext, useContext, useState, useEffect } from "react";
+import React from "react";
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { isCurrentUserAuthenticated } from "./common_requests";
+import logger, { useScopedLogger } from "../logger";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+    const SCOPED_LOGGER = useScopedLogger("AuthProvider", logger);
+
     const [authState, setAuthState] = useState({
         isLoading: true,
         isAuthenticated: false,
@@ -12,32 +15,65 @@ export const AuthProvider = ({ children }) => {
         user: null,
     });
 
-    const fetchAuthStatus = async () => {
+    // prevent duplicate concurrent calls
+    const inFlightRef = useRef(false);
+
+    const fetchAuthStatus = useCallback(async () => {
+        if (inFlightRef.current) {
+            SCOPED_LOGGER.debug("fetchAuthStatus skipped (already in flight)");
+            return;
+        }
+
+        inFlightRef.current = true;
+
+        SCOPED_LOGGER.debug("Fetching auth status...");
+
         try {
             const res = await isCurrentUserAuthenticated();
-            setAuthState({
+
+            const nextState = {
                 isLoading: false,
-                isAuthenticated: res.authenticated,
-                roles: res.roles ?? null,
-                user: res.username ?? null,
-            });
+                isAuthenticated: res?.authenticated,
+                roles: res?.roles ?? null,
+                user: res?.username ?? null,
+            };
+
+            setAuthState(nextState);
+
+            SCOPED_LOGGER.debug("Auth state updated");
         } catch (err) {
-            console.error("Failed to fetch auth status", err);
+            SCOPED_LOGGER.error("Failed to fetch auth status", err);
+
             setAuthState({
                 isLoading: false,
                 isAuthenticated: false,
                 roles: null,
                 user: null,
             });
+        } finally {
+            inFlightRef.current = false;
+            SCOPED_LOGGER.debug("Finished fetchAuthStatus");
         }
-    };
-
-    useEffect(() => {
-        fetchAuthStatus();
     }, []);
 
+    /**
+     * Fetch ONCE on mount
+     */
+    useEffect(() => {
+        fetchAuthStatus();
+    }, [fetchAuthStatus]);
+
+    /**
+     * Log only on actual state change
+     */
+    useEffect(() => {
+        SCOPED_LOGGER.debug("authState changed:", authState);
+    }, [authState]);
+
     return (
-        <AuthContext.Provider value={{ ...authState, refreshAuth: fetchAuthStatus }}>
+        <AuthContext.Provider
+            value={{ ...authState, refreshAuth: fetchAuthStatus }}
+        >
             {children}
         </AuthContext.Provider>
     );

@@ -49,6 +49,7 @@ export { getApiBaseURL } from './api';
 export { default as LOGGER } from './logger';
 export { getLoggingEnv } from './logger';
 export { setLoggingEnv } from './logger';
+export { useScopedLogger } from './logger';
 
 export { LocalPersistence, MemoryPersistence, ApiPersistence } from './persistence/persistence';
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
-import logger from "../../../logger";
+import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
 import { getEventStore, eventRegistryManager } from "../../event-logger";
 import { PortalContainer, Tooltip } from "../../ui";
@@ -9,6 +9,12 @@ export const EventViewMode = Object.freeze({
     JSON: "json",
     TABLE: "table",
     TIMELINE: "timeline", // TODO: not implemented
+});
+
+export const TimestampFormat = Object.freeze({
+    ISO: "iso",                 // raw (what you have now)
+    HUMAN: "human",             // locale string
+    RELATIVE: "relative",       // "2m ago"
 });
 
 /**
@@ -25,28 +31,31 @@ export const EventViewMode = Object.freeze({
 export default function EventDashboard({
     initialViewMode = EventViewMode.TABLE
 }) {
+    const SCOPED_LOGGER = useScopedLogger("EventDashboard", logger);
     const eventStore = getEventStore(LocalPersistence);
 
     const [events, setEvents] = useState([]);
     const [selectedEntity, setSelectedEntity] = useState("ALL");
     const [viewMode, setViewMode] = useState(initialViewMode);
+    const [timestampFormat, setTimestampFormat] = useState(TimestampFormat.HUMAN);
 
     /**
      * Load persisted events on mount
      */
     useEffect(() => {
         const loadEvents = async () => {
-            logger.groupCollapsed?.("[EventDashboard] Loading events");
+            SCOPED_LOGGER.debug("Loading events");
 
             try {
                 const all = await eventStore.getAll();
 
-                logger.debug("[EventDashboard] Loaded events:", all?.length ?? 0);
+                SCOPED_LOGGER.debug("Loaded events:", all?.length ?? 0);
+                SCOPED_LOGGER.debug("Events: ", all);
                 setEvents(all || []);
             } catch (err) {
-                logger.error("[EventDashboard] Failed to load events", err);
+                SCOPED_LOGGER.error("Failed to load events", err);
             } finally {
-                logger.groupEnd?.();
+                SCOPED_LOGGER.debug("Finished loadEvents");
             }
         };
 
@@ -89,7 +98,7 @@ export default function EventDashboard({
      * Clear all events from storage + UI
      */
     const handleClearAll = async () => {
-        logger.info("[EventDashboard] Clearing all events");
+        SCOPED_LOGGER.info("Clearing all events");
 
         await eventStore.clear();
         setEvents([]);
@@ -105,6 +114,7 @@ export default function EventDashboard({
         action: event.action,
         timestamp: event.timestamp,
         ...event.metadata,
+        ...event.context
     });
 
     const tableRows = useMemo(
@@ -121,6 +131,56 @@ export default function EventDashboard({
 
         return Array.from(keys);
     }, [tableRows]);
+
+    const formatTimestamp = (ts) => {
+        if (!ts) return "";
+
+        const date = new Date(ts);
+
+        switch (timestampFormat) {
+            case TimestampFormat.ISO:
+                return date.toISOString();
+
+            case TimestampFormat.HUMAN:
+                return date.toLocaleString();
+
+            case TimestampFormat.RELATIVE: {
+                const diff = Date.now() - date.getTime();
+                const seconds = Math.floor(diff / 1000);
+
+                if (seconds < 60) return `${seconds}s ago`;
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
+            }
+
+            default:
+                return ts;
+        }
+    };
+
+    const cycleTimestampFormat = () => {
+        setTimestampFormat((prev) => {
+            switch (prev) {
+                case TimestampFormat.HUMAN:
+                    return TimestampFormat.RELATIVE;
+                case TimestampFormat.RELATIVE:
+                    return TimestampFormat.ISO;
+                default:
+                    return TimestampFormat.HUMAN;
+            }
+        });
+    };
+
+    const useFormatTimestampOrJSONStringify = (col, row) => {
+        if (col === "timestamp") {
+            return formatTimestamp(row[col]);
+        }
+
+        return typeof row[col] === "object"
+            ? JSON.stringify(row[col])
+            : String(row[col] ?? "");
+    };
 
     const isJson = viewMode === EventViewMode.JSON;
 
@@ -296,7 +356,26 @@ export default function EventDashboard({
                                         <thead>
                                             <tr>
                                                 {allColumns.map((col) => (
-                                                    <th key={col}>{col}</th>
+                                                    <th key={col}>
+                                                        {col === "timestamp" ? (
+                                                            <Tooltip
+                                                                text={`Click to change format (current: ${timestampFormat})`}
+                                                            >
+                                                                <span
+                                                                    onClick={cycleTimestampFormat}
+                                                                    style={{
+                                                                        cursor: "pointer",
+                                                                        userSelect: "none",
+                                                                        textDecoration: "underline dotted",
+                                                                    }}
+                                                                >
+                                                                    {col}
+                                                                </span>
+                                                            </Tooltip>
+                                                        ) : (
+                                                            col
+                                                        )}
+                                                    </th>
                                                 ))}
                                             </tr>
                                         </thead>
@@ -323,9 +402,7 @@ export default function EventDashboard({
                                                                 textOverflow: "ellipsis",
                                                             }}
                                                         >
-                                                            {typeof row[col] === "object"
-                                                                ? JSON.stringify(row[col])
-                                                                : String(row[col] ?? "")}
+                                                            {useFormatTimestampOrJSONStringify(col, row)}
                                                         </td>
                                                     ))}
                                                 </tr>

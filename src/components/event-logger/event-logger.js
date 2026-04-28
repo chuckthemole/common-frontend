@@ -1,5 +1,7 @@
 import { eventRegistryManager } from "./event-registry-manager";
-import logger from "../../logger";
+import { createScopedLogger } from "../../logger";
+
+const SCOPED_LOGGER = createScopedLogger("EventLogger");
 
 /**
  * EventLogger
@@ -22,11 +24,11 @@ class EventLogger {
     constructor() {
         // Enforce singleton pattern: reuse existing instance if already created
         if (EventLogger.instance) {
-            logger.debug("[EventLogger] Returning existing instance");
+            SCOPED_LOGGER.debug("Returning existing instance");
             return EventLogger.instance;
         }
 
-        logger.debug("[EventLogger] Creating new instance");
+        SCOPED_LOGGER.debug("Creating new instance");
 
         /**
          * transport: Function | null
@@ -40,6 +42,8 @@ class EventLogger {
          * If not set, logger will fallback to console/debug logging.
          */
         this.transport = null;
+
+        this.context = {};
 
         EventLogger.instance = this;
     }
@@ -58,12 +62,17 @@ class EventLogger {
      */
     setTransport(tansportFunction) {
         if (typeof tansportFunction !== "function") {
-            logger.warn("[EventLogger] transport must be a function");
+            SCOPED_LOGGER.warn("transport must be a function");
             return;
         }
 
         this.transport = tansportFunction;
-        logger.debug("[EventLogger] transport registered");
+        SCOPED_LOGGER.debug("transport registered");
+    }
+
+    setContext(context = {}) {
+        this.context = { ...this.context, ...context };
+        SCOPED_LOGGER.debug("context updated", this.context);
     }
 
     /**
@@ -83,8 +92,7 @@ class EventLogger {
      *  4. Dispatch event via transport or fallback logger
      */
     log(event, options = {}) {
-        // Group logs for better readability in devtools
-        logger.groupCollapsed?.(`[EventLogger] ${event}`);
+        SCOPED_LOGGER.debug(`${event}`);
 
         try {
             /**
@@ -95,7 +103,7 @@ class EventLogger {
             const base = eventRegistryManager.get(event);
 
             if (!base) {
-                logger.warn(`Unknown event: ${event}`);
+                SCOPED_LOGGER.warn(`Unknown event: ${event}`);
                 return;
             }
 
@@ -109,10 +117,11 @@ class EventLogger {
                 entity: base.entity,           // domain entity (e.g., "User")
                 action: base.action,           // action type (e.g., "created")
                 timestamp: new Date().toISOString(), // ISO timestamp
+                context: this.context,
                 metadata: options.metadata || {},    // custom event data
             };
 
-            logger.debug("Built payload", payload);
+            SCOPED_LOGGER.debug("Built payload", payload);
 
             /**
              * Step 3: Resolve transport
@@ -131,14 +140,14 @@ class EventLogger {
              * Otherwise → fallback to internal logging
              */
             if (transport && typeof transport === "function") {
-                logger.debug("Using transport layer");
+                SCOPED_LOGGER.debug("Using transport layer");
 
                 // Note: transport may be async, but we intentionally do not await
                 // to avoid blocking UI or caller execution
                 transport(payload);
             } else {
-                logger.debug("No transport found → fallback logger");
-                logger.debug("[EventLogger]", payload);
+                SCOPED_LOGGER.debug("No transport found → fallback logger");
+                SCOPED_LOGGER.debug("[EventLogger]", payload);
             }
         } catch (err) {
             /**
@@ -146,10 +155,9 @@ class EventLogger {
              * -------------------------------------------------------------
              * Ensures logging failures do not break application flow
              */
-            logger.error("[EventLogger] Failed to log event", err);
+            SCOPED_LOGGER.error("Failed to log event", err);
         } finally {
-            // Always close log group to prevent console nesting issues
-            logger.groupEnd?.();
+            SCOPED_LOGGER.debug("Finished log");
         }
     }
 }

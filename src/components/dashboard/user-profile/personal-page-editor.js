@@ -126,8 +126,8 @@ export default function PersonalPageEditor({
         setError(null);
         setSuccessMessage(null);
 
-        const user = await fetchUser();
-        logger.debug("[PersonalPageEditor] USER: ", user);
+        // const user = await fetchUser();
+        // logger.debug("[PersonalPageEditor] USER: ", user);
 
         try {
             await saveProfile(activeProfileId, {
@@ -137,8 +137,8 @@ export default function PersonalPageEditor({
             });
 
             logEvent("personal_profile_page.saved", {
-                username: user.username,
-                userId: user.id,
+                // username: user.username,
+                // userId: user.id,
                 profileId: activeProfileId,
                 // hasFontSettings: !!fontSettings,
                 // hasColorSettings: !!colorSettings,
