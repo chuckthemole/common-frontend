@@ -4,6 +4,8 @@ import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
 import { getEventStore, eventRegistryManager } from "../../event-logger";
 import { PortalContainer, Tooltip } from "../../ui";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faClock } from "@fortawesome/free-solid-svg-icons";
 
 export const EventViewMode = Object.freeze({
     JSON: "json",
@@ -39,6 +41,12 @@ export default function EventDashboard({
     const [viewMode, setViewMode] = useState(initialViewMode);
     const [timestampFormat, setTimestampFormat] = useState(TimestampFormat.HUMAN);
     const [expandedRowIndex, setExpandedRowIndex] = useState(null);
+
+    // sorting state
+    const [sortConfig, setSortConfig] = useState({
+        key: "timestamp",
+        direction: "desc",
+    });
 
     /**
      * Load persisted events on mount
@@ -106,6 +114,22 @@ export default function EventDashboard({
         setSelectedEntity("ALL");
     };
 
+    const handleSort = (col) => {
+        setSortConfig((prev) => {
+            if (prev.key === col) {
+                return {
+                    key: col,
+                    direction: prev.direction === "asc" ? "desc" : "asc",
+                };
+            }
+
+            return {
+                key: col,
+                direction: "asc",
+            };
+        });
+    };
+
     const isHomogeneous = useMemo(() => {
         if (!filteredEvents.length) return true;
 
@@ -142,10 +166,56 @@ export default function EventDashboard({
         };
     };
 
-    const tableRows = useMemo(
-        () => filteredEvents.map(flattenEvent),
-        [filteredEvents]
-    );
+    const tableRows = useMemo(() => {
+        const rows = filteredEvents.map(flattenEvent);
+
+        if (!sortConfig?.key) return rows;
+
+        const sorted = [...rows].sort((a, b) => {
+            const aVal = a[sortConfig.key];
+            const bVal = b[sortConfig.key];
+
+            if (aVal == null) return 1;
+            if (bVal == null) return -1;
+
+            // timestamp sorting (special case)
+            if (sortConfig.key === "timestamp") {
+                return new Date(aVal) - new Date(bVal);
+            }
+
+            // number sorting
+            if (typeof aVal === "number" && typeof bVal === "number") {
+                return aVal - bVal;
+            }
+
+            // default string sorting
+            return String(aVal).localeCompare(String(bVal));
+        });
+
+        return sortConfig.direction === "asc" ? sorted : sorted.reverse();
+    }, [filteredEvents, sortConfig]);
+
+    const getSortIndicator = (col) => {
+        const isActive = sortConfig.key === col;
+
+        return (
+            <span
+                style={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    marginLeft: "4px",
+                    lineHeight: "8px",
+                    opacity: isActive ? 0.9 : 0.25,
+                    transform: "translateY(-1px)",
+                    fontSize: "10px",
+                    userSelect: "none",
+                }}
+            >
+                <span style={{ marginBottom: "-2px" }}>▴</span>
+                <span>▾</span>
+            </span>
+        );
+    };
 
     const allColumns = useMemo(() => {
         const keys = new Set();
@@ -407,24 +477,51 @@ export default function EventDashboard({
                                             <tr>
                                                 {allColumns.map((col) => (
                                                     <th key={col}>
-                                                        {col === "timestamp" ? (
-                                                            <Tooltip
-                                                                text={`Click to change format (current: ${timestampFormat})`}
+                                                        <div
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                gap: "6px",
+                                                                width: "100%",
+                                                            }}
+                                                        >
+                                                            {/* Sortable column label */}
+                                                            <span
+                                                                onClick={() => handleSort(col)}
+                                                                style={{
+                                                                    cursor: "pointer",
+                                                                    userSelect: "none",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    gap: "4px",
+                                                                }}
                                                             >
-                                                                <span
-                                                                    onClick={cycleTimestampFormat}
-                                                                    style={{
-                                                                        cursor: "pointer",
-                                                                        userSelect: "none",
-                                                                        textDecoration: "underline dotted",
-                                                                    }}
-                                                                >
-                                                                    {col}
-                                                                </span>
-                                                            </Tooltip>
-                                                        ) : (
-                                                            col
-                                                        )}
+                                                                {col}
+                                                                {getSortIndicator(col)}
+                                                            </span>
+
+                                                            {col === "timestamp" && (
+                                                                <Tooltip text="Cycle timestamp format">
+                                                                    <span
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            cycleTimestampFormat();
+                                                                        }}
+                                                                        style={{
+                                                                            cursor: "pointer",
+                                                                            // fontSize: "11px",
+                                                                            // opacity: 0.55,
+                                                                            userSelect: "none",
+                                                                            paddingLeft: "4px",
+                                                                            lineHeight: 1,
+                                                                        }}
+                                                                    >
+                                                                        <FontAwesomeIcon icon={faClock} />
+                                                                    </span>
+                                                                </Tooltip>
+                                                            )}
+
+                                                        </div>
                                                     </th>
                                                 ))}
                                             </tr>
