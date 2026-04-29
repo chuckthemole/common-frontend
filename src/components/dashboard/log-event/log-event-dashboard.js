@@ -441,18 +441,16 @@ export default function EventDashboard({
                         >
                             <Tooltip
                                 text={
-                                    <div style={{ maxWidth: "260px", lineHeight: 1.4 }}>
+                                    <div>
                                         <div style={{ fontWeight: 600, marginBottom: "6px" }}>
                                             Search tips
                                         </div>
 
                                         <ul
                                             style={{
-                                                paddingLeft: "14px",
+                                                paddingLeft: "18px",
                                                 margin: 0,
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                gap: "4px",
+                                                listStyleType: "disc", // force bullets
                                             }}
                                         >
                                             <li><code>john</code> → search all fields</li>
@@ -465,7 +463,7 @@ export default function EventDashboard({
                                 }
                                 variant="info"
                                 size="large"
-                                placement="right"
+                                placement="bottom-left"
                             >
                                 <span
                                     style={{

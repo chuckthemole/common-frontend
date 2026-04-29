@@ -6,18 +6,23 @@
         visibility: hidden;
         opacity: 0;
         position: absolute;
-        bottom: auto;
+
         top: 125%;
         left: 50%;
         transform: translateX(-50%);
-        text-align: center;
+
+        text-align: left;
+        white-space: normal;
+        max-width: 260px; 
+
         border-radius: 4px;
-        padding: 4px 8px;
+        padding: 8px 10px;
         font-size: 0.75rem;
-        white-space: nowrap;
-        transition: opacity 0.15s ease-in-out;
+        line-height: 1.4;
+
         z-index: 999;
-        pointer-events: none; // prevents hover flicker
+        pointer-events: none;
+        transition: opacity 0.15s ease-in-out;
     }
 
     &:hover .tooltip-text {
@@ -130,6 +135,151 @@
     right: -5px;
     left: auto;
     transform: translateY(-50%);
+    border-color: transparent transparent transparent currentColor;
+}
+
+/* ========================================
+   TOP LEFT
+======================================== */
+.tooltip-top-left .tooltip-text {
+    bottom: 125%;
+    left: 0;
+    transform: none;
+}
+
+.tooltip-top-left .tooltip-text::after {
+    top: 100%;
+    left: 10px;
+    transform: none;
+    border-color: currentColor transparent transparent transparent;
+}
+
+
+/* ========================================
+   TOP RIGHT
+======================================== */
+.tooltip-top-right .tooltip-text {
+    bottom: 125%;
+    right: 0;
+    left: auto;
+    transform: none;
+}
+
+.tooltip-top-right .tooltip-text::after {
+    top: 100%;
+    right: 10px;
+    left: auto;
+    transform: none;
+    border-color: currentColor transparent transparent transparent;
+}
+
+
+/* ========================================
+   BOTTOM LEFT
+======================================== */
+.tooltip-bottom-left .tooltip-text {
+    top: 125%;
+    left: 0;
+    right: auto;
+    transform: none;
+}
+
+.tooltip-bottom-left .tooltip-text::after {
+    top: -5px;
+    left: 10px;
+    right: auto;
+    transform: none;
+    border-color: currentColor transparent transparent transparent;
+}
+
+
+/* ========================================
+   BOTTOM RIGHT
+======================================== */
+.tooltip-bottom-right .tooltip-text {
+    top: 125%;
+    right: 0;
+    left: auto;
+    transform: none;
+}
+
+.tooltip-bottom-right .tooltip-text::after {
+    top: -5px;
+    right: 10px;
+    left: auto;
+    transform: none;
+    border-color: currentColor transparent transparent transparent;
+}
+
+
+/* ========================================
+   RIGHT TOP
+======================================== */
+.tooltip-right-top .tooltip-text {
+    left: calc(100% + 6px);
+    top: 0;
+    transform: none;
+}
+
+.tooltip-right-top .tooltip-text::after {
+    left: -5px;
+    top: 10px;
+    transform: none;
+    border-color: transparent currentColor transparent transparent;
+}
+
+
+/* ========================================
+   RIGHT BOTTOM
+======================================== */
+.tooltip-right-bottom .tooltip-text {
+    left: calc(100% + 6px);
+    bottom: 0;
+    top: auto;
+    transform: none;
+}
+
+.tooltip-right-bottom .tooltip-text::after {
+    left: -5px;
+    bottom: 10px;
+    top: auto;
+    transform: none;
+    border-color: transparent currentColor transparent transparent;
+}
+
+
+/* ========================================
+   LEFT TOP
+======================================== */
+.tooltip-left-top .tooltip-text {
+    right: calc(100% + 6px);
+    top: 0;
+    transform: none;
+}
+
+.tooltip-left-top .tooltip-text::after {
+    right: -5px;
+    top: 10px;
+    transform: none;
+    border-color: transparent transparent transparent currentColor;
+}
+
+
+/* ========================================
+   LEFT BOTTOM
+======================================== */
+.tooltip-left-bottom .tooltip-text {
+    right: calc(100% + 6px);
+    bottom: 0;
+    top: auto;
+    transform: none;
+}
+
+.tooltip-left-bottom .tooltip-text::after {
+    right: -5px;
+    bottom: 10px;
+    top: auto;
+    transform: none;
     border-color: transparent transparent transparent currentColor;
 }
 
