@@ -6,12 +6,17 @@ export default function Tooltip({
     children,
     variant = "dark",
     size = "medium",
+    placement = "bottom"
 }) {
-    const tooltipClass = classNames("tooltip-container", {
-        "tooltip-small": size === "small",
-        "tooltip-medium": size === "medium",
-        "tooltip-large": size === "large",
-    });
+    const tooltipClass = classNames(
+        "tooltip-container",
+        `tooltip-${placement}`,
+        {
+            "tooltip-small": size === "small",
+            "tooltip-medium": size === "medium",
+            "tooltip-large": size === "large",
+        }
+    );
 
     const colorClass = classNames({
         "has-background-dark has-text-white": variant === "dark",

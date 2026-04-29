@@ -68,3 +68,80 @@
         }
     }
 }
+
+/* =========================
+   PLACEMENTS
+========================= */
+
+/* TOP (tooltip above element) */
+.tooltip-top .tooltip-text {
+    top: auto;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.tooltip-top .tooltip-text::after {
+    top: 100%;
+    bottom: auto;
+    border-color: currentColor transparent transparent transparent;
+}
+
+
+/* BOTTOM (your current default) */
+.tooltip-bottom .tooltip-text {
+    top: 125%;
+    bottom: auto;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.tooltip-bottom .tooltip-text::after {
+    top: -5px;
+    border-color: currentColor transparent transparent transparent;
+}
+
+
+/* RIGHT */
+.tooltip-right .tooltip-text {
+    top: 50%;
+    left: calc(100% + 6px);
+    transform: translateY(-50%);
+}
+
+.tooltip-right .tooltip-text::after {
+    top: 50%;
+    left: -5px;
+    transform: translateY(-50%);
+    border-color: transparent currentColor transparent transparent;
+}
+
+
+/* LEFT */
+.tooltip-left .tooltip-text {
+    top: 50%;
+    right: calc(100% + 6px);
+    left: auto;
+    transform: translateY(-50%);
+}
+
+.tooltip-left .tooltip-text::after {
+    top: 50%;
+    right: -5px;
+    left: auto;
+    transform: translateY(-50%);
+    border-color: transparent transparent transparent currentColor;
+}
+
+// Code
+.tooltip-text code {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 0.72rem;
+}
+
+// TODO: look into this more
+.has-background-info code {
+    background: rgba(255, 255, 255, 0.2);
+}

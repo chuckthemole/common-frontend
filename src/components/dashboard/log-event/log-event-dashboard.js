@@ -5,7 +5,7 @@ import { LocalPersistence } from "../../../persistence";
 import { getEventStore, eventRegistryManager } from "../../event-logger";
 import { Alert, ConfirmModal, PortalContainer, Tooltip, useRumpusModal } from "../../ui";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock } from "@fortawesome/free-solid-svg-icons";
+import { faClock, faInfo } from "@fortawesome/free-solid-svg-icons";
 
 export const EventViewMode = Object.freeze({
     JSON: "json",
@@ -42,12 +42,22 @@ export default function EventDashboard({
     const [timestampFormat, setTimestampFormat] = useState(TimestampFormat.HUMAN);
     const [expandedRowIndex, setExpandedRowIndex] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
     // sorting state
     const [sortConfig, setSortConfig] = useState({
         key: "timestamp",
         direction: "desc",
     });
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDebouncedQuery(searchQuery);
+        }, 250); // 200–300ms
+
+        return () => clearTimeout(timeout);
+    }, [searchQuery]);
 
     /**
      * Load persisted events on mount
@@ -103,6 +113,69 @@ export default function EventDashboard({
             return entity === selectedEntity;
         });
     }, [events, selectedEntity]);
+
+    const parseSearchQuery = (query) => {
+        const tokens = query
+            .toLowerCase()
+            .split(" ")
+            .map(t => t.trim())
+            .filter(Boolean);
+
+        const structured = {};
+        const freeText = [];
+
+        for (const token of tokens) {
+            const [key, value] = token.split(":");
+
+            if (value) {
+                structured[key] = value;
+            } else {
+                freeText.push(token);
+            }
+        }
+
+        return { structured, freeText };
+    };
+
+    const searchedEvents = useMemo(() => {
+        if (!debouncedQuery.trim()) return filteredEvents;
+
+        const { structured, freeText } = parseSearchQuery(debouncedQuery);
+
+        return filteredEvents.filter((event) => {
+            const flat = {
+                timestamp: event.timestamp,
+                id: event.context?.userId ?? "",
+                username: event.context?.username ?? "",
+                component: event.entity ?? "",
+                action: event.action ?? "",
+                ...event.metadata,
+            };
+
+            // structured filters (username:john)
+            for (const key in structured) {
+                const val = flat[key];
+                if (!val || !String(val).toLowerCase().includes(structured[key])) {
+                    return false;
+                }
+            }
+
+            if (freeText.length > 0) {
+                const combined = Object.values(flat)
+                    .map(v =>
+                        typeof v === "object"
+                            ? JSON.stringify(v)
+                            : String(v)
+                    )
+                    .join(" ")
+                    .toLowerCase();
+
+                return freeText.every(term => combined.includes(term));
+            }
+
+            return true;
+        });
+    }, [filteredEvents, debouncedQuery]);
 
     /**
      * Clear all events from storage + UI
@@ -165,7 +238,7 @@ export default function EventDashboard({
     };
 
     const tableRows = useMemo(() => {
-        const rows = filteredEvents.map(flattenEvent);
+        const rows = searchedEvents.map(flattenEvent);
 
         if (!sortConfig?.key) return rows;
 
@@ -176,22 +249,19 @@ export default function EventDashboard({
             if (aVal == null) return 1;
             if (bVal == null) return -1;
 
-            // timestamp sorting (special case)
             if (sortConfig.key === "timestamp") {
                 return new Date(aVal) - new Date(bVal);
             }
 
-            // number sorting
             if (typeof aVal === "number" && typeof bVal === "number") {
                 return aVal - bVal;
             }
 
-            // default string sorting
             return String(aVal).localeCompare(String(bVal));
         });
 
         return sortConfig.direction === "asc" ? sorted : sorted.reverse();
-    }, [filteredEvents, sortConfig]);
+    }, [searchedEvents, sortConfig]);
 
     const getSortIndicator = (col) => {
         const isActive = sortConfig.key === col;
@@ -225,6 +295,24 @@ export default function EventDashboard({
         return Array.from(keys);
     }, [tableRows]);
 
+    const highlightText = (text) => {
+        if (!debouncedQuery.trim()) return text;
+
+        const terms = searchQuery
+            .toLowerCase()
+            .split(" ")
+            .filter(Boolean);
+
+        let str = String(text);
+
+        for (const term of terms) {
+            const regex = new RegExp(`(${term})`, "gi");
+            str = str.replace(regex, "<mark>$1</mark>");
+        }
+
+        return <span dangerouslySetInnerHTML={{ __html: str }} />;
+    };
+
     const renderCell = (col, row) => {
         if (col === "timestamp") {
             return formatTimestamp(row[col]);
@@ -245,9 +333,12 @@ export default function EventDashboard({
             );
         }
 
-        return typeof row[col] === "object"
-            ? JSON.stringify(row[col])
-            : String(row[col] ?? "");
+        const value =
+            typeof row[col] === "object"
+                ? JSON.stringify(row[col])
+                : String(row[col] ?? "");
+
+        return highlightText(value);
     };
 
     const formatTimestamp = (ts) => {
@@ -301,6 +392,7 @@ export default function EventDashboard({
     };
 
     const isJson = viewMode === EventViewMode.JSON;
+    const isTyping = searchQuery !== debouncedQuery;
 
     return (
         <>
@@ -333,86 +425,164 @@ export default function EventDashboard({
                     <div
                         style={{
                             display: "flex",
-                            alignItems: "center",
-                            gap: "1rem",
-                            flexWrap: "wrap",
+                            flexDirection: "column",
+                            gap: "0.75rem",
+                            width: "100%",
                         }}
                     >
-                        {/* Entity filter */}
-                        <div style={{ minWidth: "220px" }}>
-                            <PortalContainer id="editor-dropdowns">
-                                {(portalTarget) => (
-                                    <SingleSelector
-                                        options={entityOptions}
-                                        value={selectedEntity}
-                                        onChange={setSelectedEntity}
-                                        placeholder="Select entity..."
-                                        searchable
-                                        portalTarget={portalTarget}
-                                    />)}
-                            </PortalContainer>
+                        {/* ================= SEARCH ROW ================= */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "left",
+                                gap: "8px",
+                                width: "100%",
+                            }}
+                        >
+                            <Tooltip
+                                text={
+                                    <div style={{ maxWidth: "260px", lineHeight: 1.4 }}>
+                                        <div style={{ fontWeight: 600, marginBottom: "6px" }}>
+                                            Search tips
+                                        </div>
+
+                                        <ul
+                                            style={{
+                                                paddingLeft: "14px",
+                                                margin: 0,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: "4px",
+                                            }}
+                                        >
+                                            <li><code>john</code> → search all fields</li>
+                                            <li><code>username:john</code></li>
+                                            <li><code>action:click</code></li>
+                                            <li><code>component:button</code></li>
+                                            <li><code>john error</code> → multi-term</li>
+                                        </ul>
+                                    </div>
+                                }
+                                variant="info"
+                                size="large"
+                                placement="right"
+                            >
+                                <span
+                                    style={{
+                                        cursor: "pointer",
+                                        // fontSize: "12px",
+                                        // opacity: 0.6,
+                                        userSelect: "none",
+                                    }}
+                                >
+                                    <FontAwesomeIcon icon={faInfo} />
+                                </span>
+                            </Tooltip>
+                            <input
+                                className="input"
+                                type="text"
+                                placeholder="Search events..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                style={{
+                                    flex: 1,
+                                    minWidth: "200px",
+                                }}
+                            />
+
+                            {isTyping && (
+                                <span style={{ fontSize: "11px", opacity: 0.5 }}>
+                                    filtering...
+                                </span>
+                            )}
                         </div>
 
-                        {/* View toggle */}
-                        <Tooltip
-                            text={
-                                isJson
-                                    ? "Switch to table view (flattened rows)"
-                                    : "Switch to JSON view (raw event payloads)"
-                            }
+                        {/* ================= FILTER ROW ================= */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "1rem",
+                                flexWrap: "wrap",
+                            }}
                         >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                    padding: "6px 10px",
-                                    border: "1px solid #e5e5e5",
-                                    borderRadius: "6px",
-                                    background: "#fafafa",
-                                }}
-                            >
-                                <span
-                                    style={{
-                                        fontSize: "12px",
-                                        opacity: isJson ? 0.5 : 1,
-                                        fontWeight: !isJson ? 600 : 400,
-                                    }}
-                                >
-                                    Rows
-                                </span>
-
-                                <ToggleSwitch
-                                    checked={isJson}
-                                    onChange={(checked) =>
-                                        setViewMode(
-                                            checked ? EventViewMode.JSON : EventViewMode.TABLE
-                                        )
-                                    }
-                                />
-
-                                <span
-                                    style={{
-                                        fontSize: "12px",
-                                        opacity: isJson ? 1 : 0.5,
-                                        fontWeight: isJson ? 600 : 400,
-                                    }}
-                                >
-                                    JSON
-                                </span>
+                            {/* Entity filter */}
+                            <div style={{ minWidth: "220px" }}>
+                                <PortalContainer id="editor-dropdowns">
+                                    {(portalTarget) => (
+                                        <SingleSelector
+                                            options={entityOptions}
+                                            value={selectedEntity}
+                                            onChange={setSelectedEntity}
+                                            placeholder="Select entity..."
+                                            searchable
+                                            portalTarget={portalTarget}
+                                        />
+                                    )}
+                                </PortalContainer>
                             </div>
-                        </Tooltip>
 
-                        {/* Clear */}
-                        <Tooltip text="Delete all saved logs">
-                            <button
-                                className="button is-danger"
-                                onClick={handleClearAll}
-                                disabled={!events.length}
+                            {/* View toggle */}
+                            <Tooltip
+                                text={
+                                    isJson
+                                        ? "Switch to table view (flattened rows)"
+                                        : "Switch to JSON view (raw event payloads)"
+                                }
                             >
-                                Clear All
-                            </button>
-                        </Tooltip>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.5rem",
+                                        padding: "6px 10px",
+                                        border: "1px solid #e5e5e5",
+                                        borderRadius: "6px",
+                                        background: "#fafafa",
+                                    }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: "12px",
+                                            opacity: isJson ? 0.5 : 1,
+                                            fontWeight: !isJson ? 600 : 400,
+                                        }}
+                                    >
+                                        Rows
+                                    </span>
+
+                                    <ToggleSwitch
+                                        checked={isJson}
+                                        onChange={(checked) =>
+                                            setViewMode(
+                                                checked ? EventViewMode.JSON : EventViewMode.TABLE
+                                            )
+                                        }
+                                    />
+
+                                    <span
+                                        style={{
+                                            fontSize: "12px",
+                                            opacity: isJson ? 1 : 0.5,
+                                            fontWeight: isJson ? 600 : 400,
+                                        }}
+                                    >
+                                        JSON
+                                    </span>
+                                </div>
+                            </Tooltip>
+
+                            {/* Clear */}
+                            <Tooltip text="Delete all saved logs">
+                                <button
+                                    className="button is-danger"
+                                    onClick={handleClearAll}
+                                    disabled={!events.length}
+                                >
+                                    Clear All
+                                </button>
+                            </Tooltip>
+                        </div>
                     </div>
                 </div>
 
@@ -432,7 +602,7 @@ export default function EventDashboard({
                     ) : (
                         <>
                             <h3 className="title is-6 mb-3">
-                                Showing {filteredEvents.length} event(s)
+                                Showing {searchedEvents.length} event(s)
                             </h3>
 
                             {/* Scroll container */}
@@ -449,7 +619,7 @@ export default function EventDashboard({
                                 <div style={{ minWidth: "100%", width: "max-content" }}>
                                     {/* ================= JSON VIEW ================= */}
                                     {viewMode === EventViewMode.JSON &&
-                                        filteredEvents.map((event, idx) => (
+                                        searchedEvents.map((event, idx) => (
                                             <pre
                                                 key={event.key || idx}
                                                 style={{
