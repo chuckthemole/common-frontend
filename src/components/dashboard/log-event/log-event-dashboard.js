@@ -3,7 +3,7 @@ import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
 import { getEventStore, eventRegistryManager } from "../../event-logger";
-import { PortalContainer, Tooltip } from "../../ui";
+import { Alert, ConfirmModal, PortalContainer, Tooltip, useRumpusModal } from "../../ui";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock } from "@fortawesome/free-solid-svg-icons";
 
@@ -34,13 +34,14 @@ export default function EventDashboard({
     initialViewMode = EventViewMode.TABLE
 }) {
     const SCOPED_LOGGER = useScopedLogger("EventDashboard", logger);
+    const { openModal } = useRumpusModal();
     const eventStore = getEventStore(LocalPersistence);
-
     const [events, setEvents] = useState([]);
     const [selectedEntity, setSelectedEntity] = useState("ALL");
     const [viewMode, setViewMode] = useState(initialViewMode);
     const [timestampFormat, setTimestampFormat] = useState(TimestampFormat.HUMAN);
     const [expandedRowIndex, setExpandedRowIndex] = useState(null);
+    const [successMessage, setSuccessMessage] = useState(null);
 
     // sorting state
     const [sortConfig, setSortConfig] = useState({
@@ -108,10 +109,7 @@ export default function EventDashboard({
      */
     const handleClearAll = async () => {
         SCOPED_LOGGER.info("Clearing all events");
-
-        await eventStore.clear();
-        setEvents([]);
-        setSelectedEntity("ALL");
+        openModal("clearLogsModal");
     };
 
     const handleSort = (col) => {
@@ -305,288 +303,324 @@ export default function EventDashboard({
     const isJson = viewMode === EventViewMode.JSON;
 
     return (
-        <div
-            style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                overflow: "hidden",
-            }}
-        >
-            {/* =========================================================
-                STICKY TOP BAR
-            ========================================================= */}
+        <>
             <div
-                className="box"
                 style={{
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 10,
                     display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "1rem",
-                    flexWrap: "wrap",
+                    flexDirection: "column",
+                    height: "100%",
+                    overflow: "hidden",
                 }}
             >
-                <h2 className="title is-5 mb-0">Events</h2>
-
+                {/* =========================================================
+                STICKY TOP BAR
+            ========================================================= */}
                 <div
+                    className="box"
                     style={{
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 10,
                         display: "flex",
                         alignItems: "center",
+                        justifyContent: "space-between",
                         gap: "1rem",
                         flexWrap: "wrap",
                     }}
                 >
-                    {/* Entity filter */}
-                    <div style={{ minWidth: "220px" }}>
-                        <PortalContainer id="editor-dropdowns">
-                            {(portalTarget) => (
-                                <SingleSelector
-                                    options={entityOptions}
-                                    value={selectedEntity}
-                                    onChange={setSelectedEntity}
-                                    placeholder="Select entity..."
-                                    searchable
-                                    portalTarget={portalTarget}
-                                />)}
-                        </PortalContainer>
-                    </div>
+                    <h2 className="title is-5 mb-0">Events</h2>
 
-                    {/* View toggle */}
-                    <Tooltip
-                        text={
-                            isJson
-                                ? "Switch to table view (flattened rows)"
-                                : "Switch to JSON view (raw event payloads)"
-                        }
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "1rem",
+                            flexWrap: "wrap",
+                        }}
                     >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "0.5rem",
-                                padding: "6px 10px",
-                                border: "1px solid #e5e5e5",
-                                borderRadius: "6px",
-                                background: "#fafafa",
-                            }}
-                        >
-                            <span
-                                style={{
-                                    fontSize: "12px",
-                                    opacity: isJson ? 0.5 : 1,
-                                    fontWeight: !isJson ? 600 : 400,
-                                }}
-                            >
-                                Rows
-                            </span>
-
-                            <ToggleSwitch
-                                checked={isJson}
-                                onChange={(checked) =>
-                                    setViewMode(
-                                        checked ? EventViewMode.JSON : EventViewMode.TABLE
-                                    )
-                                }
-                            />
-
-                            <span
-                                style={{
-                                    fontSize: "12px",
-                                    opacity: isJson ? 1 : 0.5,
-                                    fontWeight: isJson ? 600 : 400,
-                                }}
-                            >
-                                JSON
-                            </span>
+                        {/* Entity filter */}
+                        <div style={{ minWidth: "220px" }}>
+                            <PortalContainer id="editor-dropdowns">
+                                {(portalTarget) => (
+                                    <SingleSelector
+                                        options={entityOptions}
+                                        value={selectedEntity}
+                                        onChange={setSelectedEntity}
+                                        placeholder="Select entity..."
+                                        searchable
+                                        portalTarget={portalTarget}
+                                    />)}
+                            </PortalContainer>
                         </div>
-                    </Tooltip>
 
-                    {/* Clear */}
-                    <button
-                        className="button is-danger"
-                        onClick={handleClearAll}
-                        disabled={!events.length}
-                    >
-                        Clear All
-                    </button>
+                        {/* View toggle */}
+                        <Tooltip
+                            text={
+                                isJson
+                                    ? "Switch to table view (flattened rows)"
+                                    : "Switch to JSON view (raw event payloads)"
+                            }
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.5rem",
+                                    padding: "6px 10px",
+                                    border: "1px solid #e5e5e5",
+                                    borderRadius: "6px",
+                                    background: "#fafafa",
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        fontSize: "12px",
+                                        opacity: isJson ? 0.5 : 1,
+                                        fontWeight: !isJson ? 600 : 400,
+                                    }}
+                                >
+                                    Rows
+                                </span>
+
+                                <ToggleSwitch
+                                    checked={isJson}
+                                    onChange={(checked) =>
+                                        setViewMode(
+                                            checked ? EventViewMode.JSON : EventViewMode.TABLE
+                                        )
+                                    }
+                                />
+
+                                <span
+                                    style={{
+                                        fontSize: "12px",
+                                        opacity: isJson ? 1 : 0.5,
+                                        fontWeight: isJson ? 600 : 400,
+                                    }}
+                                >
+                                    JSON
+                                </span>
+                            </div>
+                        </Tooltip>
+
+                        {/* Clear */}
+                        <Tooltip text="Delete all saved logs">
+                            <button
+                                className="button is-danger"
+                                onClick={handleClearAll}
+                                disabled={!events.length}
+                            >
+                                Clear All
+                            </button>
+                        </Tooltip>
+                    </div>
+                </div>
+
+                {/* =========================================================
+                MAIN CONTENT AREA
+            ========================================================= */}
+                <div
+                    style={{
+                        flex: 1,
+                        padding: "1.5rem",
+                        minWidth: 0,
+                        overflow: "hidden",
+                    }}
+                >
+                    {!filteredEvents.length ? (
+                        <p className="has-text-grey">No events found.</p>
+                    ) : (
+                        <>
+                            <h3 className="title is-6 mb-3">
+                                Showing {filteredEvents.length} event(s)
+                            </h3>
+
+                            {/* Scroll container */}
+                            <div
+                                style={{
+                                    maxHeight: "70vh",
+                                    overflowY: "auto",
+                                    overflowX: "auto",
+                                    border: "1px solid #eee",
+                                    borderRadius: "6px",
+                                }}
+                            >
+                                {/* ensures table can expand horizontally */}
+                                <div style={{ minWidth: "100%", width: "max-content" }}>
+                                    {/* ================= JSON VIEW ================= */}
+                                    {viewMode === EventViewMode.JSON &&
+                                        filteredEvents.map((event, idx) => (
+                                            <pre
+                                                key={event.key || idx}
+                                                style={{
+                                                    margin: 0,
+                                                    padding: "10px",
+                                                    fontSize: "12px",
+                                                    background: idx % 2 === 0 ? "#ffffff" : "#fafafa",
+                                                    borderBottom: "1px solid #eee",
+                                                    whiteSpace: "pre",
+                                                }}
+                                            >
+                                                {JSON.stringify(event, null, 2)}
+                                            </pre>
+                                        ))}
+
+                                    {/* ================= TABLE VIEW ================= */}
+                                    {viewMode === "table" && (
+                                        <table
+                                            className="table is-fullwidth is-narrow"
+                                            style={{
+                                                margin: 0,
+                                                minWidth: "100%",
+                                            }}
+                                        >
+                                            <thead>
+                                                <tr>
+                                                    {allColumns.map((col) => (
+                                                        <th key={col}>
+                                                            <div
+                                                                style={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    gap: "6px",
+                                                                    width: "100%",
+                                                                }}
+                                                            >
+                                                                {/* Sortable column label */}
+                                                                <span
+                                                                    onClick={() => handleSort(col)}
+                                                                    style={{
+                                                                        cursor: "pointer",
+                                                                        userSelect: "none",
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        gap: "4px",
+                                                                    }}
+                                                                >
+                                                                    {col}
+                                                                    {getSortIndicator(col)}
+                                                                </span>
+
+                                                                {col === "timestamp" && (
+                                                                    <Tooltip text="Cycle timestamp format">
+                                                                        <span
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                cycleTimestampFormat();
+                                                                            }}
+                                                                            style={{
+                                                                                cursor: "pointer",
+                                                                                // fontSize: "11px",
+                                                                                // opacity: 0.55,
+                                                                                userSelect: "none",
+                                                                                paddingLeft: "4px",
+                                                                                lineHeight: 1,
+                                                                            }}
+                                                                        >
+                                                                            <FontAwesomeIcon icon={faClock} />
+                                                                        </span>
+                                                                    </Tooltip>
+                                                                )}
+
+                                                            </div>
+                                                        </th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                {tableRows.map((row, idx) => {
+                                                    // attach index so renderCell can access it
+                                                    const rowWithIndex = { ...row, __index: idx };
+
+                                                    return (
+                                                        <React.Fragment key={idx}>
+                                                            {/* -------- MAIN ROW -------- */}
+                                                            <tr
+                                                                style={{
+                                                                    background: idx % 2 === 0 ? "#ffffff" : "#f7f7f7",
+                                                                }}
+                                                            >
+                                                                {allColumns.map((col) => (
+                                                                    <td
+                                                                        key={col}
+                                                                        style={{
+                                                                            whiteSpace: "nowrap",
+                                                                            fontSize: "13px",
+                                                                            maxWidth: "300px",
+                                                                            overflow: "hidden",
+                                                                            textOverflow: "ellipsis",
+                                                                        }}
+                                                                    >
+                                                                        {renderCell(col, rowWithIndex)}
+                                                                    </td>
+                                                                ))}
+                                                            </tr>
+
+                                                            {/* -------- EXPANDED METADATA ROW -------- */}
+                                                            {expandedRowIndex === idx && row.metadata && (
+                                                                <tr>
+                                                                    <td colSpan={allColumns.length}>
+                                                                        <pre
+                                                                            style={{
+                                                                                margin: 0,
+                                                                                padding: "12px",
+                                                                                fontSize: "12px",
+                                                                                background: "#fafafa",
+                                                                                borderTop: "1px solid #eee",
+                                                                                whiteSpace: "pre-wrap",
+                                                                                wordBreak: "break-word",
+                                                                            }}
+                                                                        >
+                                                                            {JSON.stringify(row.metadata, null, 2)}
+                                                                        </pre>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {successMessage && (
+                        <Alert
+                            message={successMessage}
+                            type="success"
+                            persistent={false}
+                            size="medium"
+                            position="bottom"
+                            onClose={() => setSuccessMessage(null)}
+                        />
+                    )}
+
                 </div>
             </div>
 
-            {/* =========================================================
-                MAIN CONTENT AREA
-            ========================================================= */}
-            <div
-                style={{
-                    flex: 1,
-                    padding: "1.5rem",
-                    minWidth: 0,
-                    overflow: "hidden",
+            <ConfirmModal
+                modalId="clearLogsModal"
+                title="Delete All Logs?"
+                message="This will permanently delete ALL saved logs. Are you sure?"
+                confirmText="Delete All"
+                cancelText="Cancel"
+                danger
+                onConfirm={async () => {
+                    try {
+                        await eventStore.clear();
+                        setEvents([]);
+                        setSelectedEntity("ALL");
+                        setSuccessMessage("All saved logs have been cleared.");
+                    } catch (err) {
+                        SCOPED_LOGGER.error("Failed to clear logs:", err);
+                        setError("Failed to clear saved logs.");
+                    }
                 }}
-            >
-                {!filteredEvents.length ? (
-                    <p className="has-text-grey">No events found.</p>
-                ) : (
-                    <>
-                        <h3 className="title is-6 mb-3">
-                            Showing {filteredEvents.length} event(s)
-                        </h3>
-
-                        {/* Scroll container */}
-                        <div
-                            style={{
-                                maxHeight: "70vh",
-                                overflowY: "auto",
-                                overflowX: "auto",
-                                border: "1px solid #eee",
-                                borderRadius: "6px",
-                            }}
-                        >
-                            {/* ensures table can expand horizontally */}
-                            <div style={{ minWidth: "100%", width: "max-content" }}>
-                                {/* ================= JSON VIEW ================= */}
-                                {viewMode === EventViewMode.JSON &&
-                                    filteredEvents.map((event, idx) => (
-                                        <pre
-                                            key={event.key || idx}
-                                            style={{
-                                                margin: 0,
-                                                padding: "10px",
-                                                fontSize: "12px",
-                                                background: idx % 2 === 0 ? "#ffffff" : "#fafafa",
-                                                borderBottom: "1px solid #eee",
-                                                whiteSpace: "pre",
-                                            }}
-                                        >
-                                            {JSON.stringify(event, null, 2)}
-                                        </pre>
-                                    ))}
-
-                                {/* ================= TABLE VIEW ================= */}
-                                {viewMode === "table" && (
-                                    <table
-                                        className="table is-fullwidth is-narrow"
-                                        style={{
-                                            margin: 0,
-                                            minWidth: "100%",
-                                        }}
-                                    >
-                                        <thead>
-                                            <tr>
-                                                {allColumns.map((col) => (
-                                                    <th key={col}>
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                gap: "6px",
-                                                                width: "100%",
-                                                            }}
-                                                        >
-                                                            {/* Sortable column label */}
-                                                            <span
-                                                                onClick={() => handleSort(col)}
-                                                                style={{
-                                                                    cursor: "pointer",
-                                                                    userSelect: "none",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    gap: "4px",
-                                                                }}
-                                                            >
-                                                                {col}
-                                                                {getSortIndicator(col)}
-                                                            </span>
-
-                                                            {col === "timestamp" && (
-                                                                <Tooltip text="Cycle timestamp format">
-                                                                    <span
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            cycleTimestampFormat();
-                                                                        }}
-                                                                        style={{
-                                                                            cursor: "pointer",
-                                                                            // fontSize: "11px",
-                                                                            // opacity: 0.55,
-                                                                            userSelect: "none",
-                                                                            paddingLeft: "4px",
-                                                                            lineHeight: 1,
-                                                                        }}
-                                                                    >
-                                                                        <FontAwesomeIcon icon={faClock} />
-                                                                    </span>
-                                                                </Tooltip>
-                                                            )}
-
-                                                        </div>
-                                                    </th>
-                                                ))}
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            {tableRows.map((row, idx) => {
-                                                // attach index so renderCell can access it
-                                                const rowWithIndex = { ...row, __index: idx };
-
-                                                return (
-                                                    <React.Fragment key={idx}>
-                                                        {/* -------- MAIN ROW -------- */}
-                                                        <tr
-                                                            style={{
-                                                                background: idx % 2 === 0 ? "#ffffff" : "#f7f7f7",
-                                                            }}
-                                                        >
-                                                            {allColumns.map((col) => (
-                                                                <td
-                                                                    key={col}
-                                                                    style={{
-                                                                        whiteSpace: "nowrap",
-                                                                        fontSize: "13px",
-                                                                        maxWidth: "300px",
-                                                                        overflow: "hidden",
-                                                                        textOverflow: "ellipsis",
-                                                                    }}
-                                                                >
-                                                                    {renderCell(col, rowWithIndex)}
-                                                                </td>
-                                                            ))}
-                                                        </tr>
-
-                                                        {/* -------- EXPANDED METADATA ROW -------- */}
-                                                        {expandedRowIndex === idx && row.metadata && (
-                                                            <tr>
-                                                                <td colSpan={allColumns.length}>
-                                                                    <pre
-                                                                        style={{
-                                                                            margin: 0,
-                                                                            padding: "12px",
-                                                                            fontSize: "12px",
-                                                                            background: "#fafafa",
-                                                                            borderTop: "1px solid #eee",
-                                                                            whiteSpace: "pre-wrap",
-                                                                            wordBreak: "break-word",
-                                                                        }}
-                                                                    >
-                                                                        {JSON.stringify(row.metadata, null, 2)}
-                                                                    </pre>
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
+            />
+        </>
     );
 }
