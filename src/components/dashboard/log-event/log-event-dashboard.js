@@ -434,7 +434,7 @@ export default function EventDashboard({
                         <div
                             style={{
                                 display: "flex",
-                                alignItems: "left",
+                                alignItems: "flex-start",
                                 gap: "8px",
                                 width: "100%",
                             }}
@@ -464,6 +464,8 @@ export default function EventDashboard({
                                 variant="info"
                                 size="large"
                                 placement="bottom-left"
+                                rotatable
+                                debug
                             >
                                 <span
                                     style={{

@@ -3,17 +3,17 @@
     display: inline-block;
 
     .tooltip-text {
-        visibility: hidden;
-        opacity: 0;
         position: absolute;
 
-        top: 125%;
-        left: 50%;
-        transform: translateX(-50%);
+        /* visibility */
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.15s ease-in-out;
 
+        /* layout */
         text-align: left;
         white-space: normal;
-        max-width: 260px; 
+        max-width: 260px;
 
         border-radius: 4px;
         padding: 8px 10px;
@@ -21,8 +21,16 @@
         line-height: 1.4;
 
         z-index: 999;
-        pointer-events: none;
-        transition: opacity 0.15s ease-in-out;
+        pointer-events: auto;
+
+        top: auto;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        transform: none;
+
+        /* safer background handling */
+        background-color: inherit;
     }
 
     &:hover .tooltip-text {
@@ -30,155 +38,137 @@
         opacity: 1;
     }
 
-    // Arrow
+    /* =========================
+       ARROW BASE
+    ========================= */
     .tooltip-text::after {
         content: "";
         position: absolute;
-        top: -5px;
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: currentColor transparent transparent transparent;
+        width: 10px;
+        height: 10px;
+        background-color: inherit;
+        transform: rotate(45deg);
     }
 
-    // Sizes
+    /* =========================
+       SIZES
+    ========================= */
     &.tooltip-small .tooltip-text {
         font-size: 0.65rem;
         padding: 2px 6px;
-
-        &::after {
-            border-width: 4px;
-            margin-left: -4px;
-        }
     }
 
     &.tooltip-medium .tooltip-text {
         font-size: 0.75rem;
         padding: 4px 8px;
-
-        &::after {
-            border-width: 5px;
-            margin-left: -5px;
-        }
     }
 
     &.tooltip-large .tooltip-text {
         font-size: 0.9rem;
         padding: 6px 12px;
-
-        &::after {
-            border-width: 6px;
-            margin-left: -6px;
-        }
     }
 }
 
-/* =========================
-   PLACEMENTS
-========================= */
+/* =========================================================
+   CENTERED POSITIONS
+========================================================= */
 
-/* TOP (tooltip above element) */
+/* TOP */
 .tooltip-top .tooltip-text {
-    top: auto;
     bottom: 125%;
+    top: auto;
     left: 50%;
+    right: auto;
     transform: translateX(-50%);
 }
 
 .tooltip-top .tooltip-text::after {
-    top: 100%;
-    bottom: auto;
-    border-color: currentColor transparent transparent transparent;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
 }
 
-
-/* BOTTOM (your current default) */
+/* BOTTOM */
 .tooltip-bottom .tooltip-text {
     top: 125%;
     bottom: auto;
     left: 50%;
+    right: auto;
     transform: translateX(-50%);
 }
 
 .tooltip-bottom .tooltip-text::after {
     top: -5px;
-    border-color: currentColor transparent transparent transparent;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
 }
-
 
 /* RIGHT */
 .tooltip-right .tooltip-text {
-    top: 50%;
     left: calc(100% + 6px);
+    right: auto;
+    top: 50%;
+    bottom: auto;
     transform: translateY(-50%);
 }
 
 .tooltip-right .tooltip-text::after {
-    top: 50%;
     left: -5px;
-    transform: translateY(-50%);
-    border-color: transparent currentColor transparent transparent;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
 }
-
 
 /* LEFT */
 .tooltip-left .tooltip-text {
-    top: 50%;
     right: calc(100% + 6px);
     left: auto;
+    top: 50%;
+    bottom: auto;
     transform: translateY(-50%);
 }
 
 .tooltip-left .tooltip-text::after {
-    top: 50%;
     right: -5px;
-    left: auto;
-    transform: translateY(-50%);
-    border-color: transparent transparent transparent currentColor;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
 }
 
-/* ========================================
-   TOP LEFT
-======================================== */
+/* =========================================================
+   CORNER POSITIONS
+========================================================= */
+
+/* TOP LEFT */
 .tooltip-top-left .tooltip-text {
     bottom: 125%;
+    top: auto;
     left: 0;
+    right: auto;
     transform: none;
 }
 
 .tooltip-top-left .tooltip-text::after {
-    top: 100%;
-    left: 10px;
-    transform: none;
-    border-color: currentColor transparent transparent transparent;
+    bottom: -5px;
+    left: 12px;
 }
 
-
-/* ========================================
-   TOP RIGHT
-======================================== */
+/* TOP RIGHT */
 .tooltip-top-right .tooltip-text {
     bottom: 125%;
+    top: auto;
     right: 0;
     left: auto;
     transform: none;
 }
 
 .tooltip-top-right .tooltip-text::after {
-    top: 100%;
-    right: 10px;
-    left: auto;
-    transform: none;
-    border-color: currentColor transparent transparent transparent;
+    bottom: -5px;
+    right: 12px;
 }
 
-
-/* ========================================
-   BOTTOM LEFT
-======================================== */
+/* BOTTOM LEFT */
 .tooltip-bottom-left .tooltip-text {
     top: 125%;
+    bottom: auto;
     left: 0;
     right: auto;
     transform: none;
@@ -186,18 +176,13 @@
 
 .tooltip-bottom-left .tooltip-text::after {
     top: -5px;
-    left: 10px;
-    right: auto;
-    transform: none;
-    border-color: currentColor transparent transparent transparent;
+    left: 12px;
 }
 
-
-/* ========================================
-   BOTTOM RIGHT
-======================================== */
+/* BOTTOM RIGHT */
 .tooltip-bottom-right .tooltip-text {
     top: 125%;
+    bottom: auto;
     right: 0;
     left: auto;
     transform: none;
@@ -205,35 +190,31 @@
 
 .tooltip-bottom-right .tooltip-text::after {
     top: -5px;
-    right: 10px;
-    left: auto;
-    transform: none;
-    border-color: currentColor transparent transparent transparent;
+    right: 12px;
 }
 
+/* =========================================================
+   SIDE CORNERS
+========================================================= */
 
-/* ========================================
-   RIGHT TOP
-======================================== */
+/* RIGHT TOP */
 .tooltip-right-top .tooltip-text {
     left: calc(100% + 6px);
+    right: auto;
     top: 0;
+    bottom: auto;
     transform: none;
 }
 
 .tooltip-right-top .tooltip-text::after {
     left: -5px;
-    top: 10px;
-    transform: none;
-    border-color: transparent currentColor transparent transparent;
+    top: 12px;
 }
 
-
-/* ========================================
-   RIGHT BOTTOM
-======================================== */
+/* RIGHT BOTTOM */
 .tooltip-right-bottom .tooltip-text {
     left: calc(100% + 6px);
+    right: auto;
     bottom: 0;
     top: auto;
     transform: none;
@@ -241,35 +222,27 @@
 
 .tooltip-right-bottom .tooltip-text::after {
     left: -5px;
-    bottom: 10px;
-    top: auto;
-    transform: none;
-    border-color: transparent currentColor transparent transparent;
+    bottom: 12px;
 }
 
-
-/* ========================================
-   LEFT TOP
-======================================== */
+/* LEFT TOP */
 .tooltip-left-top .tooltip-text {
     right: calc(100% + 6px);
+    left: auto;
     top: 0;
+    bottom: auto;
     transform: none;
 }
 
 .tooltip-left-top .tooltip-text::after {
     right: -5px;
-    top: 10px;
-    transform: none;
-    border-color: transparent transparent transparent currentColor;
+    top: 12px;
 }
 
-
-/* ========================================
-   LEFT BOTTOM
-======================================== */
+/* LEFT BOTTOM */
 .tooltip-left-bottom .tooltip-text {
     right: calc(100% + 6px);
+    left: auto;
     bottom: 0;
     top: auto;
     transform: none;
@@ -277,13 +250,12 @@
 
 .tooltip-left-bottom .tooltip-text::after {
     right: -5px;
-    bottom: 10px;
-    top: auto;
-    transform: none;
-    border-color: transparent transparent transparent currentColor;
+    bottom: 12px;
 }
 
-// Code
+/* =========================
+   CODE STYLING
+========================= */
 .tooltip-text code {
     background: rgba(0, 0, 0, 0.15);
     padding: 1px 4px;
@@ -291,7 +263,6 @@
     font-size: 0.72rem;
 }
 
-// TODO: look into this more
 .has-background-info code {
     background: rgba(255, 255, 255, 0.2);
 }
