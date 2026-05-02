@@ -37,6 +37,7 @@ export default function Tooltip({
     size = "medium",
     placement = "bottom",
     rotatable = false,
+    animated = false,
     debug = false,
 }) {
     const SCOPED_LOGGER = useScopedLogger("Tooltip", logger);
@@ -111,6 +112,7 @@ export default function Tooltip({
             "tooltip-small": size === "small",
             "tooltip-medium": size === "medium",
             "tooltip-large": size === "large",
+            "tooltip-animated": animated,
         }
     );
 

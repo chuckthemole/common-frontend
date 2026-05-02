@@ -268,3 +268,73 @@
 .has-background-info code {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* =========================
+   ANIMATION MODE
+========================= */
+
+.tooltip-animated .tooltip-text {
+    transition:
+        opacity 0.15s ease-in-out,
+        transform 0.2s ease,
+        left 0.2s ease,
+        right 0.2s ease,
+        top 0.2s ease,
+        bottom 0.2s ease;
+}
+
+/* TOP */
+.tooltip-animated.tooltip-top .tooltip-text {
+    transform: translate(-50%, -4px);
+}
+
+/* BOTTOM */
+.tooltip-animated.tooltip-bottom .tooltip-text {
+    transform: translate(-50%, 4px);
+}
+
+/* LEFT */
+.tooltip-animated.tooltip-left .tooltip-text {
+    transform: translate(-4px, -50%);
+}
+
+/* RIGHT */
+.tooltip-animated.tooltip-right .tooltip-text {
+    transform: translate(4px, -50%);
+}
+
+/* CORNERS */
+
+.tooltip-animated.tooltip-top-left .tooltip-text {
+    transform: translate(-4px, -4px);
+}
+
+.tooltip-animated.tooltip-top-right .tooltip-text {
+    transform: translate(4px, -4px);
+}
+
+.tooltip-animated.tooltip-bottom-left .tooltip-text {
+    transform: translate(-4px, 4px);
+}
+
+.tooltip-animated.tooltip-bottom-right .tooltip-text {
+    transform: translate(4px, 4px);
+}
+
+/* SIDE CORNERS */
+
+.tooltip-animated.tooltip-right-top .tooltip-text {
+    transform: translate(4px, -4px);
+}
+
+.tooltip-animated.tooltip-right-bottom .tooltip-text {
+    transform: translate(4px, 4px);
+}
+
+.tooltip-animated.tooltip-left-top .tooltip-text {
+    transform: translate(-4px, -4px);
+}
+
+.tooltip-animated.tooltip-left-bottom .tooltip-text {
+    transform: translate(-4px, 4px);
+}

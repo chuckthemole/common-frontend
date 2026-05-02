@@ -465,6 +465,7 @@ export default function EventDashboard({
                                 size="large"
                                 placement="bottom-right"
                                 rotatable
+                                animated
                                 debug
                             >
                                 <span
