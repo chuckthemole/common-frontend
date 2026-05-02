@@ -463,7 +463,7 @@ export default function EventDashboard({
                                 }
                                 variant="info"
                                 size="large"
-                                placement="bottom-left"
+                                placement="bottom-right"
                                 rotatable
                                 debug
                             >
