@@ -57,4 +57,4 @@ export * from './utils/component_debugger';
 
 export * as Common from './components/common'
 // export * as Client from './client'
-export * as Utils from './components/utils'
+export * as Utils from './utils'

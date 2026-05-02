@@ -1,6 +1,8 @@
 .tooltip-container {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
 
     .tooltip-text {
         position: absolute;

@@ -434,7 +434,7 @@ export default function EventDashboard({
                         <div
                             style={{
                                 display: "flex",
-                                alignItems: "flex-start",
+                                alignItems: "center",
                                 gap: "8px",
                                 width: "100%",
                             }}

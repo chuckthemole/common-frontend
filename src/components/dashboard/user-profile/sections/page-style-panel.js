@@ -5,9 +5,8 @@ import {
     FontSettingsModal,
     ColorSettingsModal
 } from "../../../design-control";
-import { SingleSelector } from "../../../dashboard-elements";
+import { SingleSelector, SectionCard } from "../../../dashboard-elements";
 import { previewColorLayouts } from "../../../design-control/color/predefined_color_layouts_preview";
-import { SectionCard } from "./sections-helper";
 import { THEMES } from "../personal-page.schema";
 import logger from "../../../../logger";
 
