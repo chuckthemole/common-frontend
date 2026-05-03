@@ -8,10 +8,10 @@ import {
     isCurrentUserAuthenticated,
     currentUserInfo,
     getCurrentBasePath
-} from './common_requests';
+} from '../common_requests';
 
-import BasePath from './base_path';
-import logger from '../logger';
+import BasePath from '../base_path';
+import logger from '../../logger';
 
 export default function UserIcon() {
     const base_path = BasePath();

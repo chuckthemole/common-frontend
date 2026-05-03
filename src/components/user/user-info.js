@@ -3,9 +3,9 @@ import useSWR from 'swr';
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle, faUser } from '@fortawesome/free-solid-svg-icons';
-import { getCommonPaths, isCurrentUserAuthenticated } from './common_requests';
+import { getCommonPaths, isCurrentUserAuthenticated } from '../common_requests';
 
-import api from '../api';
+import api from '../../api';
 
 const fetcher = (url, config) => api(url, config).then((res) => res.data);
 

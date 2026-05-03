@@ -38,7 +38,7 @@ const COMPONENT_MAP = {
         'Logout'
     ),
     UserIcon: lazyWithLogging(
-        () => import('./user_icon'),
+        () => import('./user/user-icon'),
         'UserIcon'
     ),
     Admin: lazyWithLogging(
