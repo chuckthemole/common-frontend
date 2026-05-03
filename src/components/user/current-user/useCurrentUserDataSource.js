@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import logger, { useScopedLogger } from "../../logger";
-import { ApiPersistence } from "../../persistence";
-import { useAuth } from "../auth_context";
+import logger, { useScopedLogger } from "../../../logger";
+import { ApiPersistence } from "../../../persistence";
+import { useAuth } from "../../auth";
 
 /**
- * useUser
+ * useCurrentUserDataSource
  *
  * A persistence-driven hook for the current authenticated user.
  *
@@ -13,7 +13,7 @@ import { useAuth } from "../auth_context";
  * - Uses ApiPersistence as the abstraction layer
  * - Allows endpoint injection for flexibility
  */
-export default function useUser({
+export default function useCurrentUserDataSource({
     autoFetch = true,
     endpoints = {
         get: "/api/user/me",
@@ -22,7 +22,7 @@ export default function useUser({
     },
 } = {}) {
 
-    const SCOPED_LOGGER = useScopedLogger("useUser", logger);
+    const SCOPED_LOGGER = useScopedLogger("useCurrentUserDataSource", logger);
     const { isAuthenticated } = useAuth();
     const inFlightRef = useRef(false);
     const hasLoadedRef = useRef(false);

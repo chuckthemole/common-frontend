@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { EMPTY } from "../common";
 import { useLogin } from "../hooks/use_login";
 import Spinner from "../ui/loaders/spinning_wheel";
-import { useAuth } from "../auth_context";
+import { useAuth } from "../auth";
 import { LoginFields } from "../auth/login_fields";
 import { RumpusModal } from "../ui/modal";
 import { useRumpusModal } from "../ui/modal/use-rumpus-modal";

@@ -1,9 +1,7 @@
-import React from "react";
-import { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
-import { isCurrentUserAuthenticated } from "./common_requests";
-import logger, { useScopedLogger } from "../logger";
-
-const AuthContext = createContext(null);
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import AuthContext from "./auth-context";
+import { isCurrentUserAuthenticated } from "../common_requests";
+import logger, { useScopedLogger } from "../../logger";
 
 export const AuthProvider = ({ children }) => {
     const SCOPED_LOGGER = useScopedLogger("AuthProvider", logger);
@@ -15,7 +13,6 @@ export const AuthProvider = ({ children }) => {
         user: null,
     });
 
-    // prevent duplicate concurrent calls
     const inFlightRef = useRef(false);
 
     const fetchAuthStatus = useCallback(async () => {
@@ -25,8 +22,6 @@ export const AuthProvider = ({ children }) => {
         }
 
         inFlightRef.current = true;
-
-        SCOPED_LOGGER.debug("Fetching auth status...");
 
         try {
             const res = await isCurrentUserAuthenticated();
@@ -39,8 +34,6 @@ export const AuthProvider = ({ children }) => {
             };
 
             setAuthState(nextState);
-
-            SCOPED_LOGGER.debug("Auth state updated");
         } catch (err) {
             SCOPED_LOGGER.error("Failed to fetch auth status", err);
 
@@ -52,37 +45,25 @@ export const AuthProvider = ({ children }) => {
             });
         } finally {
             inFlightRef.current = false;
-            SCOPED_LOGGER.debug("Finished fetchAuthStatus");
         }
     }, []);
 
-    /**
-     * Fetch ONCE on mount
-     */
     useEffect(() => {
         fetchAuthStatus();
     }, [fetchAuthStatus]);
 
-    /**
-     * Log only on actual state change
-     */
     useEffect(() => {
         SCOPED_LOGGER.debug("authState changed:", authState);
     }, [authState]);
 
     return (
         <AuthContext.Provider
-            value={{ ...authState, refreshAuth: fetchAuthStatus }}
+            value={{
+                ...authState,
+                refreshAuth: fetchAuthStatus,
+            }}
         >
             {children}
         </AuthContext.Provider>
     );
-};
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (!context) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
 };

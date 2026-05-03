@@ -3,7 +3,7 @@ import { useLogout } from '../../hooks/use_logout';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../loaders/spinning_wheel';
 import { useAuthStatus } from '../../hooks/use_auth_status';
-import { useAuth } from '../../auth_context';
+import { useAuth } from '../../auth';
 import logger from '../../../logger';
 
 export default function LogoutButton({

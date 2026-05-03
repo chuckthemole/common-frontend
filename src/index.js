@@ -20,8 +20,8 @@ export { default as Section } from './components/section';
 export { UserCommon } from './components/user_common';
 export { default as UserIcon } from './components/user_icon';
 export { default as UserInfo } from './components/user_info';
-export { AuthProvider, useAuth } from './components/auth_context';
-export { default as AuthRoot } from './components/auth_root';
+export { AuthProvider, useAuth } from './components/auth/auth-provider';
+export { default as AuthRoot } from './components/auth/auth-root';
 export { default as EntityTaskManager } from './components/entity_task_manager';
 
 export * from './components/dashboard-elements';
@@ -34,6 +34,8 @@ export * from './components/triggers';
 export * from './components/storage';
 export * from './components/pages';
 export * from './components/event-logger';
+export * from './components/user';
+export * from './components/auth';
 export * from './utils';
 
 export * from './persistence';

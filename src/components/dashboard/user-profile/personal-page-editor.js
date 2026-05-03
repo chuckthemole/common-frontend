@@ -22,7 +22,7 @@ import { usePageSections } from "./use-page-sections";
 import { debugImports } from "../../../utils";
 import { useProfile } from "./profile/useProfile";
 import { useEventLogger } from "../../event-logger/useEventLogger";
-import useUser from "../../hooks/use_user";
+import useCurrentUser from "../../user/current-user/useCurrentUser";
 
 /**
  * DEBUG ONLY — Import Integrity Check
@@ -69,12 +69,8 @@ export default function PersonalPageEditor({
 
     const { openModal } = useRumpusModal();
 
-    const { fetchUser, user, loading } = useUser({
-        autoFetch: false,
-        endpoints: {
-            get: "/api/current_user",
-        },
-    });
+    const { user, isAuthenticated } = useCurrentUser();
+    logger.debug('herehere', user);
 
     // DEBUG
     // useEffect(() => {
@@ -126,9 +122,6 @@ export default function PersonalPageEditor({
         setError(null);
         setSuccessMessage(null);
 
-        // const user = await fetchUser();
-        // logger.debug("[PersonalPageEditor] USER: ", user);
-
         try {
             await saveProfile(activeProfileId, {
                 page,
@@ -137,8 +130,6 @@ export default function PersonalPageEditor({
             });
 
             logEvent("personal_profile_page.saved", {
-                // username: user.username,
-                // userId: user.id,
                 profileId: activeProfileId,
                 // hasFontSettings: !!fontSettings,
                 // hasColorSettings: !!colorSettings,

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import { eventLogger } from "./event-logger";
-import useUser from "../hooks/use_user";
+import useUser from "../user/current-user/useCurrentUserDataSource";
 import logger, { useScopedLogger } from "../../logger";
 
 export default function EventLoggerProvider({ children }) {
 
     const SCOPED_LOGGER = useScopedLogger("EventLoggerProvider", logger);
+    const lastUserRef = useRef(null);
 
     const {
         user,
@@ -17,6 +18,31 @@ export default function EventLoggerProvider({ children }) {
             get: "/api/current_user",
         },
     });
+
+    useEffect(() => {
+        if (loading) {
+            SCOPED_LOGGER.debug("user still loading...");
+            return;
+        }
+
+        if (!user) {
+            SCOPED_LOGGER.debug("no user returned", {
+                isAuthenticated,
+            });
+            return;
+        }
+
+        // avoid duplicate logs for same object
+        if (lastUserRef.current === user) return;
+        lastUserRef.current = user;
+
+        SCOPED_LOGGER.debug("user object received", {
+            user,
+            keys: Object.keys(user),
+            isAuthenticated,
+        });
+
+    }, [user, loading, isAuthenticated]);
 
     /**
      * Build context (only meaningful once user exists)

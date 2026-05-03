@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { isCurrentUserAuthenticated } from './common_requests';
 import { getApi } from '../api';
 import Spinner from './ui/loaders/spinning_wheel';
-import { useAuthStatus } from './hooks/use_auth_status';
+// import { useAuthStatus } from './hooks/use_auth_status';
+import { useAuth } from './auth';
 
 export default function Logout() {
 
-    const { isLoading, isAuthenticated, refetch } = useAuthStatus();
+    const { isLoading, isAuthenticated } = useAuth();
 
     function handleSubmit(e) {
         e.preventDefault();
