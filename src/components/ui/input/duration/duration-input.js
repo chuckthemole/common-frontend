@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { SingleSelector } from "../../../dashboard-elements";
 import { PortalContainer } from "../../../ui";
+import { NumberStepper } from "../../../dashboard-elements";
 
 const TIME_UNITS = [
     { label: "Minutes", value: "minutes" },
@@ -14,6 +15,7 @@ export default function DurationInput({
     value = { amount: 1, unit: "days" },
     onChange,
     min = 1,
+    max = 999, // optional safety cap
 }) {
     /**
      * Map current value → selector option
@@ -25,37 +27,47 @@ export default function DurationInput({
     /**
      * Handlers
      */
-    const handleAmountChange = (e) => {
-        const amount = parseInt(e.target.value, 10) || 0;
-        onChange?.({ ...value, amount });
+    const handleAmountChange = (amount) => {
+        if (amount == null) return;
+
+        onChange?.({
+            ...value,
+            amount,
+        });
     };
 
     const handleUnitChange = (option) => {
         if (!option) return;
-        onChange?.({ ...value, unit: option.value });
+
+        onChange?.({
+            ...value,
+            unit: option.value,
+        });
     };
 
     return (
-        <div className="duration-input field has-addons">
-            {/* Number input */}
+        <div className="duration-input field is-flex is-align-items-center" style={{ gap: "8px" }}>
+            {/* Number Stepper */}
             <div className="control">
-                <input
-                    type="number"
-                    className="input"
-                    min={min}
+                <NumberStepper
                     value={value.amount}
                     onChange={handleAmountChange}
+                    min={min}
+                    max={max}
+                    inputCapable
                 />
             </div>
 
-            {/* SingleSelector */}
+            {/* Unit Selector */}
             <div className="control" style={{ minWidth: "140px" }}>
                 <PortalContainer id="duration-input-dropdown">
                     {(portalTarget) => (
                         <SingleSelector
                             options={TIME_UNITS}
-                            value={selectedUnit}
-                            onChange={handleUnitChange}
+                            value={selectedUnit?.value}
+                            onChange={(val) => handleUnitChange(
+                                TIME_UNITS.find((u) => u.value === val)
+                            )}
                             placeholder="Unit"
                             portalTarget={portalTarget}
                             searchable={false}
