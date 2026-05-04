@@ -3,7 +3,14 @@ import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
 import { getEventStore, eventRegistryManager } from "../../event-logger";
-import { Alert, ConfirmModal, PortalContainer, Tooltip, useRumpusModal } from "../../ui";
+import {
+    Alert,
+    ConfirmModal,
+    PortalContainer,
+    Tooltip,
+    useRumpusModal,
+    DurationInput
+} from "../../ui";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faInfo } from "@fortawesome/free-solid-svg-icons";
 
@@ -44,6 +51,17 @@ export default function EventDashboard({
     const [successMessage, setSuccessMessage] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+
+    // Duration
+    const [archiveAfter, setArchiveAfter] = useState({
+        amount: 7,
+        unit: "days",
+    });
+
+    const [deleteAfter, setDeleteAfter] = useState({
+        amount: 30,
+        unit: "days",
+    });
 
     // sorting state
     const [sortConfig, setSortConfig] = useState({
@@ -583,6 +601,26 @@ export default function EventDashboard({
                                     Clear All
                                 </button>
                             </Tooltip>
+
+                        </div>
+
+                        {/* Log retention/duration */}
+                        <h3 className="title is-5">Log Retention Settings</h3>
+
+                        <div className="field">
+                            <label className="label">Archive logs after</label>
+                            <DurationInput
+                                value={archiveAfter}
+                                onChange={setArchiveAfter}
+                            />
+                        </div>
+
+                        <div className="field">
+                            <label className="label">Delete logs after</label>
+                            <DurationInput
+                                value={deleteAfter}
+                                onChange={setDeleteAfter}
+                            />
                         </div>
                     </div>
                 </div>

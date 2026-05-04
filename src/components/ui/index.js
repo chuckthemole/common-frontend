@@ -4,4 +4,5 @@ export * from './loaders';
 export * from './alerts';
 export * from './tooltip';
 export * from './modal';
+export * from './input';
 export { default as PortalContainer } from './portal-container';
