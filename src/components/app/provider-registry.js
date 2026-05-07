@@ -1,7 +1,7 @@
 import React from "react";
 import { AuthProvider } from "../auth";
 import { CurrentUserProvider } from "../user";
-import { EventLoggerProvider } from "../event-logger";
+import { EventLoggerProvider, RetentionProvider } from "../event-logger";
 import {
     LayoutSettingsProvider,
     ColorSettingsProvider,
@@ -87,6 +87,12 @@ export const PROVIDER_REGISTRY = {
     ],
 
     logger: [
-        ({ children }) => <EventLoggerProvider>{children}</EventLoggerProvider>,
+        ({ children }) => (
+            <EventLoggerProvider>
+                <RetentionProvider>
+                    {children}
+                </RetentionProvider>
+            </EventLoggerProvider>
+        ),
     ],
 };

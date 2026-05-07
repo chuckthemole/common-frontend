@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
-import { getEventStore, eventRegistryManager } from "../../event-logger";
+import { getEventStore, eventRegistryManager, EventLoggerRetentionModal } from "../../event-logger";
 import {
     Alert,
     ConfirmModal,
@@ -53,15 +53,15 @@ export default function EventDashboard({
     const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
 
     // Duration
-    const [archiveAfter, setArchiveAfter] = useState({
-        amount: 7,
-        unit: "days",
-    });
+    // const [archiveAfter, setArchiveAfter] = useState({
+    //     amount: 7,
+    //     unit: "days",
+    // });
 
-    const [deleteAfter, setDeleteAfter] = useState({
-        amount: 30,
-        unit: "days",
-    });
+    // const [deleteAfter, setDeleteAfter] = useState({
+    //     amount: 30,
+    //     unit: "days",
+    // });
 
     // sorting state
     const [sortConfig, setSortConfig] = useState({
@@ -602,10 +602,12 @@ export default function EventDashboard({
                                 </button>
                             </Tooltip>
 
+                            <EventLoggerRetentionModal />
+
                         </div>
 
                         {/* Log retention/duration */}
-                        <h3 className="title is-5">Log Retention Settings</h3>
+                        {/* <h3 className="title is-5">Log Retention Settings</h3>
 
                         <div className="field">
                             <label className="label">Archive logs after</label>
@@ -621,7 +623,7 @@ export default function EventDashboard({
                                 value={deleteAfter}
                                 onChange={setDeleteAfter}
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
 

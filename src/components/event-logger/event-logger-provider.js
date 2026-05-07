@@ -15,7 +15,7 @@ export default function EventLoggerProvider({ children }) {
     } = useUser({
         autoFetch: true,
         endpoints: {
-            get: "/api/current_user",
+            get: "/api/current_user", // TODO: take out magic string
         },
     });
 
