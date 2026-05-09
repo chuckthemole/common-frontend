@@ -1,9 +1,10 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import PropTypes from "prop-types";
 
 import { DashboardLayout } from "../../pages";
 import { UserSidebarNavigation } from "../";
 import useCurrentUser from "../current-user/useCurrentUser";
+import logger from "../../../logger";
 
 /**
  * -----------------------------------------------------------------------------
@@ -19,35 +20,12 @@ import useCurrentUser from "../current-user/useCurrentUser";
  *  - serve as entry point into user tools/settings
  *
  * -----------------------------------------------------------------------------
- * This page intentionally focuses on composition rather than business logic.
- * Complex domain behavior should live in:
- *
- *  - hooks
- *  - services
- *  - providers
- *  - feature components
- *
- * -----------------------------------------------------------------------------
- * Example
- * -----------------------------------------------------------------------------
- *
- * <UserLandingPage
- *     activePath={location.pathname}
- *     onNavigate={(item) => navigate(item.href)}
- * />
- *
- * -----------------------------------------------------------------------------
  */
-
 export default function UserLandingPage({
     activePath = "",
-
     onNavigate,
-
     header = null,
-
     footer = null,
-
     children,
 }) {
     /**
@@ -55,41 +33,66 @@ export default function UserLandingPage({
      * Current User
      * -------------------------------------------------------------------------
      */
-    const currentUser =
-        useCurrentUser?.() || null;
+    const currentUser = useCurrentUser?.() || null;
+
+    /**
+     * Debug: user object lifecycle
+     */
+    useEffect(() => {
+        logger.debug("[UserLandingPage] user loaded", currentUser);
+    }, [currentUser]);
+
+    /**
+     * Debug: props snapshot
+     */
+    useEffect(() => {
+        logger.debug("[UserLandingPage] props", {
+            activePath,
+            hasOnNavigate: !!onNavigate,
+            hasHeader: !!header,
+            hasFooter: !!footer,
+            hasChildren: !!children,
+        });
+    }, [activePath, onNavigate, header, footer, children]);
 
     /**
      * -------------------------------------------------------------------------
      * Derived Display Name
      * -------------------------------------------------------------------------
      */
-    const displayName =
-        useMemo(() => {
-            return (
-                currentUser
-                    ?.displayName ||
-                currentUser?.name ||
-                currentUser?.email ||
-                "User"
-            );
-        }, [currentUser]);
+    const displayName = useMemo(() => {
+        const name =
+            currentUser?.user?.username ||
+            currentUser?.user?.id ||
+            currentUser?.user?.email ||
+            "User";
+
+        logger.debug("[UserLandingPage] displayName resolved", {
+            displayName: name,
+        });
+
+        return name;
+    }, [currentUser]);
 
     /**
      * -------------------------------------------------------------------------
      * Sidebar
      * -------------------------------------------------------------------------
      */
-    const sidebar = (
-        <UserSidebarNavigation
-            activePath={
-                activePath
-            }
-            onNavigate={
-                onNavigate
-            }
-            user={currentUser}
-        />
-    );
+    const sidebar = useMemo(() => {
+        logger.debug("[UserLandingPage] rendering sidebar", {
+            currentUser,
+            activePath,
+        });
+
+        return (
+            <UserSidebarNavigation
+                activePath={activePath}
+                onNavigate={onNavigate}
+                user={currentUser}
+            />
+        );
+    }, [activePath, onNavigate, currentUser]);
 
     return (
         <DashboardLayout
@@ -101,24 +104,19 @@ export default function UserLandingPage({
             {/* Welcome Section                                               */}
             {/* ------------------------------------------------------------- */}
 
+            {logger.debug("[UserLandingPage] render main layout")}
+
             <section
                 className="box"
-                style={{
-                    marginBottom: "1.5rem",
-                }}
+                style={{ marginBottom: "1.5rem" }}
             >
                 <h1 className="title is-3">
-                    Welcome,{" "}
-                    {displayName}
+                    Welcome, {displayName}
                 </h1>
 
                 <p className="subtitle is-6">
-                    Manage your
-                    account,
-                    preferences,
-                    activity,
-                    and developer
-                    settings.
+                    Manage your account, preferences,
+                    activity, and developer settings.
                 </p>
             </section>
 
@@ -129,16 +127,22 @@ export default function UserLandingPage({
             <div
                 style={{
                     display: "flex",
-                    flexDirection:
-                        "column",
+                    flexDirection: "column",
                     gap: "1rem",
                 }}
             >
-                {children || (
+                {children ? (
+                    (() => {
+                        logger.debug(
+                            "[UserLandingPage] rendering custom children"
+                        );
+                        return children;
+                    })()
+                ) : (
                     <>
-                        {/* ------------------------------------------------- */}
-                        {/* Example Overview Cards                           */}
-                        {/* ------------------------------------------------- */}
+                        {logger.debug(
+                            "[UserLandingPage] rendering default dashboard content"
+                        )}
 
                         <div className="columns">
                             <div className="column">
@@ -146,11 +150,8 @@ export default function UserLandingPage({
                                     <h2 className="title is-5">
                                         Account
                                     </h2>
-
                                     <p>
-                                        View and
-                                        manage your
-                                        account
+                                        View and manage your account
                                         information.
                                     </p>
                                 </div>
@@ -161,11 +162,8 @@ export default function UserLandingPage({
                                     <h2 className="title is-5">
                                         Notifications
                                     </h2>
-
                                     <p>
-                                        Configure
-                                        alerts and
-                                        communication
+                                        Configure alerts and communication
                                         preferences.
                                     </p>
                                 </div>
@@ -176,21 +174,13 @@ export default function UserLandingPage({
                                     <h2 className="title is-5">
                                         Security
                                     </h2>
-
                                     <p>
-                                        Update
-                                        passwords,
-                                        sessions,
-                                        and access
-                                        controls.
+                                        Update passwords, sessions, and
+                                        access controls.
                                     </p>
                                 </div>
                             </div>
                         </div>
-
-                        {/* ------------------------------------------------- */}
-                        {/* Recent Activity                                  */}
-                        {/* ------------------------------------------------- */}
 
                         <div className="box">
                             <h2 className="title is-5">
@@ -198,8 +188,7 @@ export default function UserLandingPage({
                             </h2>
 
                             <p className="has-text-grey">
-                                No recent
-                                activity.
+                                No recent activity.
                             </p>
                         </div>
                     </>
@@ -210,35 +199,9 @@ export default function UserLandingPage({
 }
 
 UserLandingPage.propTypes = {
-    /**
-     * Current active route/path.
-     */
-    activePath:
-        PropTypes.string,
-
-    /**
-     * Navigation callback.
-     */
-    onNavigate:
-        PropTypes.func,
-
-    /**
-     * Optional layout header.
-     */
-    header:
-        PropTypes.node,
-
-    /**
-     * Optional layout footer.
-     */
-    footer:
-        PropTypes.node,
-
-    /**
-     * Optional custom page content.
-     *
-     * If omitted, default dashboard overview content is rendered.
-     */
-    children:
-        PropTypes.node,
+    activePath: PropTypes.string,
+    onNavigate: PropTypes.func,
+    header: PropTypes.node,
+    footer: PropTypes.node,
+    children: PropTypes.node,
 };
