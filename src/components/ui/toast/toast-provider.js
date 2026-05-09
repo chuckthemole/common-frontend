@@ -153,6 +153,10 @@ export default function ToastProvider({
         [pushToast]
     );
 
+    const clearAllToasts = useCallback(() => {
+        setToasts([]);
+    }, []);
+
     /**
      * -------------------------------------------------------------------------
      * Group Toasts By Position
@@ -190,8 +194,9 @@ export default function ToastProvider({
             error,
             info,
             warning,
+            clearAllToasts
         }),
-        [success, error, info, warning]
+        [success, error, info, warning, clearAllToasts]
     );
 
     return (
@@ -235,20 +240,42 @@ export default function ToastProvider({
                                 ...widthStyles,
                             }}
                         >
+                            {/* ------------------------------------------------------------- */}
+                            {/* Header Actions (Clear All)                                   */}
+                            {/* ------------------------------------------------------------- */}
+
+                            {items.length > 1 && (
+                                <div
+                                    style={{
+                                        pointerEvents: "auto",
+                                        display: "flex",
+                                        justifyContent: "flex-end",
+                                        marginBottom: "0.25rem",
+                                    }}
+                                >
+                                    <button
+                                        className="button is-small is-danger is-light"
+                                        onClick={clearAllToasts}
+                                    >
+                                        Clear all
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* ------------------------------------------------------------- */}
+                            {/* Toast List                                                   */}
+                            {/* ------------------------------------------------------------- */}
+
                             {items.map((toast) => {
                                 const toastWidth =
-                                    TOAST_WIDTHS[
-                                    toast.width ||
-                                    "auto"
-                                    ] || TOAST_WIDTHS.auto;
+                                    TOAST_WIDTHS[toast.width || "auto"] ||
+                                    TOAST_WIDTHS.auto;
 
                                 return (
                                     <div
                                         key={toast.id}
                                         style={{
-                                            pointerEvents:
-                                                "auto",
-
+                                            pointerEvents: "auto",
                                             ...toastWidth,
                                         }}
                                     >
@@ -257,11 +284,7 @@ export default function ToastProvider({
                                             message={toast.message}
                                             duration={toast.duration}
                                             size={toast.size}
-                                            onClose={() =>
-                                                removeToast(
-                                                    toast.id
-                                                )
-                                            }
+                                            onClose={() => removeToast(toast.id)}
                                         />
                                     </div>
                                 );

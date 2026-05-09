@@ -70,6 +70,7 @@ export const PROVIDER_REGISTRY = {
         },
     ],
 
+    // TODO: let's refactor this to ui instead of modal
     modal: [
         ({ children, appElement }) => (
             <RumpusModalProvider
