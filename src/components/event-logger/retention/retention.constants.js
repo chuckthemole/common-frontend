@@ -4,4 +4,5 @@ export const DEFAULT_RETENTION_POLICY = {
     activeDays: 14,
     archiveDays: 7,
     enabled: true,
+    frequency: "daily",
 };

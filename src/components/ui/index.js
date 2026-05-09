@@ -6,4 +6,5 @@ export * from './tooltip';
 export * from './modal';
 export * from './input';
 export * from './toast';
+export * from './collapsible';
 export { default as PortalContainer } from './portal-container';

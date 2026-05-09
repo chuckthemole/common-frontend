@@ -4,12 +4,20 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { useRumpusModal, RumpusModal, DurationInput, useToast } from "../../ui";
+import { useRumpusModal, RumpusModal, DurationInput, useToast, PortalContainer, JsonEditor, Collapsible } from "../../ui";
+import { SingleSelector } from "../../dashboard-elements";
 import RetentionContext from "./retention-context";
 import logger from "../../../logger";
 import {
     DEFAULT_RETENTION_POLICY,
 } from "./retention.constants";
+
+const FREQUENCY_OPTIONS = [
+    { label: "Hourly", value: "hourly" },
+    { label: "Daily", value: "daily" },
+    { label: "Weekly", value: "weekly" },
+    { label: "Monthly", value: "monthly" },
+];
 
 export default function EventLoggerRetentionModal({
     buttonLabel = "Retention Settings",
@@ -159,49 +167,80 @@ export default function EventLoggerRetentionModal({
                         Event Log Retention
                     </h3>
 
-                    <div className="field">
-                        <label className="label">
-                            Archive Logs After
-                        </label>
-
-                        <DurationInput
-                            value={{
-                                amount:
-                                    draftPolicy.activeDays,
-                                unit: "days",
-                            }}
-                            onChange={(
-                                value
-                            ) => {
-                                updateDraft(
-                                    "activeDays",
-                                    value.amount
-                                );
-                            }}
+                    <Collapsible label={"Current Saved Policy"}>
+                        <JsonEditor
+                            data={existingPolicy}
                         />
+                    </Collapsible>
+
+                    <div className="columns">
+                        <div className="column">
+                            <div className="field">
+                                <label className="label">
+                                    Archive Logs After
+                                </label>
+
+                                <DurationInput
+                                    value={{
+                                        amount:
+                                            draftPolicy.activeDays,
+                                        unit: "days",
+                                    }}
+                                    onChange={(
+                                        value
+                                    ) => {
+                                        updateDraft(
+                                            "activeDays",
+                                            value.amount
+                                        );
+                                    }}
+                                />
+                            </div>
+
+                            <div className="field">
+                                <label className="label">
+                                    Delete Archived Logs After
+                                </label>
+
+                                <DurationInput
+                                    value={{
+                                        amount:
+                                            draftPolicy.archiveDays,
+                                        unit: "days",
+                                    }}
+                                    onChange={(
+                                        value
+                                    ) => {
+                                        updateDraft(
+                                            "archiveDays",
+                                            value.amount
+                                        );
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Job Frequency */}
+                        <div className="field column">
+                            <label className="label">
+                                Retention Job Frequency
+                            </label>
+
+
+                            <PortalContainer id="job-frequency-input-dropdown">
+                                {(portalTarget) => (
+                                    <SingleSelector
+                                        value={draftPolicy.frequency}
+                                        options={FREQUENCY_OPTIONS}
+                                        onChange={(value) =>
+                                            updateDraft("frequency", value)
+                                        }
+                                    />
+                                )}
+                            </PortalContainer>
+                        </div>
                     </div>
 
-                    <div className="field">
-                        <label className="label">
-                            Delete Archived Logs After
-                        </label>
-
-                        <DurationInput
-                            value={{
-                                amount:
-                                    draftPolicy.archiveDays,
-                                unit: "days",
-                            }}
-                            onChange={(
-                                value
-                            ) => {
-                                updateDraft(
-                                    "archiveDays",
-                                    value.amount
-                                );
-                            }}
-                        />
-                    </div>
 
                     <div
                         className="buttons is-right"
