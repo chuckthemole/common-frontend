@@ -4,7 +4,7 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { useRumpusModal, RumpusModal, DurationInput, Alert } from "../../ui";
+import { useRumpusModal, RumpusModal, DurationInput, useToast } from "../../ui";
 import RetentionContext from "./retention-context";
 import logger from "../../../logger";
 import {
@@ -20,9 +20,9 @@ export default function EventLoggerRetentionModal({
         closeModal,
     } = useRumpusModal();
 
-    const [alert, setAlert] = useState(null);
-
     const retentionSettings = useContext(RetentionContext);
+
+    const toast = useToast();
 
     if (!retentionSettings) {
         logger.warn(
@@ -86,37 +86,36 @@ export default function EventLoggerRetentionModal({
                 });
             }
 
-            setAlert({
-                type: "success",
+            toast.success(
+                <div>
+                    <strong>
+                        Retention policy saved.
+                    </strong>
 
-                message: (
                     <div>
+                        Logs archive after{" "}
                         <strong>
-                            Retention policy saved.
+                            {
+                                draftPolicy.activeDays
+                            } days
                         </strong>
-
-                        <div>
-                            Logs archive after{" "}
-                            <strong>
-                                {
-                                    draftPolicy.activeDays
-                                } days
-                            </strong>
-                        </div>
-
-                        <div>
-                            Archived logs delete after{" "}
-                            <strong>
-                                {
-                                    draftPolicy.archiveDays
-                                } days
-                            </strong>
-                        </div>
                     </div>
-                ),
-            });
 
-            closeModal(modalId);
+                    <div>
+                        Archived logs delete after{" "}
+                        <strong>
+                            {
+                                draftPolicy.archiveDays
+                            } days
+                        </strong>
+                    </div>
+                </div>,
+                {
+                    position: "bottom-center",
+                    width: "full",
+                    duration: null
+                }
+            );
 
             closeModal(modalId);
         } catch (error) {
@@ -135,20 +134,6 @@ export default function EventLoggerRetentionModal({
 
     return (
         <>
-
-            {/* Alert */}
-            {alert && (
-                <Alert
-                    type={alert.type}
-                    message={alert.message}
-                    duration={null}
-                    onClose={() =>
-                        setAlert(null)
-                    }
-                    position="bottom"
-                />
-            )}
-
             {/* Button */}
             <button
                 onClick={() =>

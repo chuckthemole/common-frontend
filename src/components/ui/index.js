@@ -5,4 +5,5 @@ export * from './alerts';
 export * from './tooltip';
 export * from './modal';
 export * from './input';
+export * from './toast';
 export { default as PortalContainer } from './portal-container';

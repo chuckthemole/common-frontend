@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import {
     PortalContainer,
     Tooltip,
-    Alert,
     ConfirmModal,
-    useRumpusModal
+    useRumpusModal,
+    useToast
 } from "../../ui";
 import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import PagePreview from "./preview/page-preview";
@@ -40,11 +40,10 @@ export default function PersonalPageEditor({
     const [previewEl, setPreviewEl] = useState(null);
     const [page, setPage] = useState(DEFAULT_PAGE);
     const [saveIsLoading, setSaveIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [successMessage, setSuccessMessage] = useState(null);
     const [previewVisible, setPreviewVisible] = useState(false);
     const [colorSettings, setColorSettings] = useState({});
     const [fontSettings, setFontSettings] = useState({});
+    const toast = useToast();
 
     const { logEvent } = useEventLogger();
 
@@ -114,13 +113,18 @@ export default function PersonalPageEditor({
         e.preventDefault();
 
         if (!activeProfileId?.trim()) {
-            setError("Please enter a unique profile ID before saving.");
+            toast.error(
+                "Please enter a unique profile ID before saving.",
+                {
+                    position: "bottom-center",
+                    width: "full",
+                    duration: null
+                }
+            );
             return;
         }
 
         setSaveIsLoading(true);
-        setError(null);
-        setSuccessMessage(null);
 
         try {
             await saveProfile(activeProfileId, {
@@ -135,11 +139,26 @@ export default function PersonalPageEditor({
                 // hasColorSettings: !!colorSettings,
             });
 
-            setSuccessMessage(`Profile "${activeProfileId}" saved successfully!`);
+            toast.success(
+                `Profile "${activeProfileId}" saved successfully!`,
+                {
+                    position: "bottom-center",
+                    width: "full",
+                    duration: null
+                }
+            );
+
             onSuccess?.(page);
         } catch (err) {
             logger.error("[PersonalPageEditor] Save failed:", err);
-            setError(err.message || "Failed to save profile.");
+            toast.error(
+                err.message || "Failed to save profile.",
+                {
+                    position: "bottom-center",
+                    width: "full",
+                    duration: null
+                }
+            );
         } finally {
             setSaveIsLoading(false);
         }
@@ -331,29 +350,6 @@ export default function PersonalPageEditor({
                             onUpdate={(data) => updateSection("contact", data)}
                         />
 
-                        {/* ---------- Alerts ---------- */}
-                        {error && (
-                            <Alert
-                                message={error}
-                                type="error"
-                                persistent={false}
-                                size="medium"
-                                position="bottom"
-                                onClose={() => setError(null)}
-                            />
-                        )}
-
-                        {successMessage && (
-                            <Alert
-                                message={successMessage}
-                                type="success"
-                                persistent={false}
-                                size="medium"
-                                position="bottom"
-                                onClose={() => setSuccessMessage(null)}
-                            />
-                        )}
-
                     </div>
                 </div>
 
@@ -377,10 +373,25 @@ export default function PersonalPageEditor({
                 onConfirm={async () => {
                     try {
                         await clearProfiles();
-                        setSuccessMessage("All saved profiles have been cleared.");
+                        toast.success(
+                            "All saved profiles have been cleared.",
+                            {
+                                position: "bottom-center",
+                                width: "full",
+                                duration: null
+                            }
+                        );
+
                     } catch (err) {
                         logger.error("[PersonalPageEditor] Failed to clear profiles:", err);
-                        setError("Failed to clear saved profiles.");
+                        toast.error(
+                            "Failed to clear saved profiles.",
+                            {
+                                position: "bottom-center",
+                                width: "full",
+                                duration: null
+                            }
+                        );
                     }
                 }}
             />
@@ -404,7 +415,6 @@ function runImportDebug() {
     debugImports("PersonalPageEditor", {
         PortalContainer,
         Tooltip,
-        Alert,
         SingleSelector,
         ToggleSwitch,
         PagePreview,

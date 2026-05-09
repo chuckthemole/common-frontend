@@ -4,7 +4,7 @@ import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
 import { getEventStore, eventRegistryManager, EventLoggerRetentionModal } from "../../event-logger";
 import {
-    Alert,
+    useToast,
     ConfirmModal,
     PortalContainer,
     Tooltip,
@@ -48,9 +48,9 @@ export default function EventDashboard({
     const [viewMode, setViewMode] = useState(initialViewMode);
     const [timestampFormat, setTimestampFormat] = useState(TimestampFormat.HUMAN);
     const [expandedRowIndex, setExpandedRowIndex] = useState(null);
-    const [successMessage, setSuccessMessage] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+    const toast = useToast();
 
     // Duration
     // const [archiveAfter, setArchiveAfter] = useState({
@@ -799,17 +799,6 @@ export default function EventDashboard({
                         </>
                     )}
 
-                    {successMessage && (
-                        <Alert
-                            message={successMessage}
-                            type="success"
-                            persistent={false}
-                            size="medium"
-                            position="bottom"
-                            onClose={() => setSuccessMessage(null)}
-                        />
-                    )}
-
                 </div>
             </div>
 
@@ -825,7 +814,14 @@ export default function EventDashboard({
                         await eventStore.clear();
                         setEvents([]);
                         setSelectedEntity("ALL");
-                        setSuccessMessage("All saved logs have been cleared.");
+                        toast.success(
+                            "All saved logs have been cleared.",
+                            {
+                                position: "bottom-center",
+                                width: "full",
+                                duration: null
+                            }
+                        );
                     } catch (err) {
                         SCOPED_LOGGER.error("Failed to clear logs:", err);
                         setError("Failed to clear saved logs.");

@@ -18,8 +18,6 @@ const Alert = ({
     duration = 3000,
     persistent = false,
     size = "medium",
-    position = "top",
-    fullWidth = true,
     onClose,
 }) => {
     const [visible, setVisible] = useState(true);
@@ -73,28 +71,40 @@ const Alert = ({
     };
 
     // Container styles for position and width
-    const containerStyle = {
-        position: "fixed",
-        [position]: "1rem",
-        left: fullWidth ? 0 : "50%",
-        transform: fullWidth ? "none" : "translateX(-50%)",
-        zIndex: 9999,
-        width: fullWidth ? "100%" : "auto",
-        display: "flex",
-        justifyContent: "center",
-        pointerEvents: "auto",
-        padding: "0.5rem",
-    };
+    // const containerStyle = {
+    //     position: "fixed",
+    //     [position]: "1rem",
+    //     left: fullWidth ? 0 : "50%",
+    //     transform: fullWidth ? "none" : "translateX(-50%)",
+    //     zIndex: 9999,
+    //     width: fullWidth ? "100%" : "auto",
+    //     display: "flex",
+    //     justifyContent: "center",
+    //     pointerEvents: "auto",
+    //     padding: "0.5rem",
+    // };
 
     return (
-        <div style={containerStyle}>
-            <div className={`notification ${typeClassMap[type]} ${sizeClassMap[size]}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: fullWidth ? "100%" : "auto" }}>
-                <div>{message}</div>
-                <button
-                    className="delete"
-                    onClick={handleClose}
-                />
-            </div>
+        <div
+            className={`
+            notification
+            ${typeClassMap[type]}
+            ${sizeClassMap[size]}
+        `}
+            style={{
+                display: "flex",
+                justifyContent:
+                    "space-between",
+                alignItems: "center",
+                minWidth: "320px",
+            }}
+        >
+            <div>{message}</div>
+
+            <button
+                className="delete"
+                onClick={handleClose}
+            />
         </div>
     );
 };

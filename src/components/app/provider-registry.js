@@ -7,7 +7,7 @@ import {
     ColorSettingsProvider,
     FontSettingsProvider,
 } from "../design-control";
-import { RumpusModalProvider } from "../ui";
+import { RumpusModalProvider, ToastProvider } from "../ui";
 import { LocalPersistence } from "../../persistence";
 
 /**
@@ -72,8 +72,12 @@ export const PROVIDER_REGISTRY = {
 
     modal: [
         ({ children, appElement }) => (
-            <RumpusModalProvider appElement={appElement}>
-                {children}
+            <RumpusModalProvider
+                appElement={appElement}
+            >
+                <ToastProvider>
+                    {children}
+                </ToastProvider>
             </RumpusModalProvider>
         ),
     ],
