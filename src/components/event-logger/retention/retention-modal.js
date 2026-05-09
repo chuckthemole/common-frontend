@@ -3,38 +3,73 @@ import React, {
     useEffect,
     useMemo,
     useState,
+    useCallback,
 } from "react";
-import { useRumpusModal, RumpusModal, DurationInput, useToast, PortalContainer, JsonEditor, Collapsible } from "../../ui";
-import { SingleSelector } from "../../dashboard-elements";
-import RetentionContext from "./retention-context";
+
+import {
+    useRumpusModal,
+    RumpusModal,
+    useToast,
+} from "../../ui";
+
 import logger from "../../../logger";
+
+import RetentionContext from "./retention-context";
+
+import RetentionForm from "./retention-form";
+
 import {
     DEFAULT_RETENTION_POLICY,
 } from "./retention.constants";
 
-const FREQUENCY_OPTIONS = [
-    { label: "Hourly", value: "hourly" },
-    { label: "Daily", value: "daily" },
-    { label: "Weekly", value: "weekly" },
-    { label: "Monthly", value: "monthly" },
-];
+/**
+ * -----------------------------------------------------------------------------
+ * EventLoggerRetentionModal
+ * -----------------------------------------------------------------------------
+ *
+ * Modal wrapper around RetentionForm.
+ *
+ * Responsibilities:
+ *  - modal lifecycle
+ *  - draft state lifecycle
+ *  - persistence actions
+ *  - save/cancel behavior
+ *  - toast notifications
+ *
+ * Intentionally delegates all editing UI to RetentionForm.
+ * -----------------------------------------------------------------------------
+ */
+
+const MODAL_ID =
+    "event-logger-retention-settings";
 
 export default function EventLoggerRetentionModal({
     buttonLabel = "Retention Settings",
 }) {
+    /**
+     * -------------------------------------------------------------------------
+     * Modal Infrastructure
+     * -------------------------------------------------------------------------
+     */
     const {
         activeModal,
         openModal,
         closeModal,
     } = useRumpusModal();
 
-    const retentionSettings = useContext(RetentionContext);
-
     const toast = useToast();
+
+    /**
+     * -------------------------------------------------------------------------
+     * Retention Context
+     * -------------------------------------------------------------------------
+     */
+    const retentionSettings =
+        useContext(RetentionContext);
 
     if (!retentionSettings) {
         logger.warn(
-            "EventLoggerRetentionSettingsModal must be used inside RetentionProvider"
+            "[EventLoggerRetentionModal] Must be used inside RetentionProvider"
         );
 
         return null;
@@ -47,12 +82,21 @@ export default function EventLoggerRetentionModal({
         getPolicyForTarget,
     } = retentionSettings;
 
-    const modalId =
-        "event-logger-retention-settings";
-
+    /**
+     * -------------------------------------------------------------------------
+     * Modal State
+     * -------------------------------------------------------------------------
+     */
     const isOpen =
-        activeModal === modalId;
+        activeModal === MODAL_ID;
 
+    /**
+     * -------------------------------------------------------------------------
+     * Existing Policy
+     * -------------------------------------------------------------------------
+     *
+     * Fallback to defaults if policy not yet created.
+     */
     const existingPolicy = useMemo(() => {
         return (
             getPolicyForTarget("all") ||
@@ -60,106 +104,173 @@ export default function EventLoggerRetentionModal({
         );
     }, [getPolicyForTarget]);
 
+    /**
+     * -------------------------------------------------------------------------
+     * Draft Policy State
+     * -------------------------------------------------------------------------
+     *
+     * Local editable state used while modal is open.
+     */
     const [draftPolicy, setDraftPolicy] =
         useState(existingPolicy);
 
+    /**
+     * -------------------------------------------------------------------------
+     * Sync Draft On Open
+     * -------------------------------------------------------------------------
+     *
+     * Ensures latest persisted policy is loaded each time modal opens.
+     */
     useEffect(() => {
         if (isOpen) {
             setDraftPolicy(existingPolicy);
         }
     }, [isOpen, existingPolicy]);
 
-    const updateDraft = (
-        key,
-        value
-    ) => {
-        setDraftPolicy((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
-    };
-
-    const handleSave = async () => {
-        try {
-            if (existingPolicy?.id) {
-                await updatePolicy(
-                    existingPolicy.id,
-                    draftPolicy
-                );
-            } else {
-                await addPolicy({
-                    ...draftPolicy,
-                    id: "default-policy",
-                    target: "all",
-                });
-            }
-
-            toast.success(
-                <div>
-                    <strong>
-                        Retention policy saved.
-                    </strong>
-
-                    <div>
-                        Logs archive after{" "}
-                        <strong>
-                            {
-                                draftPolicy.activeDays
-                            } days
-                        </strong>
-                    </div>
-
-                    <div>
-                        Archived logs delete after{" "}
-                        <strong>
-                            {
-                                draftPolicy.archiveDays
-                            } days
-                        </strong>
-                    </div>
-                </div>,
-                {
-                    position: "bottom-center",
-                    width: "full",
-                    duration: null
+    /**
+     * -------------------------------------------------------------------------
+     * Save Policy
+     * -------------------------------------------------------------------------
+     */
+    const handleSave =
+        useCallback(async () => {
+            try {
+                /**
+                 * -------------------------------------------------------------
+                 * Update existing policy
+                 * -------------------------------------------------------------
+                 */
+                if (existingPolicy?.id) {
+                    await updatePolicy(
+                        existingPolicy.id,
+                        draftPolicy
+                    );
                 }
-            );
 
-            closeModal(modalId);
-        } catch (error) {
-            logger.error(
-                "Failed to save retention policy",
-                error
-            );
-        }
-    };
+                /**
+                 * -------------------------------------------------------------
+                 * Create default policy
+                 * -------------------------------------------------------------
+                 */
+                else {
+                    await addPolicy({
+                        ...draftPolicy,
 
-    const handleCancel = () => {
-        setDraftPolicy(existingPolicy);
+                        id: "default-policy",
 
-        closeModal(modalId);
-    };
+                        target: "all",
+                    });
+                }
+
+                /**
+                 * -------------------------------------------------------------
+                 * Success Notification
+                 * -------------------------------------------------------------
+                 */
+                toast.success(
+                    <div>
+                        <strong>
+                            Retention policy saved.
+                        </strong>
+
+                        <div>
+                            Logs archive after{" "}
+                            <strong>
+                                {
+                                    draftPolicy.activeDays
+                                } days
+                            </strong>
+                        </div>
+
+                        <div>
+                            Archived logs delete after{" "}
+                            <strong>
+                                {
+                                    draftPolicy.archiveDays
+                                } days
+                            </strong>
+                        </div>
+
+                        <div>
+                            Frequency:{" "}
+                            <strong>
+                                {
+                                    draftPolicy.frequency
+                                }
+                            </strong>
+                        </div>
+                    </div>,
+                    {
+                        position:
+                            "bottom-center",
+
+                        width: "full",
+
+                        duration: null,
+                    }
+                );
+
+                closeModal(MODAL_ID);
+            } catch (error) {
+                logger.error(
+                    "[EventLoggerRetentionModal] Failed to save retention policy",
+                    error
+                );
+
+                toast.error(
+                    "Failed to save retention policy."
+                );
+            }
+        }, [
+            addPolicy,
+            closeModal,
+            draftPolicy,
+            existingPolicy,
+            toast,
+            updatePolicy,
+        ]);
+
+    /**
+     * -------------------------------------------------------------------------
+     * Cancel Editing
+     * -------------------------------------------------------------------------
+     */
+    const handleCancel =
+        useCallback(() => {
+            setDraftPolicy(existingPolicy);
+
+            closeModal(MODAL_ID);
+        }, [
+            closeModal,
+            existingPolicy,
+        ]);
 
     return (
         <>
-            {/* Button */}
+            {/* ------------------------------------------------------------- */}
+            {/* Open Modal Button                                             */}
+            {/* ------------------------------------------------------------- */}
+
             <button
-                onClick={() =>
-                    openModal(modalId)
-                }
                 className="button is-info"
+                onClick={() =>
+                    openModal(MODAL_ID)
+                }
             >
                 {buttonLabel}
             </button>
 
-            {/* Modal */}
+            {/* ------------------------------------------------------------- */}
+            {/* Modal                                                         */}
+            {/* ------------------------------------------------------------- */}
+
             <RumpusModal
+                draggable
                 isOpen={isOpen}
+                title="Retention Settings"
                 onRequestClose={
                     handleCancel
                 }
-                title="Retention Settings"
-                draggable
             >
                 <div className="content">
 
@@ -167,84 +278,22 @@ export default function EventLoggerRetentionModal({
                         Event Log Retention
                     </h3>
 
-                    <Collapsible label={"Current Saved Policy"}>
-                        <JsonEditor
-                            data={existingPolicy}
-                        />
-                    </Collapsible>
+                    {/* ----------------------------------------------------- */}
+                    {/* Reusable Retention Form                              */}
+                    {/* ----------------------------------------------------- */}
 
-                    <div className="columns">
-                        <div className="column">
-                            <div className="field">
-                                <label className="label">
-                                    Archive Logs After
-                                </label>
+                    <RetentionForm
+                        value={draftPolicy}
+                        onChange={setDraftPolicy}
+                        disabled={loading}
+                    />
 
-                                <DurationInput
-                                    value={{
-                                        amount:
-                                            draftPolicy.activeDays,
-                                        unit: "days",
-                                    }}
-                                    onChange={(
-                                        value
-                                    ) => {
-                                        updateDraft(
-                                            "activeDays",
-                                            value.amount
-                                        );
-                                    }}
-                                />
-                            </div>
+                    {/* ----------------------------------------------------- */}
+                    {/* Action Buttons                                        */}
+                    {/* ----------------------------------------------------- */}
 
-                            <div className="field">
-                                <label className="label">
-                                    Delete Archived Logs After
-                                </label>
+                    <div className="buttons is-right">
 
-                                <DurationInput
-                                    value={{
-                                        amount:
-                                            draftPolicy.archiveDays,
-                                        unit: "days",
-                                    }}
-                                    onChange={(
-                                        value
-                                    ) => {
-                                        updateDraft(
-                                            "archiveDays",
-                                            value.amount
-                                        );
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Job Frequency */}
-                        <div className="field column">
-                            <label className="label">
-                                Retention Job Frequency
-                            </label>
-
-
-                            <PortalContainer id="job-frequency-input-dropdown">
-                                {(portalTarget) => (
-                                    <SingleSelector
-                                        value={draftPolicy.frequency}
-                                        options={FREQUENCY_OPTIONS}
-                                        onChange={(value) =>
-                                            updateDraft("frequency", value)
-                                        }
-                                    />
-                                )}
-                            </PortalContainer>
-                        </div>
-                    </div>
-
-
-                    <div
-                        className="buttons is-right"
-                    >
                         <button
                             className="button"
                             onClick={
@@ -256,13 +305,12 @@ export default function EventLoggerRetentionModal({
 
                         <button
                             className="button is-primary"
-                            onClick={
-                                handleSave
-                            }
                             disabled={loading}
+                            onClick={handleSave}
                         >
                             Save
                         </button>
+
                     </div>
 
                 </div>
