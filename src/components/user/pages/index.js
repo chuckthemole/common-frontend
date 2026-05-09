@@ -1,0 +1,1 @@
+export { default as UserLandingPage } from './user-landing-page';
