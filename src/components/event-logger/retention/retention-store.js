@@ -164,7 +164,7 @@ export const createRetentionStore = (
                         };
                     });
 
-                await persistence.setCollection(
+                await persistence.setAll(
                     RETENTION_COLLECTION,
                     nextPolicies
                 );
@@ -205,7 +205,7 @@ export const createRetentionStore = (
                             target
                     );
 
-                await persistence.setCollection(
+                await persistence.setAll(
                     RETENTION_COLLECTION,
                     nextPolicies
                 );

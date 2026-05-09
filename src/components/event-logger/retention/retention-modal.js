@@ -4,7 +4,7 @@ import React, {
     useMemo,
     useState,
 } from "react";
-import { useRumpusModal, RumpusModal, DurationInput } from "../../ui";
+import { useRumpusModal, RumpusModal, DurationInput, Alert } from "../../ui";
 import RetentionContext from "./retention-context";
 import logger from "../../../logger";
 import {
@@ -20,8 +20,9 @@ export default function EventLoggerRetentionModal({
         closeModal,
     } = useRumpusModal();
 
-    const retentionSettings =
-        useContext(RetentionContext);
+    const [alert, setAlert] = useState(null);
+
+    const retentionSettings = useContext(RetentionContext);
 
     if (!retentionSettings) {
         logger.warn(
@@ -85,6 +86,38 @@ export default function EventLoggerRetentionModal({
                 });
             }
 
+            setAlert({
+                type: "success",
+
+                message: (
+                    <div>
+                        <strong>
+                            Retention policy saved.
+                        </strong>
+
+                        <div>
+                            Logs archive after{" "}
+                            <strong>
+                                {
+                                    draftPolicy.activeDays
+                                } days
+                            </strong>
+                        </div>
+
+                        <div>
+                            Archived logs delete after{" "}
+                            <strong>
+                                {
+                                    draftPolicy.archiveDays
+                                } days
+                            </strong>
+                        </div>
+                    </div>
+                ),
+            });
+
+            closeModal(modalId);
+
             closeModal(modalId);
         } catch (error) {
             logger.error(
@@ -102,6 +135,21 @@ export default function EventLoggerRetentionModal({
 
     return (
         <>
+
+            {/* Alert */}
+            {alert && (
+                <Alert
+                    type={alert.type}
+                    message={alert.message}
+                    duration={null}
+                    onClose={() =>
+                        setAlert(null)
+                    }
+                    position="bottom"
+                />
+            )}
+
+            {/* Button */}
             <button
                 onClick={() =>
                     openModal(modalId)
@@ -111,6 +159,7 @@ export default function EventLoggerRetentionModal({
                 {buttonLabel}
             </button>
 
+            {/* Modal */}
             <RumpusModal
                 isOpen={isOpen}
                 onRequestClose={
