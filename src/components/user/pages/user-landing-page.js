@@ -98,9 +98,9 @@ export default function UserLandingPage({
      */
     const displayName = useMemo(() => {
         const name =
-            currentUser?.user?.username ||
-            currentUser?.user?.id ||
-            currentUser?.user?.email ||
+            currentUser?.username ||
+            currentUser?.id ||
+            currentUser?.email ||
             "User";
 
         SCOPED_LOGGER.debug("[UserLandingPage] displayName resolved", {
