@@ -12,7 +12,7 @@ import logger, {
     useScopedLogger,
 } from "../../../logger";
 
-import { ObjectEditor } from "../../ui";
+import { ComponentLoading, ObjectEditor } from "../../ui";
 
 /**
  * -----------------------------------------------------------------------------
@@ -165,19 +165,14 @@ export default function UserProfilePage({
      * -------------------------------------------------------------------------
      */
 
-    if (
-        isLoading ||
-        !formState
-    ) {
+    if (isLoading || !formState) {
 
         SCOPED_LOGGER.debug(
             "Profile loading"
         );
 
         return (
-            <div>
-                Loading profile...
-            </div>
+            <ComponentLoading />
         );
     }
 

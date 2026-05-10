@@ -10,4 +10,5 @@ export * from './collapsible';
 export * from './navigation';
 export * from './tabs';
 export * from './panel';
+export * from './transitions';
 export { default as PortalContainer } from './portal-container';
