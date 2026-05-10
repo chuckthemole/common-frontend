@@ -8,4 +8,5 @@ export * from './input';
 export * from './toast';
 export * from './collapsible';
 export * from './navigation';
+export * from './tabs';
 export { default as PortalContainer } from './portal-container';
