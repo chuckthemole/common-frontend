@@ -56,6 +56,7 @@ export default function UserLandingPage({
     header = null,
     footer = null,
     children,
+    sidebarSections = DEFAULT_SECTIONS,
 }) {
 
     const SCOPED_LOGGER = useScopedLogger("UserLandingPage", logger);
@@ -81,7 +82,7 @@ export default function UserLandingPage({
      * Debug: props snapshot
      */
     useEffect(() => {
-        logger.debug("[UserLandingPage] props", {
+        SCOPED_LOGGER.debug("[UserLandingPage] props", {
             activePath,
             hasOnNavigate: !!onNavigate,
             hasHeader: !!header,
@@ -102,7 +103,7 @@ export default function UserLandingPage({
             currentUser?.user?.email ||
             "User";
 
-        logger.debug("[UserLandingPage] displayName resolved", {
+        SCOPED_LOGGER.debug("[UserLandingPage] displayName resolved", {
             displayName: name,
         });
 
@@ -135,10 +136,14 @@ export default function UserLandingPage({
     const sectionItems = useMemo(() => {
         SCOPED_LOGGER.debug("User admin status", isAdmin);
 
-        return isAdmin
-            ? [...DEFAULT_SECTIONS, ...adminSection]
-            : [...DEFAULT_SECTIONS];
-    }, [isAdmin]);
+        const baseSections = sidebarSections || DEFAULT_SECTIONS;
+
+        const sectionsWithAdmin = isAdmin
+            ? [...baseSections, ...adminSection]
+            : baseSections;
+
+        return sectionsWithAdmin;
+    }, [isAdmin, sidebarSections]);
 
 
     /**
@@ -147,7 +152,7 @@ export default function UserLandingPage({
      * -------------------------------------------------------------------------
      */
     const sidebar = useMemo(() => {
-        logger.debug("[UserLandingPage] rendering sidebar", {
+        SCOPED_LOGGER.debug("[UserLandingPage] rendering sidebar", {
             currentUser,
             activePath,
             sectionItems
@@ -173,7 +178,7 @@ export default function UserLandingPage({
             {/* Welcome Section                                               */}
             {/* ------------------------------------------------------------- */}
 
-            {logger.debug("[UserLandingPage] render main layout")}
+            {SCOPED_LOGGER.debug("[UserLandingPage] render main layout")}
 
             <section
                 className="box"
@@ -202,14 +207,14 @@ export default function UserLandingPage({
             >
                 {children ? (
                     (() => {
-                        logger.debug(
+                        SCOPED_LOGGER.debug(
                             "[UserLandingPage] rendering custom children"
                         );
                         return children;
                     })()
                 ) : (
                     <>
-                        {logger.debug(
+                        {SCOPED_LOGGER.debug(
                             "[UserLandingPage] rendering default dashboard content"
                         )}
 
@@ -273,4 +278,5 @@ UserLandingPage.propTypes = {
     header: PropTypes.node,
     footer: PropTypes.node,
     children: PropTypes.node,
+    sidebarSections: PropTypes.array,
 };
