@@ -5,6 +5,7 @@ import {
     JsonEditor,
     Collapsible,
     PortalContainer,
+    Panel,
 } from "../../ui";
 
 import { SingleSelector } from "../../dashboard-elements";
@@ -100,121 +101,142 @@ export default function RetentionForm({
             {/* ----------------------------------------------------------------- */}
 
             {showJson && (
-                <Collapsible
-                    label="Current Saved Policy"
-                >
-                    <JsonEditor
-                        data={value}
-                        viewOnly
-                    />
-                </Collapsible>
+                <Panel
+                    heading="Current Saved Policy"
+                    items={[
+                        {
+                            key: "policy-json",
+                            type: "custom",
+                            content: (
+                                <Collapsible label={"JSON"}>
+                                    <JsonEditor
+                                        data={value}
+                                        viewOnly
+                                    />
+                                </Collapsible>
+                            ),
+                        },
+                    ]}
+                />
             )}
 
             {/* ----------------------------------------------------------------- */}
             {/* Retention Configuration Fields                                    */}
             {/* ----------------------------------------------------------------- */}
 
-            <div className="columns">
+            <Panel
+                heading="Retention Configuration"
+                items={[
+                    {
+                        key: "retention-form",
+                        type: "custom",
+                        content: (
+                            <div className="columns">
 
-                {/* ------------------------------------------------------------- */}
-                {/* Retention Durations                                           */}
-                {/* ------------------------------------------------------------- */}
+                                {/* ------------------------------------------------- */}
+                                {/* Retention Durations                               */}
+                                {/* ------------------------------------------------- */}
 
-                <div className="column">
+                                <div className="column">
 
-                    {/* Archive Duration */}
-                    <div className="field">
-                        <label className="label">
-                            Archive Logs After
-                        </label>
+                                    {/* Archive Duration */}
+                                    <div className="field">
+                                        <label className="label">
+                                            Archive Logs After
+                                        </label>
 
-                        <DurationInput
-                            disabled={disabled}
-                            value={{
-                                amount:
-                                    value.activeDays ?? 30,
+                                        <DurationInput
+                                            disabled={disabled}
+                                            value={{
+                                                amount:
+                                                    value.activeDays ?? 30,
 
-                                unit: "days",
-                            }}
-                            onChange={(duration) =>
-                                update(
-                                    "activeDays",
-                                    duration.amount
-                                )
-                            }
-                        />
-                    </div>
+                                                unit: "days",
+                                            }}
+                                            onChange={(duration) =>
+                                                update(
+                                                    "activeDays",
+                                                    duration.amount
+                                                )
+                                            }
+                                        />
+                                    </div>
 
-                    {/* Delete Duration */}
-                    <div className="field">
-                        <label className="label">
-                            Delete Archived Logs After
-                        </label>
+                                    {/* Delete Duration */}
+                                    <div className="field">
+                                        <label className="label">
+                                            Delete Archived Logs After
+                                        </label>
 
-                        <DurationInput
-                            disabled={disabled}
-                            value={{
-                                amount:
-                                    value.archiveDays ?? 90,
+                                        <DurationInput
+                                            disabled={disabled}
+                                            value={{
+                                                amount:
+                                                    value.archiveDays ?? 90,
 
-                                unit: "days",
-                            }}
-                            onChange={(duration) =>
-                                update(
-                                    "archiveDays",
-                                    duration.amount
-                                )
-                            }
-                        />
-                    </div>
+                                                unit: "days",
+                                            }}
+                                            onChange={(duration) =>
+                                                update(
+                                                    "archiveDays",
+                                                    duration.amount
+                                                )
+                                            }
+                                        />
+                                    </div>
 
-                </div>
+                                </div>
 
-                {/* ------------------------------------------------------------- */}
-                {/* Frequency Selector                                            */}
-                {/* ------------------------------------------------------------- */}
+                                {/* ------------------------------------------------- */}
+                                {/* Frequency Selector                                */}
+                                {/* ------------------------------------------------- */}
 
-                <div className="column is-one-third">
+                                <div className="column">
 
-                    <div className="field">
-                        <label className="label">
-                            Retention Job Frequency
-                        </label>
+                                    <div className="field">
+                                        <label className="label">
+                                            Retention Job Frequency
+                                        </label>
 
-                        {/* ----------------------------------------------------- */}
-                        {/* PortalContainer prevents dropdown clipping in modals  */}
-                        {/* ----------------------------------------------------- */}
+                                        {/* ----------------------------------------- */}
+                                        {/* PortalContainer prevents dropdown clipping */}
+                                        {/* in modals                                 */}
+                                        {/* ----------------------------------------- */}
 
-                        <PortalContainer
-                            id="retention-frequency-selector"
-                        >
-                            {(portalTarget) => (
-                                <SingleSelector
-                                    disabled={disabled}
-                                    value={
-                                        value.frequency
-                                    }
-                                    options={
-                                        FREQUENCY_OPTIONS
-                                    }
-                                    portalTarget={
-                                        portalTarget
-                                    }
-                                    onChange={(frequency) =>
-                                        update(
-                                            "frequency",
-                                            frequency
-                                        )
-                                    }
-                                />
-                            )}
-                        </PortalContainer>
+                                        <PortalContainer
+                                            id="retention-frequency-selector"
+                                        >
+                                            {(portalTarget) => (
+                                                <SingleSelector
+                                                    disabled={disabled}
+                                                    value={
+                                                        value.frequency
+                                                    }
+                                                    options={
+                                                        FREQUENCY_OPTIONS
+                                                    }
+                                                    portalTarget={
+                                                        portalTarget
+                                                    }
+                                                    onChange={(frequency) =>
+                                                        update(
+                                                            "frequency",
+                                                            frequency
+                                                        )
+                                                    }
+                                                />
+                                            )}
+                                        </PortalContainer>
 
-                    </div>
+                                    </div>
 
-                </div>
+                                </div>
 
-            </div>
+                            </div>
+                        ),
+                    },
+                ]}
+            />
 
         </div>
     );

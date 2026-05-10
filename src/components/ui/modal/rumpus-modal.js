@@ -31,7 +31,12 @@ export default function RumpusModal({
             style={{
                 display: "flex",
                 flexDirection: "column",
+
+                width: "100%",
                 height: "100%",
+
+                minHeight: 0,
+
                 background: "#fff",
             }}
         >
@@ -71,8 +76,14 @@ export default function RumpusModal({
                 className={`modal-body ${bodyClassName ?? ""}`}
                 style={{
                     padding: "2rem",
-                    overflowY: "auto",
+
                     flex: 1,
+                    minHeight: 0,
+
+                    overflowY: "auto",
+                    overflowX: "hidden",
+
+                    WebkitOverflowScrolling: "touch",
                 }}
             >
                 {children}
@@ -150,11 +161,20 @@ export default function RumpusModal({
                 content: {
                     position: "relative",
                     inset: "auto",
+
                     padding: 0,
+
                     width,
                     maxWidth,
+
+                    height: "auto",
                     maxHeight: "90vh",
+
+                    display: "flex",
+                    flexDirection: "column",
+
                     overflow: "hidden",
+
                     borderRadius: "6px",
                 },
             }}

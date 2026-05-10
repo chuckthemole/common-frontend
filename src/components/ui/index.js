@@ -9,4 +9,5 @@ export * from './toast';
 export * from './collapsible';
 export * from './navigation';
 export * from './tabs';
+export * from './panel';
 export { default as PortalContainer } from './portal-container';

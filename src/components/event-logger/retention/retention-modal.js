@@ -274,10 +274,6 @@ export default function EventLoggerRetentionModal({
             >
                 <div className="content">
 
-                    <h3 className="title is-5">
-                        Event Log Retention
-                    </h3>
-
                     {/* ----------------------------------------------------- */}
                     {/* Reusable Retention Form                              */}
                     {/* ----------------------------------------------------- */}

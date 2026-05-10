@@ -22,6 +22,8 @@ export default function Tabs({
     tabs = [],
     activeTab,
     onChange,
+    size,
+    alignment,
     layout = "horizontal", // "horizontal" | "vertical"
     variant = "is-boxed", // Bulma-style extension point
 }) {
@@ -46,7 +48,7 @@ export default function Tabs({
             {/* -----------------------------------------------------------------
                 Tab List
             ----------------------------------------------------------------- */}
-            <div className={`tabs ${variant} ${isVertical ? "is-vertical" : ""}`}>
+            <div className={`tabs ${variant} ${size} ${isVertical ? "is-vertical" : ""}`}>
                 <ul>
                     {tabs.map((tab) => {
                         const isActive = tab.key === activeTab;
@@ -88,5 +90,7 @@ Tabs.propTypes = {
     activeTab: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
     layout: PropTypes.oneOf(["horizontal", "vertical"]),
-    variant: PropTypes.string,
+    variant: PropTypes.oneOf(["is-boxed", "is-toggle", "is-toggle-rounded"]),
+    size: PropTypes.oneOf(["is-small", "is-medium", "is-large"]),
+    alignment: PropTypes.oneOf(["is-centered", "is-right"]),
 };
