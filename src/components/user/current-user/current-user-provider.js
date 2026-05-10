@@ -1,10 +1,15 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import CurrentUserContext from "./current-user-context";
 import useUser from "./useCurrentUserDataSource";
 import logger, { useScopedLogger } from "../../../logger";
 
+const ROLE_ADMIN = "ROLE_ADMIN";
+
 export default function CurrentUserProvider({ children }) {
     const SCOPED_LOGGER = useScopedLogger("CurrentUserProvider", logger);
+
+    const [userAuthorities, setUserAuthorities] = useState([]);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     const {
         user,
@@ -21,16 +26,93 @@ export default function CurrentUserProvider({ children }) {
     });
 
     /**
-     * Debug user shape (clean + isolated)
+     * Debug user shape
      */
     useEffect(() => {
-        if (loading) return;
+        if (loading) {
+            SCOPED_LOGGER.debug(
+                "[AuthEffect] still loading, skipping authority extraction"
+            );
 
-        SCOPED_LOGGER.debug("user updated", {
-            user,
-            isAuthenticated,
-        });
-    }, [user, isAuthenticated, loading]);
+            return;
+        }
+
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] auth state updated",
+            {
+                user,
+                isAuthenticated,
+            }
+        );
+    }, [user, isAuthenticated]);
+
+    /**
+     * Set user auths
+     */
+    useEffect(() => {
+        /**
+         * -------------------------------------------------------------
+         * Debug object traversal step-by-step
+         * -------------------------------------------------------------
+         */
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] user exists?",
+            !!user
+        );
+
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] user.userDetails exists?",
+            !!user?.userDetails
+        );
+
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] authorities raw value",
+            user?.userDetails?.authorities
+        );
+
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] authorities is array?",
+            Array.isArray(
+                user?.userDetails?.authorities
+            )
+        );
+
+        /**
+         * -------------------------------------------------------------
+         * Extract authorities
+         * -------------------------------------------------------------
+         */
+        const auths =
+            user?.userDetails?.authorities?.map(
+                (auth, index) => {
+                    SCOPED_LOGGER.debug(
+                        `[AuthEffect] mapping authority index=${index}`,
+                        auth
+                    );
+
+                    return auth?.authority;
+                }
+            ) || [];
+
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] extracted authorities",
+            auths
+        );
+
+        setUserAuthorities(auths);
+
+        SCOPED_LOGGER.debug(
+            "[AuthEffect] userAuthorities state updated",
+            {
+                authsLength: auths.length,
+                auths,
+            }
+        );
+    }, [user, loading]);
+
+    useEffect(() => {
+        setIsAdmin((userAuthorities || []).includes(ROLE_ADMIN));
+    }, [userAuthorities]);
 
     /**
      * Actions (keep these minimal + stable)
@@ -58,12 +140,14 @@ export default function CurrentUserProvider({ children }) {
             user,
             loading,
             isAuthenticated: !!isAuthenticated,
+            userAuthorities,
+            isAdmin,
 
             // actions
             refreshUser,
             logout,
         };
-    }, [user, loading, isAuthenticated]);
+    }, [user, loading, isAuthenticated, userAuthorities, isAdmin]);
 
     return (
         <CurrentUserContext.Provider value={value}>

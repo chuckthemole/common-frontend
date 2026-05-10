@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { DashboardLayout } from "../../pages";
 import { UserSidebarNavigation } from "../";
 import useCurrentUser from "../current-user/useCurrentUser";
-import logger from "../../../logger";
+import logger, { useScopedLogger } from "../../../logger";
 import { DEFAULT_SECTIONS } from "../navigation/default-navigation.config";
 
 /**
@@ -57,18 +57,24 @@ export default function UserLandingPage({
     footer = null,
     children,
 }) {
+
+    const SCOPED_LOGGER = useScopedLogger("UserLandingPage", logger);
+
     /**
      * -------------------------------------------------------------------------
      * Current User
      * -------------------------------------------------------------------------
      */
-    const currentUser = useCurrentUser?.() || null;
+    const {
+        user: currentUser,
+        isAdmin
+    } = useCurrentUser();
 
     /**
      * Debug: user object lifecycle
      */
     useEffect(() => {
-        logger.debug("[UserLandingPage] user loaded", currentUser);
+        SCOPED_LOGGER.debug("user loaded", currentUser);
     }, [currentUser]);
 
     /**
@@ -126,10 +132,14 @@ export default function UserLandingPage({
             },
         ];
 
-    const sectionItems = [
-        ...DEFAULT_SECTIONS,
-        ...adminSection,
-    ];
+    const sectionItems = useMemo(() => {
+        SCOPED_LOGGER.debug("User admin status", isAdmin);
+
+        return isAdmin
+            ? [...DEFAULT_SECTIONS, ...adminSection]
+            : [...DEFAULT_SECTIONS];
+    }, [isAdmin]);
+
 
     /**
      * -------------------------------------------------------------------------
@@ -151,7 +161,7 @@ export default function UserLandingPage({
                 sections={sectionItems}
             />
         );
-    }, [activePath, onNavigate, currentUser]);
+    }, [activePath, onNavigate, currentUser, sectionItems]);
 
     return (
         <DashboardLayout
