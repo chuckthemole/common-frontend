@@ -5,6 +5,35 @@ import { DashboardLayout } from "../../pages";
 import { UserSidebarNavigation } from "../";
 import useCurrentUser from "../current-user/useCurrentUser";
 import logger from "../../../logger";
+import { DEFAULT_SECTIONS } from "../navigation/default-navigation.config";
+
+/**
+ * Given a sectionId, will append newItems.
+ * 
+ * @param {*} sections 
+ * @param {*} sectionId 
+ * @param {*} newItems 
+ * @returns 
+ */
+export function appendSectionItems(
+    sections,
+    sectionId,
+    newItems
+) {
+    return sections.map((section) => {
+        if (section.id !== sectionId) {
+            return section;
+        }
+
+        return {
+            ...section,
+            items: [
+                ...section.items,
+                ...newItems,
+            ],
+        };
+    });
+}
 
 /**
  * -----------------------------------------------------------------------------
@@ -74,6 +103,34 @@ export default function UserLandingPage({
         return name;
     }, [currentUser]);
 
+    const adminSection =
+        [
+            {
+                id: "privileged_user",
+
+                label: "Privileged User",
+
+                collapsible: false,
+
+                defaultOpen: true,
+
+                items: [
+                    {
+                        id: "admin",
+
+                        label: "Admin",
+
+                        href: "/admin",
+                    },
+                ],
+            },
+        ];
+
+    const sectionItems = [
+        ...DEFAULT_SECTIONS,
+        ...adminSection,
+    ];
+
     /**
      * -------------------------------------------------------------------------
      * Sidebar
@@ -83,6 +140,7 @@ export default function UserLandingPage({
         logger.debug("[UserLandingPage] rendering sidebar", {
             currentUser,
             activePath,
+            sectionItems
         });
 
         return (
@@ -90,6 +148,7 @@ export default function UserLandingPage({
                 activePath={activePath}
                 onNavigate={onNavigate}
                 user={currentUser}
+                sections={sectionItems}
             />
         );
     }, [activePath, onNavigate, currentUser]);

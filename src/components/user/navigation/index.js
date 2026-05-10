@@ -1,0 +1,1 @@
+export { DEFAULT_NAVIGATION } from './default-navigation.config';
