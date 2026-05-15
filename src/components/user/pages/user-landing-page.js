@@ -6,6 +6,7 @@ import { UserSidebarNavigation } from "../";
 import useCurrentUser from "../current-user/useCurrentUser";
 import logger, { useScopedLogger } from "../../../logger";
 import { DEFAULT_SECTIONS } from "../navigation/default-navigation.config";
+import { Outlet } from "react-router-dom";
 
 /**
  * Given a sectionId, will append newItems.
@@ -174,100 +175,7 @@ export default function UserLandingPage({
             header={header}
             footer={footer}
         >
-            {/* ------------------------------------------------------------- */}
-            {/* Welcome Section                                               */}
-            {/* ------------------------------------------------------------- */}
-
-            {SCOPED_LOGGER.debug("[UserLandingPage] render main layout")}
-
-            <section
-                className="box"
-                style={{ marginBottom: "1.5rem" }}
-            >
-                <h1 className="title is-3">
-                    Welcome, {displayName}
-                </h1>
-
-                <p className="subtitle is-6">
-                    Manage your account, preferences,
-                    activity, and developer settings.
-                </p>
-            </section>
-
-            {/* ------------------------------------------------------------- */}
-            {/* Dashboard Content Area                                        */}
-            {/* ------------------------------------------------------------- */}
-
-            <div
-                style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                }}
-            >
-                {children ? (
-                    (() => {
-                        SCOPED_LOGGER.debug(
-                            "[UserLandingPage] rendering custom children"
-                        );
-                        return children;
-                    })()
-                ) : (
-                    <>
-                        {SCOPED_LOGGER.debug(
-                            "[UserLandingPage] rendering default dashboard content"
-                        )}
-
-                        <div className="columns">
-                            <div className="column">
-                                <div className="box">
-                                    <h2 className="title is-5">
-                                        Account
-                                    </h2>
-                                    <p>
-                                        View and manage your account
-                                        information.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="column">
-                                <div className="box">
-                                    <h2 className="title is-5">
-                                        Notifications
-                                    </h2>
-                                    <p>
-                                        Configure alerts and communication
-                                        preferences.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="column">
-                                <div className="box">
-                                    <h2 className="title is-5">
-                                        Security
-                                    </h2>
-                                    <p>
-                                        Update passwords, sessions, and
-                                        access controls.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="box">
-                            <h2 className="title is-5">
-                                Recent Activity
-                            </h2>
-
-                            <p className="has-text-grey">
-                                No recent activity.
-                            </p>
-                        </div>
-                    </>
-                )}
-            </div>
+            <Outlet />
         </DashboardLayout>
     );
 }

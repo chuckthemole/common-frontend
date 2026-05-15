@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import logger from "../../../logger";
+import logger from "../../../../logger";
 
 /**
  * -----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ export default function Tabs({
                 Tab Panel
             ----------------------------------------------------------------- */}
             <div style={{ flex: 1 }}>
-                {tabs.find((t) => t.key === activeTab)?.component || null}
+                {tabs.find((tab) => tab.key === activeTab)?.component || null}
             </div>
         </div>
     );

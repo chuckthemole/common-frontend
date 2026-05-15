@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import PropTypes from "prop-types";
 
-import { Collapsible } from "../collapsible";
+import { Collapsible } from "../../collapsible";
 
 /**
  * -----------------------------------------------------------------------------
