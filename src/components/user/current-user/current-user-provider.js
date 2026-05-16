@@ -2,6 +2,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import CurrentUserContext from "./current-user-context";
 import useUser from "./useCurrentUserDataSource";
 import logger, { useScopedLogger } from "../../../logger";
+import { getApi } from "../../../api";
 
 const ROLE_ADMIN = "ROLE_ADMIN";
 
@@ -122,14 +123,59 @@ export default function CurrentUserProvider({ children }) {
         await refetch?.();
     };
 
-    const logout = async () => {
-        SCOPED_LOGGER.debug("logout called");
+    const logout = async ({
+        reload = true,
+        onLogout,
+    } = {}) => {
 
-        // call your API if needed
-        // await api.post("/logout");
+        SCOPED_LOGGER.debug(
+            "logout called"
+        );
 
-        // simplest version:
-        window.location.reload();
+        try {
+
+            const api = getApi();
+
+            await api.post(
+                "/auth/logout"
+            );
+
+        } catch (err) {
+
+            SCOPED_LOGGER.error(
+                "Logout API failed",
+                err
+            );
+        }
+
+        /**
+         * -------------------------------------------------------------------------
+         * Clear local auth state
+         * -------------------------------------------------------------------------
+         */
+
+        setUserAuthorities([]);
+        setIsAdmin(false);
+
+        /**
+         * -------------------------------------------------------------------------
+         * Optional logout callback
+         * -------------------------------------------------------------------------
+         */
+
+        if (typeof onLogout === "function") {
+            await onLogout();
+        }
+
+        /**
+         * -------------------------------------------------------------------------
+         * Reload application
+         * -------------------------------------------------------------------------
+         */
+
+        if (reload) {
+            window.location.reload();
+        }
     };
 
     /**

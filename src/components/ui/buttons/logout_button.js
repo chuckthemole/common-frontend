@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLogout } from '../../hooks/use_logout';
+import { useCurrentUser } from '../../user';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../loaders/spinning_wheel';
 import { useAuth } from '../../auth';
@@ -17,21 +17,24 @@ export default function LogoutButton({
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const logout = useLogout({
-        reload,
-        onLogout: () => {
-            refreshAuth();
-            setIsLoading(false);
-            if (redirectTo && !reload) {
-                navigate(redirectTo);
+    const { logout } = useCurrentUser();
+
+    const handleLogout = async () => {
+        await logout({
+            onLogout: () => {
+                refreshAuth();
+                setIsLoading(false);
+                if (redirectTo && !reload) {
+                    navigate(redirectTo);
+                }
             }
-        }
-    });
+        });
+    }
 
     const handleClick = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        await logout();
+        await handleLogout();
         // If `reload === true`, page reloads and this line never runs
     };
 
