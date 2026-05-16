@@ -17,6 +17,12 @@ import {
     ObjectEditor,
 } from "../../ui";
 
+import {
+    getNestedValue,
+    setNestedValue,
+    buildFormStateFromSchema
+} from "../../../utils";
+
 /**
  * -----------------------------------------------------------------------------
  * Default Profile Field Configuration
@@ -73,7 +79,7 @@ export const DEFAULT_PROFILE_FIELDS = [
      */
 
     {
-        key: "roles",
+        key: "userDetails.authorities",
         label: "Roles",
         readonly: true,
         adminOnly: true,
@@ -136,7 +142,6 @@ export const DEFAULT_PROFILE_FIELDS = [
  *
  * -----------------------------------------------------------------------------
  */
-
 export default function UserProfilePage({
     onSave,
     fields = DEFAULT_PROFILE_FIELDS,
@@ -153,7 +158,6 @@ export default function UserProfilePage({
      * Current User
      * -------------------------------------------------------------------------
      */
-
     const {
         user: currentUser,
         isLoading,
@@ -166,7 +170,6 @@ export default function UserProfilePage({
      * Editable User
      * -------------------------------------------------------------------------
      */
-
     const editableUser =
         currentUser?.user ||
         currentUser;
@@ -176,7 +179,6 @@ export default function UserProfilePage({
      * Form State
      * -------------------------------------------------------------------------
      */
-
     const [formState, setFormState] =
         useState(null);
 
@@ -188,7 +190,6 @@ export default function UserProfilePage({
      * Hydrate Form
      * -------------------------------------------------------------------------
      */
-
     useEffect(() => {
 
         if (!editableUser) {
@@ -201,87 +202,84 @@ export default function UserProfilePage({
         );
 
         setFormState(
-            structuredClone(
-                editableUser
-            )
+            buildFormStateFromSchema(editableUser, resolvedFieldSchema)
         );
 
     }, [editableUser]);
 
-    /**
-     * -------------------------------------------------------------------------
-     * Visible Fields
-     * -------------------------------------------------------------------------
-     *
-     * Applies visibility rules:
-     * - hidden
-     * - adminOnly
-     * - custom visible predicates
-     *
-     * -----------------------------------------------------------------------------
-     */
+    const resolvedFieldSchema = useMemo(() => {
+        const schema = {};
 
-    const visibleFields =
-        useMemo(() => {
+        for (const field of fields) {
+            /**
+             * -------------------------------------------------------------
+             * Hidden fields
+             * -------------------------------------------------------------
+             */
+            if (field.hidden) {
+                schema[field.key] = {
+                    ...field,
+                    visible: false,
+                };
 
-            return fields.filter(
-                (field) => {
+                continue;
+            }
 
-                    /**
-                     * Hidden fields
-                     */
-                    if (field.hidden) {
-                        return false;
-                    }
+            /**
+             * -------------------------------------------------------------
+             * Admin-only fields
+             * -------------------------------------------------------------
+             */
+            if (field.adminOnly && !isAdmin) {
+                schema[field.key] = {
+                    ...field,
+                    visible: false,
+                };
 
-                    /**
-                     * Admin-only fields
-                     */
-                    if (
-                        field.adminOnly &&
-                        !isAdmin
-                    ) {
-                        return false;
-                    }
+                continue;
+            }
 
-                    /**
-                     * Custom visibility predicate
-                     */
-                    if (
-                        typeof field.visible === "function"
-                    ) {
-                        return field.visible({
-                            currentUser,
-                            editableUser,
-                            formState,
-                            isAdmin,
-                        });
-                    }
+            /**
+             * -------------------------------------------------------------
+             * Dynamic visibility predicate
+             * -------------------------------------------------------------
+             */
+            if (typeof field.visible === "function") {
+                schema[field.key] = {
+                    ...field,
+                    visible: field.visible({
+                        currentUser,
+                        editableUser,
+                        formState,
+                        isAdmin,
+                    }),
+                };
 
-                    /**
-                     * Explicit visibility override
-                     */
-                    if (
-                        field.visible === false
-                    ) {
-                        return false;
-                    }
+                continue;
+            }
 
-                    return true;
-                }
-            );
+            /**
+             * -------------------------------------------------------------
+             * Normal visible field
+             * -------------------------------------------------------------
+             */
+            schema[field.key] = {
+                ...field,
+                visible:
+                    field.visible !== false,
+            };
+        }
 
-        }, [
-            fields,
-            currentUser,
-            editableUser,
-            formState,
-            isAdmin,
-        ]);
+        SCOPED_LOGGER.debug("schema completed", schema);
+        return schema;
 
-    const visibleFieldKeys = useMemo(() => {
-        return visibleFields.map((f) => f.key);
-    }, [visibleFields]);
+    }, [
+        fields,
+        currentUser,
+        editableUser,
+        formState,
+        isAdmin,
+    ]);
 
     const normalizedFieldSchema = useMemo(() => {
         const schema = {};
@@ -295,67 +293,9 @@ export default function UserProfilePage({
 
     /**
      * -------------------------------------------------------------------------
-     * Derived ObjectEditor Configuration
-     * -------------------------------------------------------------------------
-     */
-
-    const readonlyFields =
-        useMemo(() => {
-
-            return visibleFields
-                .filter(
-                    (field) =>
-                        field.readonly
-                )
-                .map(
-                    (field) =>
-                        field.key
-                );
-
-        }, [visibleFields]);
-
-    const excludedFields =
-        useMemo(() => {
-
-            return fields
-                .filter(
-                    (field) => {
-
-                        /**
-                         * Hidden fields
-                         */
-                        if (
-                            field.hidden
-                        ) {
-                            return true;
-                        }
-
-                        /**
-                         * Admin-only hidden from non-admins
-                         */
-                        if (
-                            field.adminOnly &&
-                            !isAdmin
-                        ) {
-                            return true;
-                        }
-
-                        return false;
-                    }
-                )
-                .map(
-                    (field) =>
-                        field.key
-                );
-
-        }, [fields, isAdmin]);
-
-    /**
-     * -------------------------------------------------------------------------
      * Save
      * -------------------------------------------------------------------------
      */
-
     const handleSave = async (
         e
     ) => {
@@ -407,9 +347,7 @@ export default function UserProfilePage({
         );
 
         setFormState(
-            structuredClone(
-                editableUser
-            )
+            buildFormStateFromSchema(editableUser, resolvedFieldSchema)
         );
     };
 
@@ -492,13 +430,7 @@ export default function UserProfilePage({
                     onChange={
                         setFormState
                     }
-                    includedFields={
-                        visibleFieldKeys
-                    }
-                    readonlyFields={
-                        readonlyFields
-                    }
-                    fieldSchema={normalizedFieldSchema}
+                    fieldSchema={resolvedFieldSchema}
                 />
 
                 <div
