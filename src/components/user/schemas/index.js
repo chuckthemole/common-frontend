@@ -1,0 +1,1 @@
+export { DEFAULT_PROFILE_FIELDS } from './user-profile-page-schema';
