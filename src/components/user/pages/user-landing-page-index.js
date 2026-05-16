@@ -1,5 +1,7 @@
-import React, { useMemo } from "react";
-import PropTypes from "prop-types";
+import React, { useMemo, useState, useEffect } from "react";
+
+import { useCurrentUser } from "../current-user";
+import logger, { useScopedLogger } from "../../../logger";
 
 /**
  * -----------------------------------------------------------------------------
@@ -17,9 +19,29 @@ import PropTypes from "prop-types";
  *
  * -----------------------------------------------------------------------------
  */
-export default function UserLandingPageIndex({
-    displayName,
-}) {
+export default function UserLandingPageIndex() {
+
+    const SCOPED_LOGGER = useScopedLogger("UserLandingPageIndex", logger);
+
+    const [displayName, setDisplayName] = useState("");
+
+    /**
+     * -------------------------------------------------------------------------
+     * Current User
+     * -------------------------------------------------------------------------
+     */
+    const {
+        user: currentUser,
+        isAdmin
+    } = useCurrentUser();
+
+    /**
+     * Debug: user object lifecycle
+     */
+    useEffect(() => {
+        SCOPED_LOGGER.debug("user loaded", currentUser);
+        setDisplayName(currentUser?.username);
+    }, [currentUser]);
 
     /**
      * -------------------------------------------------------------------------
@@ -115,10 +137,3 @@ export default function UserLandingPageIndex({
         </>
     );
 }
-
-UserLandingPageIndex.propTypes = {
-    /**
-     * Display name of the current user.
-     */
-    displayName: PropTypes.string.isRequired,
-};

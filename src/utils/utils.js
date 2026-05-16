@@ -20,6 +20,25 @@ export function normalizeUrl(path) {
     return normalizedPath + (hashOrQuery || '');
 }
 
+/**
+ * -----------------------------------------------------------------------------
+ * normalizeRoutePath
+ * -----------------------------------------------------------------------------
+ *
+ * Normalizes route paths for consistent matching.
+ *
+ * -----------------------------------------------------------------------------
+ */
+export function normalizeRoutePath(path = "") {
+
+    return (
+        "/" +
+        path
+            .replace(/^\/+/, "")
+            .replace(/\/+$/, "")
+    );
+}
+
 export const appendScript = (scriptToAppend) => {
     const script = document.createElement("script");
     script.src = scriptToAppend;
