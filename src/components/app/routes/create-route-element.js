@@ -7,13 +7,26 @@ import { RequireAuth } from "../../auth";
  * createRouteElement
  * -----------------------------------------------------------------------------
  *
- * Creates a standardized route element component.
+ * Creates a standardized route component wrapper for application routes.
  *
- * Supports:
- * - auth wrapping
- * - layout wrapping
- * - future permissions
- * - future feature flags
+ * Features:
+ * - optional authentication guards
+ * - configurable component props
+ * - centralized route composition
+ * - extensible for future permissions, layouts, and feature flags
+ *
+ * Example:
+ *
+ * security:
+ *     createRouteElement(
+ *         SecurityPage,
+ *         {
+ *             componentProps: {
+ *                 mode: "advanced",
+ *                 allowPasswordReset: true,
+ *             },
+ *         }
+ *     )
  *
  * -----------------------------------------------------------------------------
  */
@@ -21,13 +34,18 @@ export function createRouteElement(
     Component,
     {
         requireAuth = false,
+        componentProps = {},
     } = {}
 ) {
 
     function RouteElement(props) {
 
-        const content =
-            <Component {...props} />;
+        const content = (
+            <Component
+                {...componentProps}
+                {...props}
+            />
+        );
 
         if (requireAuth) {
             return (

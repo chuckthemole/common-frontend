@@ -14,7 +14,10 @@ import PropTypes from "prop-types";
  *  - deep updates
  *  - primitive-only rendering
  *  - field exclusion
+ *  - included fields (whitelist mode)
  *  - readonly support
+ *  - schema-driven labels
+ *  - schema-driven ordering
  *  - nested path labels
  *  - reusable across dashboards/admin/settings
  *
@@ -35,8 +38,10 @@ export default function ObjectEditor({
     value = {},
     onChange,
     excludedFields = DEFAULT_EXCLUDED_FIELDS,
+    includedFields = null,
     readonlyFields = [],
     maxDepth = 10,
+    fieldSchema = {},
 }) {
 
     /**
@@ -48,24 +53,11 @@ export default function ObjectEditor({
     const isPrimitive = (value) => {
         return (
             value == null ||
-            ["string", "number", "boolean"]
-                .includes(typeof value)
+            ["string", "number", "boolean"].includes(typeof value)
         );
     };
 
-    const isEditablePrimitive = (value) => {
-        return (
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "boolean"
-        );
-    };
-
-    const setNestedValue = (
-        obj,
-        path,
-        nextValue
-    ) => {
+    const setNestedValue = (obj, path, nextValue) => {
         const clone = structuredClone(obj);
 
         let current = clone;
@@ -81,6 +73,90 @@ export default function ObjectEditor({
 
     /**
      * -------------------------------------------------------------------------
+     * Field Visibility Logic
+     * -------------------------------------------------------------------------
+     */
+
+    const isFieldVisible = (key, fieldPath) => {
+
+        const flatKey = fieldPath.join(".");
+
+        /**
+         * Whitelist mode
+         */
+        if (includedFields && includedFields.length > 0) {
+            return (
+                includedFields.includes(key) ||
+                includedFields.includes(flatKey)
+            );
+        }
+
+        /**
+         * Legacy exclusion mode
+         */
+        if (excludedFields.includes(key)) {
+            return false;
+        }
+
+        return true;
+    };
+
+    /**
+     * -------------------------------------------------------------------------
+     * Schema-driven ordering (IMPORTANT FIX)
+     * -------------------------------------------------------------------------
+     *
+     * Ensures:
+     *  - fieldSchema order is respected
+     *  - object-only keys still appear after schema fields
+     */
+    const getOrderedEntries = (node, path = []) => {
+
+        const keys = Object.keys(node || {});
+
+        const flatSchemaKeys = Object.keys(fieldSchema || {});
+
+        const resolveOrderIndex = (key, fullPath) => {
+            const flatKey = [...fullPath, key].join(".");
+
+            const schemaEntry =
+                fieldSchema?.[key] ||
+                fieldSchema?.[flatKey];
+
+            if (!schemaEntry) return Number.MAX_SAFE_INTEGER;
+
+            return schemaEntry.order ?? Number.MAX_SAFE_INTEGER;
+        };
+
+        return keys
+            .map((key) => ({
+                key,
+                value: node[key],
+                order: resolveOrderIndex(key, path),
+            }))
+            .sort((a, b) => a.order - b.order)
+            .map(({ key, value }) => [key, value]);
+    };
+
+    /**
+     * -------------------------------------------------------------------------
+     * Label Resolver (NEW)
+     * -------------------------------------------------------------------------
+     */
+
+    const getLabel = (key, fieldPath) => {
+
+        const flatKey = fieldPath.join(".");
+
+        return (
+            fieldSchema?.[key]?.label ||
+            fieldSchema?.[flatKey]?.label ||
+            key
+        );
+    };
+
+    /**
+     * -------------------------------------------------------------------------
      * Recursive Renderer
      * -------------------------------------------------------------------------
      */
@@ -91,201 +167,120 @@ export default function ObjectEditor({
         depth = 0
     ) => {
 
-        if (
-            depth > maxDepth ||
-            node == null
-        ) {
+        if (depth > maxDepth || node == null) {
             return null;
         }
 
-        return Object.entries(node).map(
-            ([key, fieldValue]) => {
+        return getOrderedEntries(node).map(([key, fieldValue]) => {
 
-                /**
-                 * Excluded field
-                 */
-                if (
-                    excludedFields.includes(key)
-                ) {
-                    return null;
-                }
+            const fieldPath = [...path, key];
+            const fieldName = fieldPath.join(".");
 
-                const fieldPath = [
-                    ...path,
-                    key,
-                ];
+            /**
+             * Visibility check
+             */
+            if (!isFieldVisible(key, fieldPath)) {
+                return null;
+            }
 
-                const fieldName =
-                    fieldPath.join(".");
+            const isReadonly = readonlyFields.includes(fieldName);
+            const label = getLabel(key, fieldPath);
 
-                const isReadonly =
-                    readonlyFields.includes(
-                        fieldName
-                    );
-
-                /**
-                 * Arrays
-                 */
-                if (
-                    Array.isArray(fieldValue)
-                ) {
-                    return (
-                        <div
-                            key={fieldName}
-                            className="box"
-                        >
-                            <h3 className="title is-6">
-                                {key}
-                            </h3>
-
-                            <div className="content">
-                                <pre>
-                                    {JSON.stringify(
-                                        fieldValue,
-                                        null,
-                                        2
-                                    )}
-                                </pre>
-                            </div>
-                        </div>
-                    );
-                }
-
-                /**
-                 * Nested object
-                 */
-                if (
-                    fieldValue &&
-                    typeof fieldValue ===
-                    "object"
-                ) {
-                    return (
-                        <div
-                            key={fieldName}
-                            className="box"
-                        >
-                            <h3 className="title is-6">
-                                {key}
-                            </h3>
-
-                            {renderNode(
-                                fieldValue,
-                                fieldPath,
-                                depth + 1
-                            )}
-                        </div>
-                    );
-                }
-
-                /**
-                 * Skip unsupported primitives
-                 */
-                if (
-                    !isPrimitive(fieldValue)
-                ) {
-                    return null;
-                }
-
-                /**
-                 * Boolean field
-                 */
-                if (
-                    typeof fieldValue ===
-                    "boolean"
-                ) {
-                    return (
-                        <div
-                            className="field"
-                            key={fieldName}
-                        >
-                            <label className="checkbox">
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        fieldValue
-                                    }
-                                    disabled={
-                                        isReadonly
-                                    }
-                                    onChange={(e) => {
-                                        const next =
-                                            setNestedValue(
-                                                value,
-                                                fieldPath,
-                                                e.target.checked
-                                            );
-
-                                        onChange?.(
-                                            next
-                                        );
-                                    }}
-                                />
-
-                                <span
-                                    style={{
-                                        marginLeft:
-                                            "0.5rem",
-                                    }}
-                                >
-                                    {fieldName}
-                                </span>
-                            </label>
-                        </div>
-                    );
-                }
-
-                /**
-                 * Primitive input
-                 */
+            /**
+             * Arrays
+             */
+            if (Array.isArray(fieldValue)) {
                 return (
-                    <div
-                        className="field"
-                        key={fieldName}
-                    >
-                        <label className="label">
-                            {fieldName}
-                        </label>
-
-                        <div className="control">
-                            <input
-                                className="input"
-                                type={
-                                    typeof fieldValue ===
-                                        "number"
-                                        ? "number"
-                                        : "text"
-                                }
-                                value={
-                                    fieldValue ?? ""
-                                }
-                                disabled={
-                                    isReadonly
-                                }
-                                onChange={(e) => {
-
-                                    const nextValue =
-                                        typeof fieldValue ===
-                                            "number"
-                                            ? Number(
-                                                e.target.value
-                                            )
-                                            : e.target.value;
-
-                                    const next =
-                                        setNestedValue(
-                                            value,
-                                            fieldPath,
-                                            nextValue
-                                        );
-
-                                    onChange?.(next);
-                                }}
-                            />
+                    <div key={fieldName} className="box">
+                        <h3 className="title is-6">{label}</h3>
+                        <div className="content">
+                            <pre>
+                                {JSON.stringify(fieldValue, null, 2)}
+                            </pre>
                         </div>
                     </div>
                 );
             }
-        );
+
+            /**
+             * Nested object
+             */
+            if (fieldValue && typeof fieldValue === "object") {
+                return (
+                    <div key={fieldName} className="box">
+                        <h3 className="title is-6">{label}</h3>
+                        {renderNode(fieldValue, fieldPath, depth + 1)}
+                    </div>
+                );
+            }
+
+            /**
+             * Boolean field
+             */
+            if (typeof fieldValue === "boolean") {
+                return (
+                    <div className="field" key={fieldName}>
+                        <label className="checkbox">
+                            <input
+                                type="checkbox"
+                                checked={fieldValue}
+                                disabled={isReadonly}
+                                onChange={(e) => {
+                                    const next = setNestedValue(
+                                        value,
+                                        fieldPath,
+                                        e.target.checked
+                                    );
+                                    onChange?.(next);
+                                }}
+                            />
+
+                            <span style={{ marginLeft: "0.5rem" }}>
+                                {label}
+                            </span>
+                        </label>
+                    </div>
+                );
+            }
+
+            /**
+             * Primitive input (string / number)
+             */
+            return (
+                <div className="field" key={fieldName}>
+                    <label className="label">
+                        {label}
+                    </label>
+
+                    <div className="control">
+                        <input
+                            className="input"
+                            type={
+                                typeof fieldValue === "number"
+                                    ? "number"
+                                    : "text"
+                            }
+                            value={fieldValue ?? ""}
+                            disabled={isReadonly}
+                            onChange={(e) => {
+                                const nextValue =
+                                    typeof fieldValue === "number"
+                                        ? Number(e.target.value)
+                                        : e.target.value;
+
+                                const next = setNestedValue(
+                                    value,
+                                    fieldPath,
+                                    nextValue
+                                );
+
+                                onChange?.(next);
+                            }}
+                        />
+                    </div>
+                </div>
+            );
+        });
     };
 
     /**
@@ -296,27 +291,26 @@ export default function ObjectEditor({
 
     const content = useMemo(() => {
         return renderNode(value);
-    }, [value]);
+    }, [
+        value,
+        includedFields,
+        excludedFields,
+        readonlyFields,
+        fieldSchema,
+    ]);
 
-    return (
-        <div>
-            {content}
-        </div>
-    );
+    return <div>{content}</div>;
 }
 
 ObjectEditor.propTypes = {
     value: PropTypes.object,
-
     onChange: PropTypes.func,
 
-    excludedFields: PropTypes.arrayOf(
-        PropTypes.string
-    ),
+    excludedFields: PropTypes.arrayOf(PropTypes.string),
+    includedFields: PropTypes.arrayOf(PropTypes.string),
 
-    readonlyFields: PropTypes.arrayOf(
-        PropTypes.string
-    ),
-
+    readonlyFields: PropTypes.arrayOf(PropTypes.string),
     maxDepth: PropTypes.number,
+
+    fieldSchema: PropTypes.object,
 };
