@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createClient } from "../api-utils";
 import logger from "../../../logger";
-import { mapUsers } from "./map-user";
+import { mapUser, mapUsers } from "./map-user";
 
 let userApi = null;
 
@@ -47,30 +47,52 @@ export const createUserApi =
             });
 
             return {
-                getUser: (data) => {
-                    logger.debug("[createUserApi.getUser] request start", {
-                        endpoint: get,
-                        payload: data,
-                    });
+                getUser: ({ id }) => {
+
+                    const endpoint =
+                        get.replace(
+                            ":id",
+                            encodeURIComponent(id)
+                        );
+
+                    logger.debug(
+                        "[createUserApi.getUser] request start",
+                        {
+                            endpoint,
+                            id,
+                        }
+                    );
 
                     return client
-                        .get(get, data)
+                        .get(endpoint)
                         .then((response) => {
-                            logger.debug("[createUserApi.getUser] request success", {
-                                endpoint: get,
-                                response,
-                            });
 
-                            return response;
+                            logger.debug(
+                                "[createUserApi.getUser] request success",
+                                {
+                                    endpoint,
+                                    response,
+                                }
+                            );
+
+                            return mapUser(
+                                response.data
+                            );
                         })
                         .catch((error) => {
-                            logger.error("[createUserApi.getUser] request failed", {
-                                endpoint: get,
-                                payload: data,
-                                error,
-                                message: error?.message,
-                                stack: error?.stack,
-                            });
+
+                            logger.error(
+                                "[createUserApi.getUser] request failed",
+                                {
+                                    endpoint,
+                                    id,
+                                    error,
+                                    message:
+                                        error?.message,
+                                    stack:
+                                        error?.stack,
+                                }
+                            );
 
                             throw error;
                         });

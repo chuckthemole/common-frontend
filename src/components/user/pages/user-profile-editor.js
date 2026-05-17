@@ -7,6 +7,7 @@ import React, {
 import PropTypes from "prop-types";
 
 import useCurrentUser from "../current-user/useCurrentUser";
+import { useUser } from "../useUser";
 
 import logger, {
     useScopedLogger,
@@ -18,65 +19,117 @@ import {
 } from "../../ui";
 
 import {
-    getNestedValue,
-    setNestedValue,
-    buildFormStateFromSchema
+    buildFormStateFromSchema,
 } from "../../../utils";
 
-import { DEFAULT_PROFILE_FIELDS } from "../schemas";
+import {
+    DEFAULT_PROFILE_FIELDS,
+} from "../schemas";
 
 /**
  * -----------------------------------------------------------------------------
- * UserProfilePage
+ * UserProfileEditor
  * -----------------------------------------------------------------------------
  *
- * Generic editable user profile page.
+ * Generic schema-driven user profile viewer/editor.
  *
- * Responsibilities:
- * - hydrate editable user state
- * - render schema-driven form fields
- * - manage save/reset lifecycle
- * - support field visibility and permissions
+ * Features:
+ *  - current user OR arbitrary user
+ *  - readonly mode
+ *  - admin-aware field visibility
+ *  - schema-driven rendering
+ *  - reset/save lifecycle
  *
  * -----------------------------------------------------------------------------
  */
-export default function UserProfilePage({
-    onSave,
+
+export default function UserProfileEditor({
+    user: providedUser = null,
+    userId = null,
+    readonly = false,
+    title = "Profile",
     fields = DEFAULT_PROFILE_FIELDS,
+    onSave,
 }) {
 
     const SCOPED_LOGGER =
         useScopedLogger(
-            "UserProfilePage",
+            "UserProfileEditor",
             logger
         );
 
     /**
      * -------------------------------------------------------------------------
-     * Current User
+     * Current User Context
      * -------------------------------------------------------------------------
      */
+
     const {
         user: currentUser,
-        isLoading,
+        isLoading: currentUserLoading,
         refreshUser,
         isAdmin,
     } = useCurrentUser();
 
     /**
      * -------------------------------------------------------------------------
-     * Editable User
+     * User Hook
      * -------------------------------------------------------------------------
      */
-    const editableUser =
-        currentUser?.user ||
-        currentUser;
+    const shouldFetchExternalUser = Boolean(userId) && !providedUser;
+    const {
+        user: externalUserResult,
+        loading: externalUserResultLoading,
+        error: externalUserResultError,
+        refreshUser: externalRefreshUser
+    } = useUser(
+        userId,
+        {
+            enabled:
+                shouldFetchExternalUser,
+        }
+    );
+
+    SCOPED_LOGGER.debug("userId", userId);
+
+    /**
+     * -------------------------------------------------------------------------
+     * Resolve Editable User
+     * -------------------------------------------------------------------------
+     */
+
+    const editableUser = useMemo(() => {
+
+        if (providedUser) {
+            return providedUser;
+        }
+
+        if (userId) {
+            return externalUserResult;
+        }
+
+        return (
+            currentUser?.user ||
+            currentUser
+        );
+
+    }, [
+        providedUser,
+        userId,
+        externalUserResult,
+        currentUser,
+    ]);
+
+    const isLoading =
+        currentUserLoading ||
+        externalUserResultLoading;
 
     /**
      * -------------------------------------------------------------------------
      * Form State
      * -------------------------------------------------------------------------
      */
+
     const [formState, setFormState] =
         useState(null);
 
@@ -85,36 +138,24 @@ export default function UserProfilePage({
 
     /**
      * -------------------------------------------------------------------------
-     * Hydrate Form
+     * Resolved Schema
      * -------------------------------------------------------------------------
      */
-    useEffect(() => {
-
-        if (!editableUser) {
-            return;
-        }
-
-        SCOPED_LOGGER.debug(
-            "Hydrating profile form",
-            editableUser
-        );
-
-        setFormState(
-            buildFormStateFromSchema(editableUser, resolvedFieldSchema)
-        );
-
-    }, [editableUser]);
 
     const resolvedFieldSchema = useMemo(() => {
+
         const schema = {};
 
         for (const field of fields) {
+
             /**
              * -------------------------------------------------------------
              * Hidden fields
              * -------------------------------------------------------------
              */
+
             if (field.hidden) {
+
                 schema[field.key] = {
                     ...field,
                     visible: false,
@@ -128,7 +169,12 @@ export default function UserProfilePage({
              * Admin-only fields
              * -------------------------------------------------------------
              */
-            if (field.adminOnly && !isAdmin) {
+
+            if (
+                field.adminOnly &&
+                !isAdmin
+            ) {
+
                 schema[field.key] = {
                     ...field,
                     visible: false,
@@ -139,18 +185,25 @@ export default function UserProfilePage({
 
             /**
              * -------------------------------------------------------------
-             * Dynamic visibility predicate
+             * Dynamic visibility
              * -------------------------------------------------------------
              */
+
             if (typeof field.visible === "function") {
+
                 schema[field.key] = {
                     ...field,
+
                     visible: field.visible({
                         currentUser,
                         editableUser,
                         formState,
                         isAdmin,
                     }),
+
+                    readonly:
+                        readonly ||
+                        field.readonly,
                 };
 
                 continue;
@@ -158,47 +211,86 @@ export default function UserProfilePage({
 
             /**
              * -------------------------------------------------------------
-             * Normal visible field
+             * Standard field
              * -------------------------------------------------------------
              */
+
             schema[field.key] = {
                 ...field,
+
                 visible:
                     field.visible !== false,
+
+                readonly:
+                    readonly ||
+                    field.readonly,
             };
         }
 
-        SCOPED_LOGGER.debug("schema completed", schema);
+        SCOPED_LOGGER.debug(
+            "Resolved schema",
+            schema
+        );
+
         return schema;
 
     }, [
         fields,
         currentUser,
         editableUser,
-        formState,
         isAdmin,
+        readonly,
     ]);
 
-    const normalizedFieldSchema = useMemo(() => {
-        const schema = {};
+    /**
+     * -------------------------------------------------------------------------
+     * Hydrate Form
+     * -------------------------------------------------------------------------
+     */
 
-        for (const field of fields) {
-            schema[field.key] = field;
+    useEffect(() => {
+
+        if (!editableUser) {
+            return;
         }
 
-        return schema;
-    }, [fields]);
+        SCOPED_LOGGER.debug(
+            "Hydrating form",
+            editableUser
+        );
+
+        setFormState(
+            buildFormStateFromSchema(
+                editableUser,
+                resolvedFieldSchema
+            )
+        );
+
+    }, [
+        editableUser,
+        resolvedFieldSchema,
+    ]);
 
     /**
      * -------------------------------------------------------------------------
      * Save
      * -------------------------------------------------------------------------
      */
+
     const handleSave = async (
         e
     ) => {
 
         e.preventDefault();
+
+        if (readonly) {
+
+            SCOPED_LOGGER.warn(
+                "Attempted save in readonly mode"
+            );
+
+            return;
+        }
 
         try {
 
@@ -230,7 +322,7 @@ export default function UserProfilePage({
 
     /**
      * -------------------------------------------------------------------------
-     * Reset Form
+     * Reset
      * -------------------------------------------------------------------------
      */
 
@@ -241,17 +333,20 @@ export default function UserProfilePage({
         }
 
         SCOPED_LOGGER.debug(
-            "Resetting profile form"
+            "Resetting form"
         );
 
         setFormState(
-            buildFormStateFromSchema(editableUser, resolvedFieldSchema)
+            buildFormStateFromSchema(
+                editableUser,
+                resolvedFieldSchema
+            )
         );
     };
 
     /**
      * -------------------------------------------------------------------------
-     * Has Changes
+     * Change Detection
      * -------------------------------------------------------------------------
      */
 
@@ -266,12 +361,8 @@ export default function UserProfilePage({
             }
 
             return (
-                JSON.stringify(
-                    editableUser
-                ) !==
-                JSON.stringify(
-                    formState
-                )
+                JSON.stringify(editableUser) !==
+                JSON.stringify(formState)
             );
 
         }, [
@@ -291,7 +382,7 @@ export default function UserProfilePage({
     ) {
 
         SCOPED_LOGGER.debug(
-            "Profile loading"
+            "Loading profile"
         );
 
         return (
@@ -314,7 +405,7 @@ export default function UserProfilePage({
         >
 
             <h1 className="title is-3">
-                Profile
+                {title}
             </h1>
 
             <form
@@ -328,51 +419,57 @@ export default function UserProfilePage({
                     onChange={
                         setFormState
                     }
-                    fieldSchema={resolvedFieldSchema}
+                    fieldSchema={
+                        resolvedFieldSchema
+                    }
                 />
 
-                <div
-                    className="field is-grouped mt-5"
-                >
-
-                    <div className="control">
-
-                        <button
-                            type="submit"
-                            className="button is-primary"
-                            disabled={
-                                !hasChanges ||
-                                isSaving
-                            }
+                {
+                    !readonly && (
+                        <div
+                            className="field is-grouped mt-5"
                         >
-                            {
-                                isSaving
-                                    ? "Saving..."
-                                    : "Save Changes"
-                            }
-                        </button>
 
-                    </div>
+                            <div className="control">
 
-                    <div className="control">
+                                <button
+                                    type="submit"
+                                    className="button is-primary"
+                                    disabled={
+                                        !hasChanges ||
+                                        isSaving
+                                    }
+                                >
+                                    {
+                                        isSaving
+                                            ? "Saving..."
+                                            : "Save Changes"
+                                    }
+                                </button>
 
-                        <button
-                            type="button"
-                            className="button is-light"
-                            disabled={
-                                !hasChanges ||
-                                isSaving
-                            }
-                            onClick={
-                                resetForm
-                            }
-                        >
-                            Reset
-                        </button>
+                            </div>
 
-                    </div>
+                            <div className="control">
 
-                </div>
+                                <button
+                                    type="button"
+                                    className="button is-light"
+                                    disabled={
+                                        !hasChanges ||
+                                        isSaving
+                                    }
+                                    onClick={
+                                        resetForm
+                                    }
+                                >
+                                    Reset
+                                </button>
+
+                            </div>
+
+                        </div>
+                    )
+                }
 
             </form>
 
@@ -380,15 +477,36 @@ export default function UserProfilePage({
     );
 }
 
-UserProfilePage.propTypes = {
+UserProfileEditor.propTypes = {
 
     /**
-     * Persist updated profile state.
+     * Explicit user object.
+     */
+    user: PropTypes.object,
+
+    /**
+     * Arbitrary user id.
+     * Future hook support.
+     */
+    userId: PropTypes.string,
+
+    /**
+     * Readonly mode.
+     */
+    readonly: PropTypes.bool,
+
+    /**
+     * Title override.
+     */
+    title: PropTypes.string,
+
+    /**
+     * Save handler.
      */
     onSave: PropTypes.func,
 
     /**
-     * Field schema configuration.
+     * Schema fields.
      */
     fields: PropTypes.arrayOf(
         PropTypes.shape({

@@ -1,65 +1,264 @@
-import React from "react";
+import React, { useState } from "react";
+
 import { useUsers } from "../useUsers";
+
 import logger from "../../../logger";
 
-// import UserModal from "../UserModal";
-// import UserDelete from "../UserDelete";
-// import UpdateUser from "../UpdateUser";
-// import SignupModal from "../SignupModal";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+
+import {
+    faPlus,
+    faEye,
+    faPen,
+    faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import UserProfileEditor from "./user-profile-editor";
+import { useRumpusModal, RumpusModal } from "../../ui";
 
 /**
- * Helper: safely format date
+ * -----------------------------------------------------------------------------
+ * Helpers
+ * -----------------------------------------------------------------------------
  */
-function formatDate(epochOrString) {
-    if (!epochOrString) return "—";
 
-    const date = new Date(Number(epochOrString));
-    if (isNaN(date.getTime())) return "—";
+function formatDate(epochOrString) {
+
+    if (!epochOrString) {
+        return "—";
+    }
+
+    const date =
+        new Date(
+            Number(epochOrString)
+        );
+
+    if (
+        isNaN(
+            date.getTime()
+        )
+    ) {
+        return "—";
+    }
 
     return date.toDateString();
 }
 
-export default function UsersPage() {
-    const { users, loading, error } = useUsers();
+/**
+ * -----------------------------------------------------------------------------
+ * UsersPage
+ * -----------------------------------------------------------------------------
+ */
 
-    logger.debug("[UsersPage] render", {
-        usersCount: users?.length,
+export default function UsersPage() {
+
+    const {
+        users,
         loading,
         error,
-    });
+    } = useUsers();
+
+    logger.debug(
+        "[UsersPage] render",
+        {
+            usersCount:
+                users?.length,
+
+            loading,
+            error,
+        }
+    );
+
+    const { activeModal, openModal, closeModal } = useRumpusModal();
+    const userProfileEditorModalId = "user-profile-editor-modal";
+    const userProfileEditorModalIsOpen = activeModal === userProfileEditorModalId;
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [isReadOnly, setIsReadOnly] = useState(true);
+
+    /**
+     * -------------------------------------------------------------------------
+     * Actions
+     * -------------------------------------------------------------------------
+     */
+
+    const handleViewUser = (id) => {
+
+        logger.debug(
+            "[UsersPage] view user clicked",
+            id
+        );
+        setSelectedUserId(id);
+        setIsReadOnly(true);
+        openModal(userProfileEditorModalId)
+    };
+
+    const handleUpdateUser = (id) => {
+
+        logger.debug(
+            "[UsersPage] update user clicked",
+            id
+        );
+        setSelectedUserId(id);
+        setIsReadOnly(false);
+        openModal(userProfileEditorModalId)
+    };
+
+    const handleDeleteUser = (
+        user
+    ) => {
+
+        logger.debug(
+            "[UsersPage] delete user clicked",
+            user
+        );
+
+        /**
+         * TODO:
+         * Open delete confirmation modal
+         */
+    };
+
+    /**
+     * -------------------------------------------------------------------------
+     * Loading
+     * -------------------------------------------------------------------------
+     */
 
     if (loading) {
-        return <div className="m-6">Loading users...</div>;
-    }
 
-    if (error) {
         return (
-            <div className="m-6 has-text-danger">
-                Failed to load users: {error.message}
+            <div className="m-6">
+                Loading users...
             </div>
         );
     }
 
+    /**
+     * -------------------------------------------------------------------------
+     * Error
+     * -------------------------------------------------------------------------
+     */
+
+    if (error) {
+
+        return (
+            <div
+                className="
+                    m-6
+                    notification
+                    is-danger
+                    is-light
+                "
+            >
+                Failed to load users:
+                {" "}
+                {error.message}
+            </div>
+        );
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * Render
+     * -------------------------------------------------------------------------
+     */
+
     return (
         <>
-            {/* HEADER / CONTROLS */}
+
+            {/* -----------------------------------------------------------------
+                HEADER / CONTROLS
+            ------------------------------------------------------------------ */}
+
             <div className="m-6">
-                <div className="columns">
-                    <input
-                        className="column is-one-third input"
-                        type="text"
-                        placeholder="Search users..."
-                    />
+
+                <div
+                    className="
+                        level
+                        mb-4
+                    "
+                >
+
+                    <div className="level-left">
+
+                        <div className="level-item">
+
+                            <h1 className="title is-3">
+                                Users
+                            </h1>
+
+                        </div>
+
+                    </div>
+
+                    <div className="level-right">
+
+                        <div className="level-item">
+
+                            <button
+                                className="
+                                    button
+                                    is-primary
+                                "
+                            >
+                                <span className="icon">
+
+                                    <FontAwesomeIcon
+                                        icon={faPlus}
+                                    />
+
+                                </span>
+
+                                <span>
+                                    Add User
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
                 </div>
+
+                <div className="columns">
+
+                    <div
+                        className="
+                            column
+                            is-one-third
+                        "
+                    >
+
+                        <input
+                            className="input"
+                            type="text"
+                            placeholder="Search users..."
+                        />
+
+                    </div>
+
+                </div>
+
             </div>
 
-            {/* TABLE */}
+            {/* -----------------------------------------------------------------
+                TABLE
+            ------------------------------------------------------------------ */}
+
             <div className="table-container">
-                <table className="table is-hoverable is-fullwidth is-bordered m-6">
+
+                <table
+                    className="
+                        table
+                        is-hoverable
+                        is-fullwidth
+                        is-bordered
+                        m-6
+                    "
+                >
+
                     <thead>
+
                         <tr>
                             <th>#</th>
                             <th>User</th>
@@ -71,68 +270,191 @@ export default function UsersPage() {
                             <th>Delete</th>
                             <th>Update</th>
                         </tr>
+
                     </thead>
 
                     <tbody>
-                        {users.map((user, index) => (
-                            <tr key={user.id}>
-                                <th>{index + 1}</th>
 
-                                {/* USERNAME */}
-                                <td>{user.username}</td>
+                        {
+                            users.map(
+                                (
+                                    user,
+                                    index
+                                ) => (
+                                    <tr
+                                        key={
+                                            user.id
+                                        }
+                                    >
 
-                                {/* EMAIL */}
-                                <td>{user.email}</td>
+                                        {/* INDEX */}
 
-                                {/* ROLES (from mapper) */}
-                                <td>
-                                    {user.roles?.length
-                                        ? user.roles.join(", ")
-                                        : "—"}
-                                </td>
+                                        <th>
+                                            {
+                                                index + 1
+                                            }
+                                        </th>
 
-                                {/* CREATED DATE */}
-                                <td title={user.createdAt}>
-                                    {formatDate(user.createdAtTimestamp)}
-                                </td>
+                                        {/* USERNAME */}
 
-                                {/* ID */}
-                                <td>{user.id}</td>
+                                        <td>
+                                            {
+                                                user.username
+                                            }
+                                        </td>
 
-                                {/* ACTIONS */}
-                                <td>
-                                    {/* <UserModal user_id={user.id} /> */}
-                                </td>
+                                        {/* EMAIL */}
 
-                                <td>
-                                    {/* <UserDelete
-                                        user_username={user.username}
-                                        user_id={user.id}
-                                    /> */}
-                                </td>
+                                        <td>
+                                            {
+                                                user.email
+                                            }
+                                        </td>
 
-                                <td>
-                                    {/* <UpdateUser
-                                        user_id={user.id}
-                                        userDetails={{
-                                            username: user.username,
-                                            enabled: user.enabled,
-                                            roles: user.roles,
-                                        }}
-                                        user_email={user.email}
-                                        metaData={{
-                                            creationTime:
-                                                user.createdAtTimestamp,
-                                            aboutMe: user.aboutMe,
-                                            photoLink: user.photoLink,
-                                        }}
-                                    /> */}
-                                </td>
-                            </tr>
-                        ))}
+                                        {/* ROLES */}
+
+                                        <td>
+
+                                            {
+                                                user.roles?.length
+                                                    ? user.roles.join(", ")
+                                                    : "—"
+                                            }
+
+                                        </td>
+
+                                        {/* CREATED */}
+
+                                        <td
+                                            title={
+                                                user.createdAt
+                                            }
+                                        >
+
+                                            {
+                                                formatDate(
+                                                    user.createdAtTimestamp
+                                                )
+                                            }
+
+                                        </td>
+
+                                        {/* ID */}
+
+                                        <td
+                                            style={{
+                                                maxWidth:
+                                                    "220px",
+
+                                                overflow:
+                                                    "hidden",
+
+                                                textOverflow:
+                                                    "ellipsis",
+                                            }}
+                                        >
+
+                                            {
+                                                user.id
+                                            }
+
+                                        </td>
+
+                                        {/* VIEW */}
+
+                                        <td>
+
+                                            <button
+                                                className="
+                                                    button
+                                                    is-small
+                                                    is-info
+                                                    is-light
+                                                "
+                                                onClick={() =>
+                                                    handleViewUser(user.id)
+                                                }
+                                            >
+
+                                                <span className="icon">
+
+                                                    <FontAwesomeIcon
+                                                        icon={faEye}
+                                                    />
+
+                                                </span>
+
+                                            </button>
+
+                                        </td>
+
+                                        {/* DELETE */}
+
+                                        <td>
+
+                                            <button
+                                                className="
+                                                    button
+                                                    is-small
+                                                    is-danger
+                                                    is-light
+                                                "
+                                                onClick={() =>
+                                                    handleDeleteUser(
+                                                        user
+                                                    )
+                                                }
+                                            >
+
+                                                <span className="icon">
+
+                                                    <FontAwesomeIcon
+                                                        icon={faTrash}
+                                                    />
+
+                                                </span>
+
+                                            </button>
+
+                                        </td>
+
+                                        {/* UPDATE */}
+
+                                        <td>
+
+                                            <button
+                                                className="
+                                                    button
+                                                    is-small
+                                                    is-warning
+                                                    is-light
+                                                "
+                                                onClick={() =>
+                                                    handleUpdateUser(user.id)
+                                                }
+                                            >
+
+                                                <span className="icon">
+
+                                                    <FontAwesomeIcon
+                                                        icon={faPen}
+                                                    />
+
+                                                </span>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+                                )
+                            )
+                        }
+
                     </tbody>
 
                     <tfoot>
+
                         <tr>
                             <th>#</th>
                             <th>User</th>
@@ -144,22 +466,35 @@ export default function UsersPage() {
                             <th>Delete</th>
                             <th>Update</th>
                         </tr>
+
                     </tfoot>
+
                 </table>
+
             </div>
 
-            {/* ADD USER */}
-            <div className="container m-4">
-                {/* <SignupModal
-                    btn={
-                        <span>
-                            <FontAwesomeIcon icon={faPlus} />
-                            &nbsp;&nbsp;Add new user
-                        </span>
-                    }
-                    create_user_path="/api/users"
-                /> */}
-            </div>
+            <RumpusModal
+                isOpen={userProfileEditorModalIsOpen}
+                onRequestClose={() => {
+                    setSelectedUserId('');
+                    closeModal(userProfileEditorModalId);
+                }}
+                title="Font Settings"
+                draggable
+                maxWidth="800px"
+            >
+                {isReadOnly ?
+                    <UserProfileEditor
+                        readonly
+                        userId={selectedUserId}
+                    /> :
+                    <UserProfileEditor
+                        userId={selectedUserId}
+                    />
+                }
+
+            </RumpusModal>
+
         </>
     );
 }
