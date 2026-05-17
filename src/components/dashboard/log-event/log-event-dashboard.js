@@ -16,8 +16,14 @@ import { faClock, faInfo } from "@fortawesome/free-solid-svg-icons";
 import {
     TimestampFormat,
     formatTimestamp,
-    cycleTimestampFormat
+    cycleTimestampFormat,
+    filterEvents,
+    sortRows,
+    getColumns,
+    highlightText
 } from "../../../utils";
+
+import { flattenEvent, isHomogeneousMetadata } from "../../event-logger";
 
 export const EventViewMode = Object.freeze({
     JSON: "json",
@@ -120,67 +126,21 @@ export default function EventDashboard({
         });
     }, [events, selectedEntity]);
 
-    const parseSearchQuery = (query) => {
-        const tokens = query
-            .toLowerCase()
-            .split(" ")
-            .map(t => t.trim())
-            .filter(Boolean);
-
-        const structured = {};
-        const freeText = [];
-
-        for (const token of tokens) {
-            const [key, value] = token.split(":");
-
-            if (value) {
-                structured[key] = value;
-            } else {
-                freeText.push(token);
-            }
-        }
-
-        return { structured, freeText };
-    };
-
     const searchedEvents = useMemo(() => {
         if (!debouncedQuery.trim()) return filteredEvents;
 
-        const { structured, freeText } = parseSearchQuery(debouncedQuery);
-
-        return filteredEvents.filter((event) => {
-            const flat = {
+        return filterEvents(
+            filteredEvents,
+            debouncedQuery,
+            (event) => ({
                 timestamp: event.timestamp,
                 id: event.context?.userId ?? "",
                 username: event.context?.username ?? "",
                 component: event.entity ?? "",
                 action: event.action ?? "",
                 ...event.metadata,
-            };
-
-            // structured filters (username:john)
-            for (const key in structured) {
-                const val = flat[key];
-                if (!val || !String(val).toLowerCase().includes(structured[key])) {
-                    return false;
-                }
-            }
-
-            if (freeText.length > 0) {
-                const combined = Object.values(flat)
-                    .map(v =>
-                        typeof v === "object"
-                            ? JSON.stringify(v)
-                            : String(v)
-                    )
-                    .join(" ")
-                    .toLowerCase();
-
-                return freeText.every(term => combined.includes(term));
-            }
-
-            return true;
-        });
+            })
+        );
     }, [filteredEvents, debouncedQuery]);
 
     /**
@@ -207,66 +167,14 @@ export default function EventDashboard({
         });
     };
 
-    const isHomogeneous = useMemo(() => {
-        if (!filteredEvents.length) return true;
-
-        const firstKeys = Object.keys(filteredEvents[0]?.metadata || {}).sort().join(",");
-
-        return filteredEvents.every(e => {
-            const keys = Object.keys(e?.metadata || {}).sort().join(",");
-            return keys === firstKeys;
-        });
-    }, [filteredEvents]);
-
-    /**
-     * Flatten event for table view
-     */
-    const flattenEvent = (event) => {
-        const base = {
-            timestamp: event.timestamp,
-            ID: event.context?.userId ?? null,
-            username: event.context?.username ?? null,
-            component: event.entity,
-            action: event.action,
-        };
-
-        if (isHomogeneous) {
-            return {
-                ...base,
-                ...event.metadata,
-            };
-        }
-
-        return {
-            ...base,
-            metadata: event.metadata,
-        };
-    };
-
     const tableRows = useMemo(() => {
-        const rows = searchedEvents.map(flattenEvent);
+        const isHomogeneous = isHomogeneousMetadata(searchedEvents);
 
-        if (!sortConfig?.key) return rows;
+        const rows = searchedEvents.map((event) =>
+            flattenEvent(event, { isHomogeneous })
+        );
 
-        const sorted = [...rows].sort((a, b) => {
-            const aVal = a[sortConfig.key];
-            const bVal = b[sortConfig.key];
-
-            if (aVal == null) return 1;
-            if (bVal == null) return -1;
-
-            if (sortConfig.key === "timestamp") {
-                return new Date(aVal) - new Date(bVal);
-            }
-
-            if (typeof aVal === "number" && typeof bVal === "number") {
-                return aVal - bVal;
-            }
-
-            return String(aVal).localeCompare(String(bVal));
-        });
-
-        return sortConfig.direction === "asc" ? sorted : sorted.reverse();
+        return sortRows(rows, sortConfig);
     }, [searchedEvents, sortConfig]);
 
     const getSortIndicator = (col) => {
@@ -292,32 +200,8 @@ export default function EventDashboard({
     };
 
     const allColumns = useMemo(() => {
-        const keys = new Set();
-
-        for (const row of tableRows) {
-            Object.keys(row).forEach((k) => keys.add(k));
-        }
-
-        return Array.from(keys);
+        return getColumns(tableRows);
     }, [tableRows]);
-
-    const highlightText = (text) => {
-        if (!debouncedQuery.trim()) return text;
-
-        const terms = searchQuery
-            .toLowerCase()
-            .split(" ")
-            .filter(Boolean);
-
-        let str = String(text);
-
-        for (const term of terms) {
-            const regex = new RegExp(`(${term})`, "gi");
-            str = str.replace(regex, "<mark>$1</mark>");
-        }
-
-        return <span dangerouslySetInnerHTML={{ __html: str }} />;
-    };
 
     const renderCell = (col, row) => {
         if (col === "timestamp") {
@@ -344,7 +228,13 @@ export default function EventDashboard({
                 ? JSON.stringify(row[col])
                 : String(row[col] ?? "");
 
-        return highlightText(value);
+        return (
+            <span
+                dangerouslySetInnerHTML={{
+                    __html: highlightText(value, searchQuery),
+                }}
+            />
+        );
     };
 
     const isJson = viewMode === EventViewMode.JSON;
