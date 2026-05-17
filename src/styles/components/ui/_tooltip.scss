@@ -4,6 +4,44 @@
     align-items: center;
     width: fit-content;
 
+    .tooltip-content {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    /**
+    * -------------------------------------------------------------------------
+    * Interaction hint section
+    * -------------------------------------------------------------------------
+    */
+    .tooltip-hint {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        margin-top: 2px;
+        padding-top: 6px;
+
+        font-size: 0.65rem;
+        line-height: 1.2;
+
+        opacity: 0.72;
+
+        border-top:
+            1px solid rgba(255, 255, 255, 0.12);
+
+        user-select: none;
+    }
+
+    /**
+    * Light theme adjustment
+    */
+    .has-background-light .tooltip-hint {
+        border-top:
+            1px solid rgba(0, 0, 0, 0.08);
+    }
+
     .tooltip-text {
         position: absolute;
 

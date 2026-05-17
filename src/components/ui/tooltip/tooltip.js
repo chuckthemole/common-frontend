@@ -227,7 +227,7 @@ export default function Tooltip({
     const interactionHint = useMemo(() => {
 
         if (copyable && rotatable) {
-            return "Single click to copy • Double click to rotate";
+            return "Single click to copy\nDouble click to rotate";
         }
 
         if (copyable) {
