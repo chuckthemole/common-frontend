@@ -11,4 +11,5 @@ export * from './navigation';
 export * from './tabs';
 export * from './panel';
 export * from './transitions';
+export * from './table';
 export { default as PortalContainer } from './portal-container';

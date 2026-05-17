@@ -13,7 +13,7 @@ import {
     faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import UserProfileEditor from "./user-profile-editor";
-import { useRumpusModal, RumpusModal } from "../../ui";
+import { useRumpusModal, RumpusModal, Tooltip, TruncatedCell } from "../../ui";
 
 /**
  * -----------------------------------------------------------------------------
@@ -340,51 +340,46 @@ export default function UsersPage() {
                                         </td>
 
                                         {/* ID */}
-
-                                        <td
-                                            style={{
-                                                maxWidth:
-                                                    "220px",
-
-                                                overflow:
-                                                    "hidden",
-
-                                                textOverflow:
-                                                    "ellipsis",
-                                            }}
-                                        >
-
-                                            {
-                                                user.id
-                                            }
-
+                                        <td>
+                                            <Tooltip
+                                                copyable
+                                                rotatable
+                                                copyText={user.id}
+                                                text={user.id}
+                                            >
+                                                <TruncatedCell
+                                                    value={user.id}
+                                                />
+                                            </Tooltip>
                                         </td>
 
                                         {/* VIEW */}
 
                                         <td>
 
-                                            <button
-                                                className="
+                                            <Tooltip text={"View user"}>
+                                                <button
+                                                    className="
                                                     button
                                                     is-small
                                                     is-info
                                                     is-light
                                                 "
-                                                onClick={() =>
-                                                    handleViewUser(user.id)
-                                                }
-                                            >
+                                                    onClick={() =>
+                                                        handleViewUser(user.id)
+                                                    }
+                                                >
 
-                                                <span className="icon">
+                                                    <span className="icon">
 
-                                                    <FontAwesomeIcon
-                                                        icon={faEye}
-                                                    />
+                                                        <FontAwesomeIcon
+                                                            icon={faEye}
+                                                        />
 
-                                                </span>
+                                                    </span>
 
-                                            </button>
+                                                </button>
+                                            </Tooltip>
 
                                         </td>
 
@@ -392,29 +387,31 @@ export default function UsersPage() {
 
                                         <td>
 
-                                            <button
-                                                className="
+                                            <Tooltip text={"Delete user"}>
+                                                <button
+                                                    className="
                                                     button
                                                     is-small
                                                     is-danger
                                                     is-light
                                                 "
-                                                onClick={() =>
-                                                    handleDeleteUser(
-                                                        user
-                                                    )
-                                                }
-                                            >
+                                                    onClick={() =>
+                                                        handleDeleteUser(
+                                                            user
+                                                        )
+                                                    }
+                                                >
 
-                                                <span className="icon">
+                                                    <span className="icon">
 
-                                                    <FontAwesomeIcon
-                                                        icon={faTrash}
-                                                    />
+                                                        <FontAwesomeIcon
+                                                            icon={faTrash}
+                                                        />
 
-                                                </span>
+                                                    </span>
 
-                                            </button>
+                                                </button>
+                                            </Tooltip>
 
                                         </td>
 
@@ -422,27 +419,29 @@ export default function UsersPage() {
 
                                         <td>
 
-                                            <button
-                                                className="
+                                            <Tooltip text={"Update user"}>
+                                                <button
+                                                    className="
                                                     button
                                                     is-small
                                                     is-warning
                                                     is-light
                                                 "
-                                                onClick={() =>
-                                                    handleUpdateUser(user.id)
-                                                }
-                                            >
+                                                    onClick={() =>
+                                                        handleUpdateUser(user.id)
+                                                    }
+                                                >
 
-                                                <span className="icon">
+                                                    <span className="icon">
 
-                                                    <FontAwesomeIcon
-                                                        icon={faPen}
-                                                    />
+                                                        <FontAwesomeIcon
+                                                            icon={faPen}
+                                                        />
 
-                                                </span>
+                                                    </span>
 
-                                            </button>
+                                                </button>
+                                            </Tooltip>
 
                                         </td>
 

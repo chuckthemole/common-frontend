@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import classNames from "classnames";
 import logger, { useScopedLogger } from "../../../logger";
+import { useToast } from "../toast";
 
 /**
  * Clockwise-ish rotation order for tooltip placements
@@ -39,14 +40,40 @@ export default function Tooltip({
     rotatable = false,
     animated = false,
     debug = false,
+    copyable = false,
+    copyText = null,
+    onCopy,
 }) {
     const SCOPED_LOGGER = useScopedLogger("Tooltip", logger);
+
+    const toast = useToast();
 
     /**
      * Internal placement state
      * Allows dynamic rotation without mutating parent props
      */
     const [currentPlacement, setCurrentPlacement] = useState(placement);
+
+    const [copied, setCopied] = useState(false);
+
+    const resolvedCopyText =
+        useMemo(() => {
+
+            if (copyText != null) {
+                return copyText;
+            }
+
+            if (typeof text === "string") {
+                return text;
+            }
+
+            return null;
+
+        }, [
+            copyText,
+            text,
+        ]);
+
 
     /**
      * Rotate tooltip placement in predefined order
@@ -79,16 +106,144 @@ export default function Tooltip({
         setCurrentPlacement(placement);
     }, [placement, debug, SCOPED_LOGGER]);
 
+    const handleCopy = useCallback(
+        async (e) => {
+            e.stopPropagation();
+
+            SCOPED_LOGGER.debug("COPY ATTEMPT", resolvedCopyText);
+            SCOPED_LOGGER.debug("clipboard exists?", !!navigator.clipboard);
+
+            if (!copyable || !resolvedCopyText) {
+                SCOPED_LOGGER.debug("Not copyable");
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(resolvedCopyText);
+
+                setCopied(true);
+
+                onCopy?.(resolvedCopyText);
+
+                toast.success(
+                    `Text "${resolvedCopyText}" copied successfully!`,
+                    {
+                        position: "bottom-center",
+                        width: "full",
+                    }
+                );
+
+                SCOPED_LOGGER.debug("Tooltip copied text", {
+                    text: resolvedCopyText,
+                });
+
+                setTimeout(() => {
+                    setCopied(false);
+                }, 1200);
+
+            } catch (err) {
+                SCOPED_LOGGER.error("Tooltip copy failed", err);
+                toast.error("Copy failed");
+            }
+        },
+        [copyable, resolvedCopyText, onCopy, SCOPED_LOGGER]
+    );
+
     /**
-     * Handle click for rotation (only when enabled)
-     * Stops propagation so parent click handlers aren't triggered
-     */
-    const handleClick = (e) => {
-        if (!rotatable) return;
+    * -------------------------------------------------------------------------
+    * Click
+    * -------------------------------------------------------------------------
+    */
+    const handleClick = useCallback(async (e) => {
+
+        /**
+         * Prevent bubbling into parent rows/buttons/etc.
+         */
+        e.stopPropagation();
+
+        /**
+         * -------------------------------------------------------------
+         * Copyable only
+         * -------------------------------------------------------------
+         */
+
+        if (copyable && !rotatable) {
+
+            await handleCopy(e);
+
+            return;
+        }
+
+        /**
+         * -------------------------------------------------------------
+         * Rotatable only
+         * -------------------------------------------------------------
+         */
+
+        if (rotatable && !copyable) {
+
+            rotatePlacement();
+
+            return;
+        }
+
+        /**
+         * -------------------------------------------------------------
+         * Both enabled
+         * -------------------------------------------------------------
+         *
+         * Single click copies.
+         * Double click rotates.
+         */
+
+        if (copyable && rotatable) {
+
+            await handleCopy(e);
+        }
+
+    }, [
+        copyable,
+        rotatable,
+        handleCopy,
+        rotatePlacement,
+    ]);
+
+    const handleDoubleClick = useCallback((e) => {
+
+        if (!(copyable && rotatable)) {
+            return;
+        }
 
         e.stopPropagation();
+
         rotatePlacement();
-    };
+
+    }, [
+        copyable,
+        rotatable,
+        rotatePlacement,
+    ]);
+
+    const interactionHint = useMemo(() => {
+
+        if (copyable && rotatable) {
+            return "Single click to copy • Double click to rotate";
+        }
+
+        if (copyable) {
+            return "Click to copy";
+        }
+
+        if (rotatable) {
+            return "Click to rotate";
+        }
+
+        return null;
+
+    }, [
+        copyable,
+        rotatable,
+    ]);
 
     /**
      * Keyboard accessibility (Enter / Space triggers rotation)
@@ -131,6 +286,7 @@ export default function Tooltip({
         <div
             className={tooltipClass}
             onClick={handleClick}
+            onDoubleClick={handleDoubleClick}
             onKeyDown={handleKeyDown}
             onMouseLeave={resetPlacement}
             role={rotatable ? "button" : undefined}
@@ -143,11 +299,42 @@ export default function Tooltip({
             {/* Trigger element */}
             {children}
 
-            {/* Tooltip content */}
             <span
-                className={classNames("tooltip-text", colorClass)}
+                className={classNames(
+                    "tooltip-text",
+                    colorClass,
+                    {
+                        "tooltip-copyable": copyable,
+                        "tooltip-copied": copied,
+                    }
+                )}
+                style={{
+                    cursor:
+                        copyable || rotatable
+                            ? "pointer"
+                            : "default",
+
+                    transition:
+                        "background 120ms ease, transform 120ms ease",
+                }}
             >
-                {text}
+
+                <div className="tooltip-content">
+
+                    <div>
+                        {text}
+                    </div>
+
+                    {
+                        interactionHint && (
+                            <div className="tooltip-hint">
+                                {interactionHint}
+                            </div>
+                        )
+                    }
+
+                </div>
+
             </span>
         </div>
     );

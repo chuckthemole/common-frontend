@@ -1,0 +1,1 @@
+export { default as TruncatedCell } from './truncated-cell';
