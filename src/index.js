@@ -14,7 +14,6 @@ export { default as Header } from './components/header';
 export { default as Json } from './components/json';
 export { default as Landing } from './components/landing';
 export { default as Log } from './components/log';
-export { default as Logout } from './components/logout';
 export { default as DynamicComponent } from './components/dynamic_component';
 export { default as Section } from './components/section';
 export { AuthProvider, useAuth } from './components/auth/auth-provider';

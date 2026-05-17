@@ -13,14 +13,20 @@ import {
     faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import UserProfileEditor from "./user-profile-editor";
-import { useRumpusModal, RumpusModal, Tooltip, TruncatedCell } from "../../ui";
+import {
+    useRumpusModal,
+    RumpusModal,
+    Tooltip,
+    TruncatedCell,
+    ChipInput,
+    CHIP_COLOR_PALETTE
+} from "../../ui";
 
 /**
  * -----------------------------------------------------------------------------
  * Helpers
  * -----------------------------------------------------------------------------
  */
-
 function formatDate(epochOrString) {
 
     if (!epochOrString) {
@@ -312,17 +318,27 @@ export default function UsersPage() {
                                         </td>
 
                                         {/* ROLES */}
-
                                         <td>
-
                                             {
-                                                user.roles?.length
-                                                    ? user.roles.join(", ")
-                                                    : "—"
+                                                user.roles?.length ? (
+                                                    <ChipInput
+                                                        editable
+                                                        addable
+                                                        removable
+                                                        placeholder="Add role..."
+                                                        assignColors
+                                                        colorPalette={CHIP_COLOR_PALETTE}
+                                                        items={
+                                                            user.roles.map((role) => ({
+                                                                label: role,
+                                                            }))
+                                                        }
+                                                    />
+                                                ) : (
+                                                    "—"
+                                                )
                                             }
-
                                         </td>
-
                                         {/* CREATED */}
 
                                         <td

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useLogout } from '../../hooks/use_logout';
 import { useNavigate } from 'react-router-dom';
 import Spinner from '../loaders/spinning_wheel';
 import { useAuth } from '../../auth';

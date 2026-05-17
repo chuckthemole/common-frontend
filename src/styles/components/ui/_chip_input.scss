@@ -1,0 +1,330 @@
+.chip-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    width: 100%;
+}
+
+/* ============================================================================
+   CHIP
+============================================================================ */
+
+.chip-input-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    border-radius: 999px;
+
+    padding: 0.35rem 0.7rem;
+
+    font-size: 0.75rem;
+    line-height: 1;
+
+    transition:
+        transform 120ms ease,
+        filter 120ms ease,
+        box-shadow 120ms ease;
+
+    background: #f1f3f5;
+    color: #222;
+
+    border:
+        1px solid rgba(0, 0, 0, 0.08);
+
+    user-select: none;
+}
+
+.chip-input-chip:hover {
+    transform: translateY(-1px);
+
+    filter: brightness(0.98);
+}
+
+/* ============================================================================
+   LABEL
+============================================================================ */
+
+.chip-label {
+    white-space: nowrap;
+}
+
+/* ============================================================================
+   REMOVE BUTTON
+============================================================================ */
+
+.chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: transparent;
+
+    cursor: pointer;
+
+    padding: 0;
+
+    width: 16px;
+    height: 16px;
+
+    border-radius: 999px;
+
+    transition:
+        background 120ms ease,
+        transform 120ms ease;
+}
+
+.chip-remove:hover {
+    background:
+        rgba(0, 0, 0, 0.08);
+
+    transform: scale(1.08);
+}
+
+.chip-input-chip.is-active {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+/* ============================================================================
+   CLICKABLE
+============================================================================ */
+
+.chip-clickable {
+    cursor: pointer;
+}
+
+/* ============================================================================
+   DISABLED
+============================================================================ */
+
+.chip-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.chip-input-disabled {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* ============================================================================
+   ADD INPUT
+============================================================================ */
+
+.chip-input-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.chip-input-add input {
+    border: none;
+
+    border-radius: 999px;
+
+    padding: 0.35rem 0.8rem;
+
+    background: #f8f9fa;
+
+    outline: none;
+
+    min-width: 120px;
+}
+
+.chip-input-add input:focus {
+    box-shadow:
+        0 0 0 2px rgba(50, 115, 220, 0.18);
+}
+
+.chip-input-add button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    border: none;
+
+    border-radius: 999px;
+
+    padding: 0.35rem 0.75rem;
+
+    cursor: pointer;
+
+    transition:
+        transform 120ms ease,
+        filter 120ms ease;
+
+    background: #48c774;
+    color: white;
+}
+
+.chip-input-add button:hover {
+    transform: translateY(-1px);
+
+    filter: brightness(1.03);
+}
+
+/* ============================================================================
+   SIZES
+============================================================================ */
+
+.chip-input-small .chip-input-chip {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.55rem;
+}
+
+.chip-input-large .chip-input-chip {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.9rem;
+}
+
+/* ============================================================================
+   COLOR VARIANTS
+============================================================================ */
+
+.chip-input-chip.chip-danger {
+    background: rgba(255, 82, 82, 0.12);
+    color: #c62828;
+}
+
+.chip-input-chip.chip-info {
+    background: rgba(66, 165, 245, 0.12);
+    color: #1565c0;
+}
+
+.chip-input-chip.chip-success {
+    background: rgba(72, 199, 116, 0.14);
+    color: #1b873f;
+}
+
+.chip-input-chip.chip-warning {
+    background: rgba(255, 193, 7, 0.14);
+    color: #9a6700;
+}
+
+.chip-input-chip.chip-dark {
+    background: rgba(0, 0, 0, 0.08);
+    color: #222;
+}
+
+/* RED */
+.chip-input-chip.chip-red {
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+}
+
+/* ORANGE */
+.chip-input-chip.chip-orange {
+    background: rgba(249, 115, 22, 0.14);
+    color: #c2410c;
+}
+
+/* AMBER */
+.chip-input-chip.chip-amber {
+    background: rgba(245, 158, 11, 0.14);
+    color: #92400e;
+}
+
+/* YELLOW */
+.chip-input-chip.chip-yellow {
+    background: rgba(234, 179, 8, 0.14);
+    color: #854d0e;
+}
+
+/* LIME */
+.chip-input-chip.chip-lime {
+    background: rgba(132, 204, 22, 0.16);
+    color: #3f6212;
+}
+
+/* GREEN */
+.chip-input-chip.chip-green {
+    background: rgba(34, 197, 94, 0.14);
+    color: #166534;
+}
+
+/* EMERALD */
+.chip-input-chip.chip-emerald {
+    background: rgba(16, 185, 129, 0.14);
+    color: #065f46;
+}
+
+/* TEAL */
+.chip-input-chip.chip-teal {
+    background: rgba(20, 184, 166, 0.14);
+    color: #115e59;
+}
+
+/* CYAN */
+.chip-input-chip.chip-cyan {
+    background: rgba(6, 182, 212, 0.14);
+    color: #0e7490;
+}
+
+/* SKY */
+.chip-input-chip.chip-sky {
+    background: rgba(14, 165, 233, 0.14);
+    color: #075985;
+}
+
+/* BLUE */
+.chip-input-chip.chip-blue {
+    background: rgba(59, 130, 246, 0.14);
+    color: #1d4ed8;
+}
+
+/* INDIGO */
+.chip-input-chip.chip-indigo {
+    background: rgba(99, 102, 241, 0.14);
+    color: #4338ca;
+}
+
+/* VIOLET */
+.chip-input-chip.chip-violet {
+    background: rgba(139, 92, 246, 0.14);
+    color: #5b21b6;
+}
+
+/* PURPLE */
+.chip-input-chip.chip-purple {
+    background: rgba(168, 85, 247, 0.14);
+    color: #6b21a8;
+}
+
+/* PINK */
+.chip-input-chip.chip-pink {
+    background: rgba(236, 72, 153, 0.14);
+    color: #9d174d;
+}
+
+/* ROSE */
+.chip-input-chip.chip-rose {
+    background: rgba(244, 63, 94, 0.14);
+    color: #9f1239;
+}
+
+/* SLATE */
+.chip-input-chip.chip-slate {
+    background: rgba(100, 116, 139, 0.14);
+    color: #334155;
+}
+
+/* GRAY */
+.chip-input-chip.chip-gray {
+    background: rgba(107, 114, 128, 0.14);
+    color: #374151;
+}
+
+/* BROWN / WARM NEUTRAL */
+.chip-input-chip.chip-brown {
+    background: rgba(120, 53, 15, 0.10);
+    color: #78350f;
+}
+
+/* MINT (extra distinct, nice UI accent) */
+.chip-input-chip.chip-mint {
+    background: rgba(52, 211, 153, 0.14);
+    color: #065f46;
+}
