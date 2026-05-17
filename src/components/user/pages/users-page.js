@@ -302,19 +302,29 @@ export default function UsersPage() {
                                         </th>
 
                                         {/* USERNAME */}
-
                                         <td>
-                                            {
-                                                user.username
-                                            }
+                                            <Tooltip
+                                                copyable
+                                                rotatable
+                                                copyText={user.username}
+                                                text={user.username}
+                                            >
+                                                {user.username}
+                                            </Tooltip>
                                         </td>
 
                                         {/* EMAIL */}
-
                                         <td>
-                                            {
-                                                user.email
-                                            }
+                                            <Tooltip
+                                                copyable
+                                                rotatable
+                                                copyText={user.email}
+                                                text={user.email}
+                                            >
+                                                <TruncatedCell
+                                                    value={user.email}
+                                                />
+                                            </Tooltip>
                                         </td>
 
                                         {/* ROLES */}
