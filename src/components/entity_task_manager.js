@@ -46,7 +46,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { getNamedApi } from "../api";
+import { getNamedApi } from "../api/client/api";
 import logger from "../logger";
 import { ComponentLoading } from "./ui";
 

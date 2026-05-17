@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from "react";
 import CurrentUserContext from "./current-user-context";
 import useUser from "./useCurrentUserDataSource";
 import logger, { useScopedLogger } from "../../../logger";
-import { getApi } from "../../../api";
+import { getApi } from "../../../api/client/api";
 
 const ROLE_ADMIN = "ROLE_ADMIN";
 

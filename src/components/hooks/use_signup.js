@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { getApi } from '../../api';
+import { getApi } from '../../api/client/api';
 import qs from 'qs';
 
 /**

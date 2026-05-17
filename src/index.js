@@ -38,13 +38,14 @@ export * from './utils';
 
 export * from './persistence';
 
-export { default as api } from './api';
-export { createApiClient } from './api';
-export { getApi } from './api';
-export { setApi } from './api';
-export { getNamedApi } from './api';
-export { setNamedApi } from './api';
-export { getApiBaseURL } from './api';
+export { default as api } from './api/client/api';
+export { createApiClient } from './api/client/api';
+export { getApi } from './api/client/api';
+export { setApi } from './api/client/api';
+export { getNamedApi } from './api/client/api';
+export { setNamedApi } from './api/client/api';
+export { getApiBaseURL } from './api/client/api';
+export { initializeUserApi, getUserApi } from './api/modules/user/user-api';
 
 export { default as LOGGER } from './logger';
 export { getLoggingEnv } from './logger';

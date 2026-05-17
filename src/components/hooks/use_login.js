@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { getApi } from '../../api';
+import { getApi } from '../../api/client/api';
 import logger from '../../logger';
 import qs from 'qs'; // Used to serialize data as x-www-form-urlencoded
 

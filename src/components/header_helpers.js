@@ -1,4 +1,4 @@
-import { getApi } from '../api';
+import { getApi } from '../api/client/api';
 import AwsGetResource from './aws_get_resource';
 import DynamicComponent from './dynamic_component';
 import React from 'react';

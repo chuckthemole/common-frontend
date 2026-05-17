@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { getApi } from "../../../api";
+import { getApi } from "../../../api/client/api";
 import logger from "../../../logger";
 
 /**

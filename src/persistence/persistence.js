@@ -1,5 +1,5 @@
 import logger from '../logger';
-import { getApi, getNamedApi } from '../api';
+import { getApi, getNamedApi } from '../api/client/api';
 
 // -----------------------------------------------------------------------------
 // This module defines pluggable persistence strategies for storing key-value

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { getApi } from "../../api";
+import { getApi } from "../../api/client/api";
 import logger from "../../logger";
 import RumpusQuill from "../ui/editors/rumpus_quill";
 import RumpusQuillForm from "../ui/editors/rumpus_quill_form";

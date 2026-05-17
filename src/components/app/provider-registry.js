@@ -84,11 +84,15 @@ export const PROVIDER_REGISTRY = {
     ],
 
     auth: [
-        ({ children }) => <AuthProvider>{children}</AuthProvider>,
+        ({ children }) => (
+            <AuthProvider>{children}</AuthProvider>
+        ),
     ],
 
     user: [
-        ({ children }) => <CurrentUserProvider>{children}</CurrentUserProvider>,
+        ({ children }) => (
+            <CurrentUserProvider>{children}</CurrentUserProvider>
+        ),
     ],
 
     logger: [

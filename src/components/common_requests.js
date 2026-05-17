@@ -1,7 +1,7 @@
 // TODO: why is this in react dir? - chuck
 
 import useSWR from 'swr';
-import { getApi } from '../api';
+import { getApi } from '../api/client/api';
 import logger from '../logger';
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
