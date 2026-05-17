@@ -13,17 +13,16 @@ import {
 } from "../../ui";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faInfo } from "@fortawesome/free-solid-svg-icons";
+import {
+    TimestampFormat,
+    formatTimestamp,
+    cycleTimestampFormat
+} from "../../../utils";
 
 export const EventViewMode = Object.freeze({
     JSON: "json",
     TABLE: "table",
     TIMELINE: "timeline", // TODO: not implemented
-});
-
-export const TimestampFormat = Object.freeze({
-    ISO: "iso",                 // raw (what you have now)
-    HUMAN: "human",             // locale string
-    RELATIVE: "relative",       // "2m ago"
 });
 
 /**
@@ -51,17 +50,6 @@ export default function EventDashboard({
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
     const toast = useToast();
-
-    // Duration
-    // const [archiveAfter, setArchiveAfter] = useState({
-    //     amount: 7,
-    //     unit: "days",
-    // });
-
-    // const [deleteAfter, setDeleteAfter] = useState({
-    //     amount: 30,
-    //     unit: "days",
-    // });
 
     // sorting state
     const [sortConfig, setSortConfig] = useState({
@@ -333,7 +321,7 @@ export default function EventDashboard({
 
     const renderCell = (col, row) => {
         if (col === "timestamp") {
-            return formatTimestamp(row[col]);
+            return formatTimestamp(row[col], timestampFormat);
         }
 
         if (col === "metadata" && typeof row[col] === "object") {
@@ -359,56 +347,6 @@ export default function EventDashboard({
         return highlightText(value);
     };
 
-    const formatTimestamp = (ts) => {
-        if (!ts) return "";
-
-        const date = new Date(ts);
-
-        switch (timestampFormat) {
-            case TimestampFormat.ISO:
-                return date.toISOString();
-
-            case TimestampFormat.HUMAN:
-                return date.toLocaleString();
-
-            case TimestampFormat.RELATIVE: {
-                const diff = Date.now() - date.getTime();
-                const seconds = Math.floor(diff / 1000);
-
-                if (seconds < 60) return `${seconds}s ago`;
-                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-                return `${Math.floor(seconds / 86400)}d ago`;
-            }
-
-            default:
-                return ts;
-        }
-    };
-
-    const cycleTimestampFormat = () => {
-        setTimestampFormat((prev) => {
-            switch (prev) {
-                case TimestampFormat.HUMAN:
-                    return TimestampFormat.RELATIVE;
-                case TimestampFormat.RELATIVE:
-                    return TimestampFormat.ISO;
-                default:
-                    return TimestampFormat.HUMAN;
-            }
-        });
-    };
-
-    const useFormatTimestampOrJSONStringify = (col, row) => {
-        if (col === "timestamp") {
-            return formatTimestamp(row[col]);
-        }
-
-        return typeof row[col] === "object"
-            ? JSON.stringify(row[col])
-            : String(row[col] ?? "");
-    };
-
     const isJson = viewMode === EventViewMode.JSON;
     const isTyping = searchQuery !== debouncedQuery;
 
@@ -422,9 +360,11 @@ export default function EventDashboard({
                     overflow: "hidden",
                 }}
             >
-                {/* =========================================================
-                STICKY TOP BAR
-            ========================================================= */}
+                {
+                    /* =========================================================
+                    STICKY TOP BAR
+                    ========================================================= */
+                }
                 <div
                     className="box"
                     style={{
@@ -717,7 +657,7 @@ export default function EventDashboard({
                                                                         <span
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                cycleTimestampFormat();
+                                                                                setTimestampFormat((prev) => cycleTimestampFormat(prev));
                                                                             }}
                                                                             style={{
                                                                                 cursor: "pointer",
