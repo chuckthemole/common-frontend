@@ -182,19 +182,20 @@ export default function EventDashboard({
 
         return (
             <span
-                style={{
-                    display: "inline-flex",
-                    flexDirection: "column",
-                    marginLeft: "4px",
-                    lineHeight: "8px",
-                    opacity: isActive ? 0.9 : 0.25,
-                    transform: "translateY(-1px)",
-                    fontSize: "10px",
-                    userSelect: "none",
-                }}
+                className={
+                    `inspection-table__sort-indicator ${isActive
+                        ? "inspection-table__sort-indicator--active"
+                        : ""
+                    }`
+                }
             >
-                <span style={{ marginBottom: "-2px" }}>▴</span>
-                <span>▾</span>
+                <span className="inspection-table__sort-indicator-top">
+                    ▴
+                </span>
+
+                <span>
+                    ▾
+                </span>
             </span>
         );
     };
@@ -436,24 +437,6 @@ export default function EventDashboard({
 
                         </div>
 
-                        {/* Log retention/duration */}
-                        {/* <h3 className="title is-5">Log Retention Settings</h3>
-
-                        <div className="field">
-                            <label className="label">Archive logs after</label>
-                            <DurationInput
-                                value={archiveAfter}
-                                onChange={setArchiveAfter}
-                            />
-                        </div>
-
-                        <div className="field">
-                            <label className="label">Delete logs after</label>
-                            <DurationInput
-                                value={deleteAfter}
-                                onChange={setDeleteAfter}
-                            />
-                        </div> */}
                     </div>
                 </div>
 
@@ -477,30 +460,15 @@ export default function EventDashboard({
                             </h3>
 
                             {/* Scroll container */}
-                            <div
-                                style={{
-                                    maxHeight: "70vh",
-                                    overflowY: "auto",
-                                    overflowX: "auto",
-                                    border: "1px solid #eee",
-                                    borderRadius: "6px",
-                                }}
-                            >
+                            <div className="inspection-table-container">
                                 {/* ensures table can expand horizontally */}
-                                <div style={{ minWidth: "100%", width: "max-content" }}>
+                                <div className="inspection-table-inner">
                                     {/* ================= JSON VIEW ================= */}
                                     {viewMode === EventViewMode.JSON &&
                                         searchedEvents.map((event, idx) => (
                                             <pre
                                                 key={event.key || idx}
-                                                style={{
-                                                    margin: 0,
-                                                    padding: "10px",
-                                                    fontSize: "12px",
-                                                    background: idx % 2 === 0 ? "#ffffff" : "#fafafa",
-                                                    borderBottom: "1px solid #eee",
-                                                    whiteSpace: "pre",
-                                                }}
+                                                className="inspection-table__json-row"
                                             >
                                                 {JSON.stringify(event, null, 2)}
                                             </pre>
@@ -508,35 +476,16 @@ export default function EventDashboard({
 
                                     {/* ================= TABLE VIEW ================= */}
                                     {viewMode === "table" && (
-                                        <table
-                                            className="table is-fullwidth is-narrow"
-                                            style={{
-                                                margin: 0,
-                                                minWidth: "100%",
-                                            }}
-                                        >
+                                        <table className="table is-fullwidth is-narrow inspection-table">
                                             <thead>
                                                 <tr>
                                                     {allColumns.map((col) => (
                                                         <th key={col}>
-                                                            <div
-                                                                style={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    gap: "6px",
-                                                                    width: "100%",
-                                                                }}
-                                                            >
+                                                            <div className="inspection-table__header-content">
                                                                 {/* Sortable column label */}
                                                                 <span
                                                                     onClick={() => handleSort(col)}
-                                                                    style={{
-                                                                        cursor: "pointer",
-                                                                        userSelect: "none",
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        gap: "4px",
-                                                                    }}
+                                                                    className="inspection-table__sort-trigger"
                                                                 >
                                                                     {col}
                                                                     {getSortIndicator(col)}
@@ -549,14 +498,7 @@ export default function EventDashboard({
                                                                                 e.stopPropagation();
                                                                                 setTimestampFormat((prev) => cycleTimestampFormat(prev));
                                                                             }}
-                                                                            style={{
-                                                                                cursor: "pointer",
-                                                                                // fontSize: "11px",
-                                                                                // opacity: 0.55,
-                                                                                userSelect: "none",
-                                                                                paddingLeft: "4px",
-                                                                                lineHeight: 1,
-                                                                            }}
+                                                                            className="inspection-table__timestamp-toggle"
                                                                         >
                                                                             <FontAwesomeIcon icon={faClock} />
                                                                         </span>
@@ -577,22 +519,9 @@ export default function EventDashboard({
                                                     return (
                                                         <React.Fragment key={idx}>
                                                             {/* -------- MAIN ROW -------- */}
-                                                            <tr
-                                                                style={{
-                                                                    background: idx % 2 === 0 ? "#ffffff" : "#f7f7f7",
-                                                                }}
-                                                            >
+                                                            <tr className="inspection-table__row">
                                                                 {allColumns.map((col) => (
-                                                                    <td
-                                                                        key={col}
-                                                                        style={{
-                                                                            whiteSpace: "nowrap",
-                                                                            fontSize: "13px",
-                                                                            maxWidth: "300px",
-                                                                            overflow: "hidden",
-                                                                            textOverflow: "ellipsis",
-                                                                        }}
-                                                                    >
+                                                                    <td key={col}>
                                                                         {renderCell(col, rowWithIndex)}
                                                                     </td>
                                                                 ))}
@@ -601,18 +530,11 @@ export default function EventDashboard({
                                                             {/* -------- EXPANDED METADATA ROW -------- */}
                                                             {expandedRowIndex === idx && row.metadata && (
                                                                 <tr>
-                                                                    <td colSpan={allColumns.length}>
-                                                                        <pre
-                                                                            style={{
-                                                                                margin: 0,
-                                                                                padding: "12px",
-                                                                                fontSize: "12px",
-                                                                                background: "#fafafa",
-                                                                                borderTop: "1px solid #eee",
-                                                                                whiteSpace: "pre-wrap",
-                                                                                wordBreak: "break-word",
-                                                                            }}
-                                                                        >
+                                                                    <td
+                                                                        colSpan={allColumns.length}
+                                                                        className="inspection-table__expanded-cell"
+                                                                    >
+                                                                        <pre className="inspection-table__expanded-content">
                                                                             {JSON.stringify(row.metadata, null, 2)}
                                                                         </pre>
                                                                     </td>

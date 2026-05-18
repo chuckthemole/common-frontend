@@ -1,0 +1,148 @@
+/* ==========================================================================
+   Inspection Table
+   ==========================================================================
+   Dense, scroll-safe table styling for:
+   - event inspectors
+   - admin dashboards
+   - logs
+   - debugging tools
+   - metadata explorers
+   ========================================================================== */
+
+.inspection-table-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #eee;
+    border-radius: 6px;
+}
+
+.inspection-table-inner {
+    min-width: 100%;
+    width: max-content;
+}
+
+.inspection-table {
+    margin: 0;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+
+    th,
+    td {
+        white-space: nowrap;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background: #fff;
+        border-bottom: 1px solid #eaeaea;
+    }
+
+    td {
+        font-size: 13px;
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* ==========================================================================
+   Rows
+   ========================================================================== */
+
+.inspection-table__row {
+    background: #fff;
+
+    &:nth-child(even) {
+        background: #f7f7f7;
+    }
+}
+
+/* ==========================================================================
+   Expanded metadata/detail row
+   ========================================================================== */
+
+.inspection-table__expanded-cell {
+    padding: 0 !important;
+}
+
+.inspection-table__expanded-content {
+    margin: 0;
+    padding: 12px;
+    font-size: 12px;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ==========================================================================
+   Header controls
+   ========================================================================== */
+
+.inspection-table__header-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.inspection-table__sort-trigger {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.inspection-table__sort-indicator {
+    display: inline-flex;
+    flex-direction: column;
+    margin-left: 4px;
+    line-height: 8px;
+    transform: translateY(-1px);
+    font-size: 10px;
+    user-select: none;
+    opacity: 0.25;
+
+    &--active {
+        opacity: 0.9;
+    }
+}
+
+.inspection-table__sort-indicator-top {
+    margin-bottom: -2px;
+}
+
+.inspection-table__timestamp-toggle {
+    cursor: pointer;
+    user-select: none;
+    padding-left: 4px;
+    line-height: 1;
+}
+
+/* ==========================================================================
+   JSON mode
+   ========================================================================== */
+
+.inspection-table__json-row {
+    margin: 0;
+    padding: 10px;
+    font-size: 12px;
+    white-space: pre;
+
+    &:nth-child(even) {
+        background: #fafafa;
+    }
+
+    &:nth-child(odd) {
+        background: #ffffff;
+    }
+
+    border-bottom: 1px solid #eee;
+}
