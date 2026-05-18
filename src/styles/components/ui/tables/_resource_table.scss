@@ -1,0 +1,112 @@
+/* ==========================================================================
+   Resource Table
+   ==========================================================================
+   Reusable management/explorer table for:
+   - local storage explorers
+   - admin resource tables
+   - editable entity browsers
+   - metadata management UIs
+   ========================================================================== */
+
+.resource-table-container {
+    overflow-x: auto;
+}
+
+.resource-table {
+    width: 100%;
+    table-layout: fixed;
+
+    th {
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    td {
+        vertical-align: top;
+    }
+}
+
+/* ==========================================================================
+   Columns
+   ========================================================================== */
+
+.resource-table__key-cell {
+    font-weight: 600;
+    white-space: nowrap;
+    width: 220px;
+}
+
+.resource-table__value-cell {
+    max-width: 480px;
+}
+
+.resource-table__actions-cell {
+    text-align: right;
+    white-space: nowrap;
+    width: 1%;
+}
+
+/* ==========================================================================
+   Value Display
+   ========================================================================== */
+
+.resource-table__value-preview {
+    color: #7a7a7a;
+}
+
+.resource-table__value-expanded {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.resource-table__value-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    flex: 1;
+}
+
+/* ==========================================================================
+   Color Input
+   ========================================================================== */
+
+.resource-table__color-input {
+    width: 36px;
+    height: 36px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.resource-table__empty {
+    text-align: center;
+    color: #7a7a7a;
+}
+
+/* ==========================================================================
+   Pagination
+   ========================================================================== */
+
+.resource-table__pagination {
+    text-align: center;
+}
+
+.resource-table__pagination-info {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.resource-table__footer {
+    display: flex;
+    justify-content: space-between;
+}

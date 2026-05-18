@@ -211,8 +211,8 @@ export default function LocalStorageExplorer() {
             </div>
 
             {/* ---------- Table ---------- */}
-            <div className="table-container">
-                <table className="table is-fullwidth is-striped">
+            <div className="table-container resource-table-container">
+                <table className="table is-fullwidth is-striped resource-table">
                     <thead>
                         <tr>
                             <th>Key</th>
@@ -227,19 +227,19 @@ export default function LocalStorageExplorer() {
 
                             return (
                                 <tr key={key}>
-                                    <td className="has-text-weight-semibold">{key}</td>
-                                    <td style={{ maxWidth: "480px" }}>
+                                    <td className="resource-table__key-cell">
+                                        {key}
+                                    </td>
+                                    <td className="resource-table__value-cell">
                                         {long && !expanded && (
-                                            <div className="has-text-grey">
+                                            <div className="resource-table__value-preview">
                                                 {stringifyValue(value, true).slice(0, 120)}…
                                             </div>
                                         )}
 
                                         {(!long || expanded) && (
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                <pre
-                                                    style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, flex: 1 }}
-                                                >
+                                            <div className="resource-table__value-expanded">
+                                                <pre className="resource-table__value-content">
                                                     {stringifyValue(value, isJson)}
                                                 </pre>
 
@@ -254,7 +254,7 @@ export default function LocalStorageExplorer() {
                                                             loadStorage(); // refresh the state
                                                         }}
                                                         title="Edit color"
-                                                        style={{ width: "36px", height: "36px", border: "none", padding: 0 }}
+                                                        className="resource-table__color-input"
                                                     />
                                                 )}
                                             </div>
@@ -269,7 +269,7 @@ export default function LocalStorageExplorer() {
                                             </button>
                                         )}
                                     </td>
-                                    <td className="has-text-right">
+                                    <td className="resource-table__actions-cell">
                                         <div className="buttons is-right">
                                             {isJson && (
                                                 <button
@@ -299,7 +299,7 @@ export default function LocalStorageExplorer() {
 
                         {!paginatedItems.length && (
                             <tr>
-                                <td colSpan={3} className="has-text-centered has-text-grey">
+                                <td colSpan={3} className="resource-table__empty">
                                     No matching localStorage entries
                                 </td>
                             </tr>
@@ -310,7 +310,7 @@ export default function LocalStorageExplorer() {
 
             {/* ---------- Pagination Controls ---------- */}
             {filteredItems.length > PAGE_SIZE && (
-                <div className="mt-3 has-text-centered">
+                <div className="mt-3 resource-table__pagination">
                     <button
                         className="button is-small mr-2"
                         onClick={() => setPage((p) => Math.max(p - 1, 0))}
@@ -327,14 +327,14 @@ export default function LocalStorageExplorer() {
                     >
                         Next
                     </button>
-                    <p className="mt-1 is-size-7">
+                    <p className="resource-table__pagination-info">
                         Page {page + 1} of {Math.ceil(filteredItems.length / PAGE_SIZE)}
                     </p>
                 </div>
             )}
 
             {/* ---------- Footer ---------- */}
-            <div className="mt-3 is-flex is-justify-content-space-between">
+            <div className="mt-3 resource-table__footer">
                 <button className="button is-small" onClick={loadStorage}>
                     Reload
                 </button>
