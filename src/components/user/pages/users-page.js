@@ -21,6 +21,7 @@ import {
     ChipInput,
     CHIP_COLOR_PALETTE
 } from "../../ui";
+import { CHIP_COLOR_CONFIG } from "./chip-color.config";
 
 /**
  * -----------------------------------------------------------------------------
@@ -336,8 +337,9 @@ export default function UsersPage() {
                                                         addable
                                                         removable
                                                         placeholder="Add role..."
-                                                        assignColors
-                                                        colorPalette={CHIP_COLOR_PALETTE}
+                                                        // assignColors
+                                                        // colorPalette={CHIP_COLOR_PALETTE}
+                                                        colorMap={CHIP_COLOR_CONFIG.roles}
                                                         items={
                                                             user.roles.map((role) => ({
                                                                 label: role,

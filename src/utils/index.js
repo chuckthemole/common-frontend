@@ -6,3 +6,4 @@ export * from './time';
 export * from './search';
 export * from './table';
 export * from './text';
+export * from './colors';

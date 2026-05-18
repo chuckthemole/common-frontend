@@ -2,7 +2,6 @@ import React, {
     useState,
     useMemo,
     useCallback,
-    useRef,
 } from "react";
 
 import PropTypes from "prop-types";
@@ -14,42 +13,8 @@ import {
     faPlus,
     faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-
-const DEFAULT_PALETTE = [
-    "danger",
-    "warning",
-    "info",
-    "success",
-    "purple",
-    "dark",
-];
-
-export const CHIP_COLOR_PALETTE = [
-    "blue",
-    "yellow",
-    "purple",
-    "green",
-    "red",
-    "cyan",
-    "orange",
-    "indigo",
-    "lime",
-    "rose",
-    "teal",
-    "pink",
-    "emerald",
-    "fuchsia",
-    "amber",
-    "violet",
-    "sky",
-    "coral",
-    "slate",
-    "mint",
-    "gray",
-    "lavender",
-    "stone",
-    "zinc",
-];
+import { getStablePaletteColor } from "../../../utils";
+import { DEFAULT_PALETTE } from "./color-palettes";
 
 /**
  * -----------------------------------------------------------------------------
@@ -101,6 +66,7 @@ export default function ChipInput({
     style,
     assignColors = false,
     colorPalette = [],
+    colorMap = {},
 
     /**
      * Callbacks
@@ -109,35 +75,6 @@ export default function ChipInput({
     onRemove,
     onClickChip,
 }) {
-
-    /**
-     * -------------------------------------------------------------------------
-     * Colors
-     * -------------------------------------------------------------------------
-     */
-    const colorMapRef = useRef(new Map());
-    const paletteIndexRef = useRef(0);
-
-    const getColorForItem = useCallback((item) => {
-        if (item.color) return item.color;
-
-        const key = item.value || item.id || item.label;
-
-        const existing = colorMapRef.current.get(key);
-        if (existing) return existing;
-
-        const palette =
-            colorPalette?.length
-                ? colorPalette
-                : DEFAULT_PALETTE;
-
-        const color = palette[paletteIndexRef.current % palette.length];
-        paletteIndexRef.current += 1;
-
-        colorMapRef.current.set(key, color);
-
-        return color;
-    }, [colorPalette]);
 
     /**
      * -------------------------------------------------------------------------
@@ -153,7 +90,14 @@ export default function ChipInput({
      * -------------------------------------------------------------------------
      */
     const normalizedItems = useMemo(() => {
+
+        const palette =
+            colorPalette?.length
+                ? colorPalette
+                : DEFAULT_PALETTE;
+
         return items.map((item) => {
+
             const normalized =
                 typeof item === "string"
                     ? {
@@ -168,14 +112,52 @@ export default function ChipInput({
                         disabled: item.disabled,
                     };
 
+
+
+            const normalizedColorMap =
+                Object.fromEntries(
+                    Object.entries(colorMap || {}).map(
+                        ([key, value]) => [
+                            key.toLowerCase(),
+                            value,
+                        ]
+                    )
+                );
+
+            const shouldAssignColors =
+                assignColors || Object.keys(colorMap || {}).length > 0;
+
+            const normalizedLabel =
+                normalized.label.toLowerCase();
+
+            const configuredColor =
+                normalizedColorMap[normalizedLabel];
+
             return {
                 ...normalized,
-                color: assignColors
-                    ? getColorForItem(normalized)
-                    : item.color,
+
+                color:
+                    item.color ??
+                    (
+                        shouldAssignColors
+                            ? (
+                                configuredColor ??
+                                getStablePaletteColor(
+                                    normalizedLabel,
+                                    palette
+                                )
+                            )
+                            : undefined
+                    ),
             };
         });
-    }, [items, assignColors, getColorForItem]);
+
+    }, [
+        items,
+        assignColors,
+        colorPalette,
+        colorMap,
+    ]);
 
     /**
      * -------------------------------------------------------------------------
@@ -449,4 +431,5 @@ ChipInput.propTypes = {
     onAdd: PropTypes.func,
     onRemove: PropTypes.func,
     onClickChip: PropTypes.func,
+    colorMap: PropTypes.object,
 };
