@@ -1,0 +1,97 @@
+.rumpus-table--interactive-rows {
+    tbody tr {
+        transition: background-color 120ms ease;
+    }
+
+    tbody tr:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+}
+
+// Scrollable Containers
+.rumpus-table-feature-scroll-x {
+    overflow-x: auto;
+}
+
+.rumpus-table-feature-scroll-both {
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+.rumpus-table-feature-bounded-height {
+    max-height: 70vh;
+}
+
+// Sticky Header
+.rumpus-table-feature-sticky-header {
+    th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+}
+
+// Zebra Striping
+.rumpus-table-feature-striped-rows {
+    tbody tr:nth-child(even) {
+        background: #f7f7f7;
+    }
+}
+
+// Ellipsis Cells
+.rumpus-table-feature-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+// Preformatted Expandable
+.rumpus-table-feature-preformatted {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+}
+
+// Flex Row Layouts
+.rumpus-table-feature-inline-flex {
+    display: flex;
+    align-items: center;
+}
+
+.rumpus-table-feature-inline-flex-gap-sm {
+    gap: 4px;
+}
+
+.rumpus-table-feature-inline-flex-gap-md {
+    gap: 8px;
+}
+
+// Interactive controls
+.rumpus-table-feature-clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+// Empty States
+.rumpus-table-feature-empty {
+    text-align: center;
+    color: #7a7a7a;
+}
+
+// Right Aligned Action Cells
+.rumpus-table-feature-actions-cell {
+    text-align: right;
+    white-space: nowrap;
+    width: 1%;
+}
+
+// Compact Dense Typography
+.rumpus-table-feature-dense {
+    td {
+        font-size: 13px;
+    }
+}
+
+.rumpus-table-feature-debug {
+    font-family: monospace;
+}

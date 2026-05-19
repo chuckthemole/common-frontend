@@ -211,8 +211,8 @@ export default function LocalStorageExplorer() {
             </div>
 
             {/* ---------- Table ---------- */}
-            <div className="table-container resource-table-container">
-                <table className="table is-fullwidth is-striped resource-table">
+            <div className="table-container rumpus-table--resource-container rumpus-table--interactive-rows">
+                <table className="table is-fullwidth is-striped rumpus-table--resource">
                     <thead>
                         <tr>
                             <th>Key</th>
@@ -227,19 +227,19 @@ export default function LocalStorageExplorer() {
 
                             return (
                                 <tr key={key}>
-                                    <td className="resource-table__key-cell">
+                                    <td className="rumpus-table--resource__key-cell">
                                         {key}
                                     </td>
-                                    <td className="resource-table__value-cell">
+                                    <td className="rumpus-table--resource__value-cell">
                                         {long && !expanded && (
-                                            <div className="resource-table__value-preview">
+                                            <div className="rumpus-table--resource__value-preview">
                                                 {stringifyValue(value, true).slice(0, 120)}…
                                             </div>
                                         )}
 
                                         {(!long || expanded) && (
-                                            <div className="resource-table__value-expanded">
-                                                <pre className="resource-table__value-content">
+                                            <div className="rumpus-table--resource__value-expanded">
+                                                <pre className="rumpus-table--resource__value-content">
                                                     {stringifyValue(value, isJson)}
                                                 </pre>
 
@@ -254,7 +254,7 @@ export default function LocalStorageExplorer() {
                                                             loadStorage(); // refresh the state
                                                         }}
                                                         title="Edit color"
-                                                        className="resource-table__color-input"
+                                                        className="rumpus-table--resource__color-input"
                                                     />
                                                 )}
                                             </div>
@@ -269,7 +269,7 @@ export default function LocalStorageExplorer() {
                                             </button>
                                         )}
                                     </td>
-                                    <td className="resource-table__actions-cell">
+                                    <td className="rumpus-table--resource__actions-cell">
                                         <div className="buttons is-right">
                                             {isJson && (
                                                 <button
@@ -299,7 +299,7 @@ export default function LocalStorageExplorer() {
 
                         {!paginatedItems.length && (
                             <tr>
-                                <td colSpan={3} className="resource-table__empty">
+                                <td colSpan={3} className="rumpus-table--resource__empty">
                                     No matching localStorage entries
                                 </td>
                             </tr>
@@ -310,7 +310,7 @@ export default function LocalStorageExplorer() {
 
             {/* ---------- Pagination Controls ---------- */}
             {filteredItems.length > PAGE_SIZE && (
-                <div className="mt-3 resource-table__pagination">
+                <div className="mt-3 rumpus-table--resource__pagination">
                     <button
                         className="button is-small mr-2"
                         onClick={() => setPage((p) => Math.max(p - 1, 0))}
@@ -327,14 +327,14 @@ export default function LocalStorageExplorer() {
                     >
                         Next
                     </button>
-                    <p className="resource-table__pagination-info">
+                    <p className="rumpus-table--resource__pagination-info">
                         Page {page + 1} of {Math.ceil(filteredItems.length / PAGE_SIZE)}
                     </p>
                 </div>
             )}
 
             {/* ---------- Footer ---------- */}
-            <div className="mt-3 resource-table__footer">
+            <div className="mt-3 rumpus-table--resource__footer">
                 <button className="button is-small" onClick={loadStorage}>
                     Reload
                 </button>

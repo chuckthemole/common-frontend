@@ -8,11 +8,13 @@
    - metadata management UIs
    ========================================================================== */
 
-.resource-table-container {
-    overflow-x: auto;
+@use './table_features' as *;
+
+.rumpus-table--resource-container {
+    @extend .rumpus-table-feature-scroll-x;
 }
 
-.resource-table {
+.rumpus-table--resource {
     width: 100%;
     table-layout: fixed;
 
@@ -30,40 +32,35 @@
    Columns
    ========================================================================== */
 
-.resource-table__key-cell {
+.rumpus-table--resource__key-cell {
     font-weight: 600;
     white-space: nowrap;
     width: 220px;
 }
 
-.resource-table__value-cell {
+.rumpus-table--resource__value-cell {
     max-width: 480px;
 }
 
-.resource-table__actions-cell {
-    text-align: right;
-    white-space: nowrap;
-    width: 1%;
+.rumpus-table--resource__actions-cell {
+    @extend .rumpus-table-feature-actions-cell;
 }
 
 /* ==========================================================================
    Value Display
    ========================================================================== */
 
-.resource-table__value-preview {
+.rumpus-table--resource__value-preview {
     color: #7a7a7a;
 }
 
-.resource-table__value-expanded {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
+.rumpus-table--resource__value-expanded {
+    @extend .rumpus-table-feature-inline-flex;
+    @extend .rumpus-table-feature-inline-flex-gap-md;
 }
 
-.resource-table__value-content {
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin: 0;
+.rumpus-table--resource__value-content {
+    @extend .rumpus-table-feature-preformatted;
     flex: 1;
 }
 
@@ -71,7 +68,7 @@
    Color Input
    ========================================================================== */
 
-.resource-table__color-input {
+.rumpus-table--resource__color-input {
     width: 36px;
     height: 36px;
     border: none;
@@ -84,20 +81,19 @@
    Empty State
    ========================================================================== */
 
-.resource-table__empty {
-    text-align: center;
-    color: #7a7a7a;
+.rumpus-table--resource__empty {
+    @extend .rumpus-table-feature-empty;
 }
 
 /* ==========================================================================
    Pagination
    ========================================================================== */
 
-.resource-table__pagination {
+.rumpus-table--resource__pagination {
     text-align: center;
 }
 
-.resource-table__pagination-info {
+.rumpus-table--resource__pagination-info {
     margin-top: 0.25rem;
     font-size: 0.75rem;
 }
@@ -106,7 +102,7 @@
    Footer
    ========================================================================== */
 
-.resource-table__footer {
+.rumpus-table--resource__footer {
     display: flex;
     justify-content: space-between;
 }

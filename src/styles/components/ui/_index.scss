@@ -2,5 +2,10 @@
 @use "component_loading" as *;
 @use "carousel.scss" as *;
 @use "chip_input" as *;
+
 @use "./tables/inspection_table" as *;
 @use "./tables/resource_table" as *;
+@use "./tables/base_table" as *;
+@use "./tables/table_cells" as *;
+@use "./tables/table_features" as *;
+@use "./tables/table_layout" as *;

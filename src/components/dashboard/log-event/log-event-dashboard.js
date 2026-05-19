@@ -183,13 +183,13 @@ export default function EventDashboard({
         return (
             <span
                 className={
-                    `inspection-table__sort-indicator ${isActive
-                        ? "inspection-table__sort-indicator--active"
+                    `rumpus-table--inspection__sort-indicator ${isActive
+                        ? "rumpus-table--inspection__sort-indicator--active"
                         : ""
                     }`
                 }
             >
-                <span className="inspection-table__sort-indicator-top">
+                <span className="rumpus-table--inspection__sort-indicator-top">
                     ▴
                 </span>
 
@@ -460,15 +460,15 @@ export default function EventDashboard({
                             </h3>
 
                             {/* Scroll container */}
-                            <div className="inspection-table-container">
+                            <div className="rumpus-table--inspection-container">
                                 {/* ensures table can expand horizontally */}
-                                <div className="inspection-table-inner">
+                                <div className="rumpus-table--inspection-inner">
                                     {/* ================= JSON VIEW ================= */}
                                     {viewMode === EventViewMode.JSON &&
                                         searchedEvents.map((event, idx) => (
                                             <pre
                                                 key={event.key || idx}
-                                                className="inspection-table__json-row"
+                                                className="rumpus-table--inspection__json-row"
                                             >
                                                 {JSON.stringify(event, null, 2)}
                                             </pre>
@@ -476,16 +476,16 @@ export default function EventDashboard({
 
                                     {/* ================= TABLE VIEW ================= */}
                                     {viewMode === "table" && (
-                                        <table className="table is-fullwidth is-narrow inspection-table">
+                                        <table className="table is-fullwidth is-narrow rumpus-table--inspection rumpus-table-feature-dense">
                                             <thead>
                                                 <tr>
                                                     {allColumns.map((col) => (
                                                         <th key={col}>
-                                                            <div className="inspection-table__header-content">
+                                                            <div className="rumpus-table--inspection__header-content">
                                                                 {/* Sortable column label */}
                                                                 <span
                                                                     onClick={() => handleSort(col)}
-                                                                    className="inspection-table__sort-trigger"
+                                                                    className="rumpus-table--inspection__sort-trigger"
                                                                 >
                                                                     {col}
                                                                     {getSortIndicator(col)}
@@ -498,7 +498,7 @@ export default function EventDashboard({
                                                                                 e.stopPropagation();
                                                                                 setTimestampFormat((prev) => cycleTimestampFormat(prev));
                                                                             }}
-                                                                            className="inspection-table__timestamp-toggle"
+                                                                            className="rumpus-table--inspection__timestamp-toggle"
                                                                         >
                                                                             <FontAwesomeIcon icon={faClock} />
                                                                         </span>
@@ -519,7 +519,7 @@ export default function EventDashboard({
                                                     return (
                                                         <React.Fragment key={idx}>
                                                             {/* -------- MAIN ROW -------- */}
-                                                            <tr className="inspection-table__row">
+                                                            <tr className="rumpus-table--inspection__row">
                                                                 {allColumns.map((col) => (
                                                                     <td key={col}>
                                                                         {renderCell(col, rowWithIndex)}
@@ -532,9 +532,9 @@ export default function EventDashboard({
                                                                 <tr>
                                                                     <td
                                                                         colSpan={allColumns.length}
-                                                                        className="inspection-table__expanded-cell"
+                                                                        className="rumpus-table--inspection__expanded-cell"
                                                                     >
-                                                                        <pre className="inspection-table__expanded-content">
+                                                                        <pre className="rumpus-table--inspection__expanded-content">
                                                                             {JSON.stringify(row.metadata, null, 2)}
                                                                         </pre>
                                                                     </td>

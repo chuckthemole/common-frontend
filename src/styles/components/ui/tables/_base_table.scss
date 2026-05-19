@@ -1,0 +1,14 @@
+.rumpus-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        padding: 0.75rem;
+        text-align: left;
+    }
+}
+
+.rumpus-table-container {
+    overflow-x: auto;
+}

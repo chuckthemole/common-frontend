@@ -9,20 +9,24 @@
    - metadata explorers
    ========================================================================== */
 
-.inspection-table-container {
-    max-height: 70vh;
-    overflow-y: auto;
-    overflow-x: auto;
+@use './table_features' as *;
+
+.rumpus-table--inspection-container {
+    @extend .rumpus-table-feature-scroll-both;
+    @extend .rumpus-table-feature-bounded-height;
     border: 1px solid #eee;
     border-radius: 6px;
 }
 
-.inspection-table-inner {
+.rumpus-table--inspection-inner {
     min-width: 100%;
     width: max-content;
 }
 
-.inspection-table {
+.rumpus-table--inspection {
+    @extend .rumpus-table-feature-sticky-header;
+    @extend .rumpus-table-feature-striped-rows;
+
     margin: 0;
     min-width: 100%;
     border-collapse: separate;
@@ -36,18 +40,13 @@
     }
 
     th {
-        position: sticky;
-        top: 0;
-        z-index: 1;
         background: #fff;
         border-bottom: 1px solid #eaeaea;
     }
 
     td {
-        font-size: 13px;
+        @extend .rumpus-table-feature-truncate;
         max-width: 300px;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 }
 
@@ -55,7 +54,7 @@
    Rows
    ========================================================================== */
 
-.inspection-table__row {
+.rumpus-table--inspection__row {
     background: #fff;
 
     &:nth-child(even) {
@@ -67,47 +66,42 @@
    Expanded metadata/detail row
    ========================================================================== */
 
-.inspection-table__expanded-cell {
+.rumpus-table--inspection__expanded-cell {
     padding: 0 !important;
 }
 
-.inspection-table__expanded-content {
-    margin: 0;
+.rumpus-table--inspection__expanded-content {
     padding: 12px;
     font-size: 12px;
     background: #fafafa;
     border-top: 1px solid #eee;
-    white-space: pre-wrap;
-    word-break: break-word;
+    @extend .rumpus-table-feature-preformatted;
 }
 
 /* ==========================================================================
    Header controls
    ========================================================================== */
 
-.inspection-table__header-content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.rumpus-table--inspection__header-content {
+    @extend .rumpus-table-feature-inline-flex;
+    @extend .rumpus-table-feature-inline-flex-gap-md;
     width: 100%;
 }
 
-.inspection-table__sort-trigger {
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.rumpus-table--inspection__sort-trigger {
+    @extend .rumpus-table-feature-inline-flex;
+    @extend .rumpus-table-feature-inline-flex-gap-sm;
+    @extend .rumpus-table-feature-clickable;
 }
 
-.inspection-table__sort-indicator {
+.rumpus-table--inspection__sort-indicator {
+    @extend .rumpus-table-feature-clickable;
     display: inline-flex;
     flex-direction: column;
     margin-left: 4px;
     line-height: 8px;
     transform: translateY(-1px);
     font-size: 10px;
-    user-select: none;
     opacity: 0.25;
 
     &--active {
@@ -115,13 +109,12 @@
     }
 }
 
-.inspection-table__sort-indicator-top {
+.rumpus-table--inspection__sort-indicator-top {
     margin-bottom: -2px;
 }
 
-.inspection-table__timestamp-toggle {
-    cursor: pointer;
-    user-select: none;
+.rumpus-table--inspection__timestamp-toggle {
+    @extend .rumpus-table-feature-clickable;
     padding-left: 4px;
     line-height: 1;
 }
@@ -130,7 +123,7 @@
    JSON mode
    ========================================================================== */
 
-.inspection-table__json-row {
+.rumpus-table--inspection__json-row {
     margin: 0;
     padding: 10px;
     font-size: 12px;
