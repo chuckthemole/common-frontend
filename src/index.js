@@ -45,6 +45,7 @@ export { getNamedApi } from './api/client/api';
 export { setNamedApi } from './api/client/api';
 export { getApiBaseURL } from './api/client/api';
 export { initializeUserApi, getUserApi } from './api/modules/user/user-api';
+export { initializeProfileApi, getProfileApi } from './api/modules/profile/profile-api';
 
 export { default as LOGGER } from './logger';
 export { getLoggingEnv } from './logger';
