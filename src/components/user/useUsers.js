@@ -26,7 +26,7 @@ export function useUsers() {
             endpoint: "/api/users/asc",
         });
 
-        userApi.getAll()
+        userApi.getAllUsers()
             .then((data) => {
                 logger.debug("[useUsers] api.getAll() success", {
                     data,

@@ -23,6 +23,7 @@ import { debugImports } from "../../../utils";
 import { useProfile } from "./profile/useProfile";
 import { useEventLogger } from "../../event-logger/useEventLogger";
 import useCurrentUser from "../../user/current-user/useCurrentUser";
+import { useUsers } from "../../user/useUsers";
 
 /**
  * DEBUG ONLY — Import Integrity Check
@@ -69,7 +70,12 @@ export default function PersonalPageEditor({
     const { openModal } = useRumpusModal();
 
     const { user, isAuthenticated } = useCurrentUser();
-    logger.debug('herehere', user);
+
+    const {
+        users,
+        loading,
+        error,
+    } = useUsers();
 
     // DEBUG
     // useEffect(() => {
