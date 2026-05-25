@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 
 import { useUsers } from "../useUsers";
@@ -7,48 +8,23 @@ import logger from "../../../logger";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import {
-    faPlus,
     faEye,
     faPen,
+    faPlus,
     faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import UserProfileEditor from "./user-profile-editor";
+import { useSort } from "../../hooks/use-sort";
 import {
-    useRumpusModal,
+    ChipInput,
+    ComponentLoading,
     RumpusModal,
     Tooltip,
     TruncatedCell,
-    ChipInput,
-    CHIP_COLOR_PALETTE
+    useRumpusModal
 } from "../../ui";
 import { CHIP_COLOR_CONFIG } from "./chip-color.config";
-
-/**
- * -----------------------------------------------------------------------------
- * Helpers
- * -----------------------------------------------------------------------------
- */
-function formatDate(epochOrString) {
-
-    if (!epochOrString) {
-        return "—";
-    }
-
-    const date =
-        new Date(
-            Number(epochOrString)
-        );
-
-    if (
-        isNaN(
-            date.getTime()
-        )
-    ) {
-        return "—";
-    }
-
-    return date.toDateString();
-}
+import UserProfileEditor from "./user-profile-editor";
+import { formatTimestamp, TimestampFormat } from "../../../utils";
 
 /**
  * -----------------------------------------------------------------------------
@@ -59,10 +35,20 @@ function formatDate(epochOrString) {
 export default function UsersPage() {
 
     const {
+        sortConfig,
+        toggleSort,
+        isSortedBy,
+        sortIndicator,
+    } = useSort("USERNAME", "asc");
+
+    const {
         users,
         loading,
         error,
-    } = useUsers();
+    } = useUsers({
+        sort: sortConfig.key,
+        direction: sortConfig.direction.toUpperCase(),
+    });
 
     logger.debug(
         "[UsersPage] render",
@@ -126,21 +112,6 @@ export default function UsersPage() {
 
     /**
      * -------------------------------------------------------------------------
-     * Loading
-     * -------------------------------------------------------------------------
-     */
-
-    if (loading) {
-
-        return (
-            <div className="m-6">
-                Loading users...
-            </div>
-        );
-    }
-
-    /**
-     * -------------------------------------------------------------------------
      * Error
      * -------------------------------------------------------------------------
      */
@@ -162,6 +133,272 @@ export default function UsersPage() {
             </div>
         );
     }
+
+    const tableContent = loading ? (
+        <ComponentLoading />
+    ) : (
+        <div className="table-container">
+
+            <table
+                className="
+                        table
+                        is-hoverable
+                        is-fullwidth
+                        is-bordered
+                        m-6
+                    "
+            >
+
+                <thead>
+
+                    <tr>
+                        <th>#</th>
+                        <th onClick={() => toggleSort("USERNAME")} style={{ cursor: "pointer" }}>
+                            User {isSortedBy("USERNAME") && sortIndicator("USERNAME")}
+                        </th>
+                        <th onClick={() => toggleSort("EMAIL")} style={{ cursor: "pointer" }}>
+                            Email {isSortedBy("EMAIL") && sortIndicator("EMAIL")}
+                        </th>
+                        <th>Roles</th>
+                        <th onClick={() => toggleSort("CREATED")} style={{ cursor: "pointer" }}>
+                            Created {isSortedBy("CREATED") && sortIndicator("CREATED")}
+                        </th>
+                        <th onClick={() => toggleSort("ID")} style={{ cursor: "pointer" }}>
+                            ID {isSortedBy("ID") && sortIndicator("ID")}
+                        </th>
+                        <th>View</th>
+                        <th>Delete</th>
+                        <th>Update</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {
+                        users.map(
+                            (
+                                user,
+                                index
+                            ) => (
+                                <tr
+                                    key={
+                                        user.id
+                                    }
+                                >
+
+                                    {/* INDEX */}
+
+                                    <th>
+                                        {
+                                            index + 1
+                                        }
+                                    </th>
+
+                                    {/* USERNAME */}
+                                    <td>
+                                        <Tooltip
+                                            copyable
+                                            rotatable
+                                            copyText={user.username}
+                                            text={user.username}
+                                        >
+                                            {user.username}
+                                        </Tooltip>
+                                    </td>
+
+                                    {/* EMAIL */}
+                                    <td>
+                                        <Tooltip
+                                            copyable
+                                            rotatable
+                                            copyText={user.email}
+                                            text={user.email}
+                                        >
+                                            <TruncatedCell
+                                                value={user.email}
+                                            />
+                                        </Tooltip>
+                                    </td>
+
+                                    {/* ROLES */}
+                                    <td>
+                                        {
+                                            user.roles?.length ? (
+                                                <ChipInput
+                                                    editable
+                                                    addable
+                                                    removable
+                                                    placeholder="Add role..."
+                                                    // assignColors
+                                                    // colorPalette={CHIP_COLOR_PALETTE}
+                                                    colorMap={CHIP_COLOR_CONFIG.roles}
+                                                    items={
+                                                        user.roles.map((role) => ({
+                                                            label: role,
+                                                        }))
+                                                    }
+                                                />
+                                            ) : (
+                                                "—"
+                                            )
+                                        }
+                                    </td>
+                                    {/* CREATED */}
+
+                                    <td
+                                        title={
+                                            user.createdAt
+                                        }
+                                    >
+
+                                        {
+                                            formatTimestamp(user.createdAt, TimestampFormat.ISO)
+                                        }
+
+                                    </td>
+
+                                    {/* ID */}
+                                    <td>
+                                        <Tooltip
+                                            copyable
+                                            rotatable
+                                            copyText={user.id}
+                                            text={user.id}
+                                        >
+                                            <TruncatedCell
+                                                value={user.id}
+                                            />
+                                        </Tooltip>
+                                    </td>
+
+                                    {/* VIEW */}
+
+                                    <td>
+
+                                        <Tooltip text={"View user"}>
+                                            <button
+                                                className="
+                                                    button
+                                                    is-small
+                                                    is-info
+                                                    is-light
+                                                "
+                                                onClick={() =>
+                                                    handleViewUser(user.id)
+                                                }
+                                            >
+
+                                                <span className="icon">
+
+                                                    <FontAwesomeIcon
+                                                        icon={faEye}
+                                                    />
+
+                                                </span>
+
+                                            </button>
+                                        </Tooltip>
+
+                                    </td>
+
+                                    {/* DELETE */}
+
+                                    <td>
+
+                                        <Tooltip text={"Delete user"}>
+                                            <button
+                                                className="
+                                                    button
+                                                    is-small
+                                                    is-danger
+                                                    is-light
+                                                "
+                                                onClick={() =>
+                                                    handleDeleteUser(
+                                                        user
+                                                    )
+                                                }
+                                            >
+
+                                                <span className="icon">
+
+                                                    <FontAwesomeIcon
+                                                        icon={faTrash}
+                                                    />
+
+                                                </span>
+
+                                            </button>
+                                        </Tooltip>
+
+                                    </td>
+
+                                    {/* UPDATE */}
+
+                                    <td>
+
+                                        <Tooltip text={"Update user"}>
+                                            <button
+                                                className="
+                                                    button
+                                                    is-small
+                                                    is-warning
+                                                    is-light
+                                                "
+                                                onClick={() =>
+                                                    handleUpdateUser(user.id)
+                                                }
+                                            >
+
+                                                <span className="icon">
+
+                                                    <FontAwesomeIcon
+                                                        icon={faPen}
+                                                    />
+
+                                                </span>
+
+                                            </button>
+                                        </Tooltip>
+
+                                    </td>
+
+                                </tr>
+                            )
+                        )
+                    }
+
+                </tbody>
+
+                <tfoot>
+
+                    <tr>
+                        <th>#</th>
+                        <th onClick={() => toggleSort("USERNAME")} style={{ cursor: "pointer" }}>
+                            User {isSortedBy("USERNAME") && sortIndicator("USERNAME")}
+                        </th>
+                        <th onClick={() => toggleSort("EMAIL")} style={{ cursor: "pointer" }}>
+                            Email {isSortedBy("EMAIL") && sortIndicator("EMAIL")}
+                        </th>
+                        <th>Roles</th>
+                        <th onClick={() => toggleSort("CREATED")} style={{ cursor: "pointer" }}>
+                            Created {isSortedBy("CREATED") && sortIndicator("CREATED")}
+                        </th>
+                        <th onClick={() => toggleSort("ID")} style={{ cursor: "pointer" }}>
+                            ID {isSortedBy("ID") && sortIndicator("ID")}
+                        </th>
+                        <th>View</th>
+                        <th>Delete</th>
+                        <th>Update</th>
+                    </tr>
+
+                </tfoot>
+
+            </table>
+
+        </div>
+    );
 
     /**
      * -------------------------------------------------------------------------
@@ -248,257 +485,7 @@ export default function UsersPage() {
 
             </div>
 
-            {/* -----------------------------------------------------------------
-                TABLE
-            ------------------------------------------------------------------ */}
-
-            <div className="table-container">
-
-                <table
-                    className="
-                        table
-                        is-hoverable
-                        is-fullwidth
-                        is-bordered
-                        m-6
-                    "
-                >
-
-                    <thead>
-
-                        <tr>
-                            <th>#</th>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                            <th>Created</th>
-                            <th>ID</th>
-                            <th>View</th>
-                            <th>Delete</th>
-                            <th>Update</th>
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {
-                            users.map(
-                                (
-                                    user,
-                                    index
-                                ) => (
-                                    <tr
-                                        key={
-                                            user.id
-                                        }
-                                    >
-
-                                        {/* INDEX */}
-
-                                        <th>
-                                            {
-                                                index + 1
-                                            }
-                                        </th>
-
-                                        {/* USERNAME */}
-                                        <td>
-                                            <Tooltip
-                                                copyable
-                                                rotatable
-                                                copyText={user.username}
-                                                text={user.username}
-                                            >
-                                                {user.username}
-                                            </Tooltip>
-                                        </td>
-
-                                        {/* EMAIL */}
-                                        <td>
-                                            <Tooltip
-                                                copyable
-                                                rotatable
-                                                copyText={user.email}
-                                                text={user.email}
-                                            >
-                                                <TruncatedCell
-                                                    value={user.email}
-                                                />
-                                            </Tooltip>
-                                        </td>
-
-                                        {/* ROLES */}
-                                        <td>
-                                            {
-                                                user.roles?.length ? (
-                                                    <ChipInput
-                                                        editable
-                                                        addable
-                                                        removable
-                                                        placeholder="Add role..."
-                                                        // assignColors
-                                                        // colorPalette={CHIP_COLOR_PALETTE}
-                                                        colorMap={CHIP_COLOR_CONFIG.roles}
-                                                        items={
-                                                            user.roles.map((role) => ({
-                                                                label: role,
-                                                            }))
-                                                        }
-                                                    />
-                                                ) : (
-                                                    "—"
-                                                )
-                                            }
-                                        </td>
-                                        {/* CREATED */}
-
-                                        <td
-                                            title={
-                                                user.createdAt
-                                            }
-                                        >
-
-                                            {
-                                                formatDate(
-                                                    user.createdAtTimestamp
-                                                )
-                                            }
-
-                                        </td>
-
-                                        {/* ID */}
-                                        <td>
-                                            <Tooltip
-                                                copyable
-                                                rotatable
-                                                copyText={user.id}
-                                                text={user.id}
-                                            >
-                                                <TruncatedCell
-                                                    value={user.id}
-                                                />
-                                            </Tooltip>
-                                        </td>
-
-                                        {/* VIEW */}
-
-                                        <td>
-
-                                            <Tooltip text={"View user"}>
-                                                <button
-                                                    className="
-                                                    button
-                                                    is-small
-                                                    is-info
-                                                    is-light
-                                                "
-                                                    onClick={() =>
-                                                        handleViewUser(user.id)
-                                                    }
-                                                >
-
-                                                    <span className="icon">
-
-                                                        <FontAwesomeIcon
-                                                            icon={faEye}
-                                                        />
-
-                                                    </span>
-
-                                                </button>
-                                            </Tooltip>
-
-                                        </td>
-
-                                        {/* DELETE */}
-
-                                        <td>
-
-                                            <Tooltip text={"Delete user"}>
-                                                <button
-                                                    className="
-                                                    button
-                                                    is-small
-                                                    is-danger
-                                                    is-light
-                                                "
-                                                    onClick={() =>
-                                                        handleDeleteUser(
-                                                            user
-                                                        )
-                                                    }
-                                                >
-
-                                                    <span className="icon">
-
-                                                        <FontAwesomeIcon
-                                                            icon={faTrash}
-                                                        />
-
-                                                    </span>
-
-                                                </button>
-                                            </Tooltip>
-
-                                        </td>
-
-                                        {/* UPDATE */}
-
-                                        <td>
-
-                                            <Tooltip text={"Update user"}>
-                                                <button
-                                                    className="
-                                                    button
-                                                    is-small
-                                                    is-warning
-                                                    is-light
-                                                "
-                                                    onClick={() =>
-                                                        handleUpdateUser(user.id)
-                                                    }
-                                                >
-
-                                                    <span className="icon">
-
-                                                        <FontAwesomeIcon
-                                                            icon={faPen}
-                                                        />
-
-                                                    </span>
-
-                                                </button>
-                                            </Tooltip>
-
-                                        </td>
-
-                                    </tr>
-                                )
-                            )
-                        }
-
-                    </tbody>
-
-                    <tfoot>
-
-                        <tr>
-                            <th>#</th>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                            <th>Created</th>
-                            <th>ID</th>
-                            <th>View</th>
-                            <th>Delete</th>
-                            <th>Update</th>
-                        </tr>
-
-                    </tfoot>
-
-                </table>
-
-            </div>
+            {tableContent}
 
             <RumpusModal
                 isOpen={userProfileEditorModalIsOpen}

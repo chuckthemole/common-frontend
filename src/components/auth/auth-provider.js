@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
             const nextState = {
                 isLoading: false,
-                isAuthenticated: res?.authenticated,
+                isAuthenticated: !!res?.authenticated,
                 roles: res?.roles ?? null,
                 user: res?.username ?? null,
             };

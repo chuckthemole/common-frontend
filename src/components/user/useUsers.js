@@ -1,99 +1,99 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getUserApi } from "../../api/modules/user/user-api";
 import logger from "../../logger";
 
-export function useUsers() {
+/**
+ * query shape:
+ * {
+ *   sort: "USERNAME" | "EMAIL" | "ID",
+ *   direction: "ASC" | "DESC",
+ *   page: number,
+ *   size: number
+ * }
+ */
+export function useUsers(query = {}) {
+
+    const {
+        sort = "USERNAME",
+        direction = "DESC",
+        page = 0,
+        size = 50,
+    } = query;
+
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    logger.debug("[useUsers] hook render", {
-        usersCount: users.length,
-        loading,
-        error,
-    });
-
+    const cancelRef = useRef(false);
     const userApi = getUserApi();
 
     useEffect(() => {
-        let cancelled = false;
 
-        logger.debug("[useUsers] effect start", {
-            cancelled,
+        cancelRef.current = false;
+        setLoading(true);
+        setError(null);
+
+        logger.debug("[useUsers] fetch start", {
+            sort,
+            direction,
+            page,
+            size,
         });
 
-        logger.debug("[useUsers] calling api.getAll()", {
-            endpoint: "/api/users/asc",
-        });
-
-        userApi.getAllUsers()
+        userApi.getAllUsers({
+            params: {
+                sort,
+                direction,
+                page,
+                size,
+            },
+        })
             .then((data) => {
-                logger.debug("[useUsers] api.getAll() success", {
-                    data,
-                    type: typeof data,
-                    isArray: Array.isArray(data),
-                    length: Array.isArray(data) ? data.length : undefined,
-                });
 
-                if (cancelled) {
-                    logger.debug(
-                        "[useUsers] request resolved after cancellation"
-                    );
+                if (cancelRef.current) {
+                    logger.debug("[useUsers] ignored stale response");
                     return;
                 }
 
-                setUsers(data);
-
-                logger.debug("[useUsers] users state updated", {
-                    usersCount: Array.isArray(data) ? data.length : undefined,
+                logger.debug("[useUsers] success", {
+                    count: Array.isArray(data) ? data.length : 0,
                 });
+
+                setUsers(data ?? []);
             })
             .catch((err) => {
-                logger.error("[useUsers] api.getAll() failed", {
-                    error: err,
-                    message: err?.message,
-                    stack: err?.stack,
-                });
 
-                if (cancelled) {
-                    logger.debug(
-                        "[useUsers] error occurred after cancellation"
-                    );
-                    return;
-                }
+                if (cancelRef.current) return;
+
+                logger.error("[useUsers] failed", {
+                    message: err?.message,
+                    status: err?.status,
+                });
 
                 setError(err);
             })
             .finally(() => {
-                logger.debug("[useUsers] request finally()", {
-                    cancelled,
-                });
 
-                if (cancelled) {
-                    return;
-                }
+                if (cancelRef.current) return;
 
                 setLoading(false);
-
-                logger.debug("[useUsers] loading=false");
             });
 
         return () => {
-            logger.debug("[useUsers] cleanup -> cancelling request");
-
-            cancelled = true;
+            cancelRef.current = true;
         };
-    }, []);
 
-    logger.debug("[useUsers] return", {
-        users,
-        loading,
-        error,
-    });
+    }, [sort, direction, page, size]);
 
     return {
         users,
         loading,
         error,
+        query: {
+            sort,
+            direction,
+            page,
+            size,
+        },
     };
 }

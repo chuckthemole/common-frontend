@@ -17,14 +17,43 @@ export const common_fetcher = async (endpoint) => {
         // Safely return data, or an empty object/array if undefined
         return res.data ?? {}; // or use [] if the API typically returns arrays
     } catch (error) {
-        // Optional: handle 204 No Content gracefully
-        if (error.response?.status === 204) {
-            return {}; // or [] depending on what your consumers expect
+
+        const status = error.response?.status;
+
+        // -------------------------------------------------------------
+        // Expected auth-related states
+        // -------------------------------------------------------------
+        if (status === 401 || status === 403) {
+            return {
+                authenticated: false,
+                roles: null,
+                username: null,
+            };
         }
-        logger.info(endpoint);
-        const err = new Error('An error occurred while fetching the data.');
+
+        // -------------------------------------------------------------
+        // Graceful empty responses
+        // -------------------------------------------------------------
+        if (status === 204) {
+            return {};
+        }
+
+        // -------------------------------------------------------------
+        // Network/server issues
+        // -------------------------------------------------------------
+        logger.error("Fetcher failed", {
+            endpoint,
+            status,
+            error,
+        });
+
+        const err = new Error(
+            `Request failed for ${endpoint}`
+        );
+
         err.info = error.response?.data || null;
-        err.status = error.response?.status || 500;
+        err.status = status || 500;
+
         throw err;
     }
 };

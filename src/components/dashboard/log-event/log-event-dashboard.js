@@ -1,29 +1,29 @@
+import { faClock, faInfo } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useMemo, useState } from "react";
-import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
 import logger, { useScopedLogger } from "../../../logger";
 import { LocalPersistence } from "../../../persistence";
-import { getEventStore, eventRegistryManager, EventLoggerRetentionModal } from "../../event-logger";
 import {
-    useToast,
+    TimestampFormat,
+    cycleTimestampFormat,
+    filterEvents,
+    formatTimestamp,
+    getColumns,
+    highlightText,
+    sortRows
+} from "../../../utils";
+import { SingleSelector, ToggleSwitch } from "../../dashboard-elements";
+import { EventLoggerRetentionModal, eventRegistryManager, getEventStore } from "../../event-logger";
+import {
     ConfirmModal,
     PortalContainer,
     Tooltip,
     useRumpusModal,
-    DurationInput
+    useToast
 } from "../../ui";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faInfo } from "@fortawesome/free-solid-svg-icons";
-import {
-    TimestampFormat,
-    formatTimestamp,
-    cycleTimestampFormat,
-    filterEvents,
-    sortRows,
-    getColumns,
-    highlightText
-} from "../../../utils";
 
 import { flattenEvent, isHomogeneousMetadata } from "../../event-logger";
+import { useSort } from "../../hooks/use-sort";
 
 export const EventViewMode = Object.freeze({
     JSON: "json",
@@ -58,10 +58,12 @@ export default function EventDashboard({
     const toast = useToast();
 
     // sorting state
-    const [sortConfig, setSortConfig] = useState({
-        key: "timestamp",
-        direction: "desc",
-    });
+    const {
+        sortConfig,
+        toggleSort,
+        isSortedBy,
+        sortIndicator,
+    } = useSort("timestamp", "desc");
 
     useEffect(() => {
         const timeout = setTimeout(() => {
@@ -149,22 +151,6 @@ export default function EventDashboard({
     const handleClearAll = async () => {
         SCOPED_LOGGER.info("Clearing all events");
         openModal("clearLogsModal");
-    };
-
-    const handleSort = (col) => {
-        setSortConfig((prev) => {
-            if (prev.key === col) {
-                return {
-                    key: col,
-                    direction: prev.direction === "asc" ? "desc" : "asc",
-                };
-            }
-
-            return {
-                key: col,
-                direction: "asc",
-            };
-        });
     };
 
     const tableRows = useMemo(() => {
@@ -484,7 +470,7 @@ export default function EventDashboard({
                                                             <div className="rumpus-table--inspection__header-content">
                                                                 {/* Sortable column label */}
                                                                 <span
-                                                                    onClick={() => handleSort(col)}
+                                                                    onClick={() => toggleSort(col)}
                                                                     className="rumpus-table--inspection__sort-trigger"
                                                                 >
                                                                     {col}
