@@ -215,3 +215,69 @@ export function useSignupValidation({
         isValid: !hasErrors,
     };
 }
+
+/**
+ * -----------------------------------------------------------------------------
+ * TODO (Future Architecture)
+ * -----------------------------------------------------------------------------
+ *
+ * Current implementation uses a locally supplied configuration object.
+ *
+ * Long-term goal is for validation rules to be sourced from the backend so
+ * that the server remains the single source of truth for authentication and
+ * user creation requirements.
+ *
+ * Proposed Architecture:
+ *
+ *     Spring Boot
+ *         └── /api/auth/config
+ *                 ↓
+ *         Validation Policy DTO
+ *                 ↓
+ *         React AuthConfigProvider
+ *                 ↓
+ *         useSignupValidation()
+ *                 ↓
+ *         SignupFields
+ *
+ * Benefits:
+ *
+ * 1. Prevent frontend/backend validation drift.
+ *
+ *    Example:
+ *      - Frontend allows 8-character passwords.
+ *      - Backend later requires 12 characters.
+ *      - User submits valid-looking form and receives server error.
+ *
+ *    Shared configuration eliminates this problem.
+ *
+ * 2. Allow client-specific authentication policies.
+ *
+ *      Client A:
+ *          username min length = 3
+ *
+ *      Client B:
+ *          username min length = 8
+ *          special characters required
+ *
+ *      Client C:
+ *          email optional
+ *
+ *    No frontend code changes required.
+ *
+ * 3. Allow runtime configuration changes without redeploying the frontend.
+ *
+ * 4. Ensure validation messages and requirements remain synchronized across
+ *    all authentication screens.
+ *
+ * Future work:
+ *
+ * - Create AuthenticationConfiguration DTO on backend.
+ * - Expose GET /api/auth/config endpoint.
+ * - Create useAuthConfig() hook.
+ * - Cache configuration using context/provider.
+ * - Fall back to DEFAULT_SIGNUP_VALIDATION_CONFIG when endpoint is unavailable.
+ * - Consider server-provided validation messages for localization/i18n.
+ *
+ * -----------------------------------------------------------------------------
+ */
