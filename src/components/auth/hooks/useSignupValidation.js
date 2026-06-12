@@ -2,34 +2,27 @@ import {
     useMemo,
 } from "react";
 
+import { DEFAULT_SIGNUP_VALIDATION_CONFIG } from "../config/default-signup-validation.config";
+
 /**
  * -----------------------------------------------------------------------------
  * useSignupValidation
  * -----------------------------------------------------------------------------
  *
- * Client-side validation for signup forms.
- *
- * Returns:
- *
- * {
- *     errors: {
- *         username,
- *         email,
- *         password,
- *         confirmPassword,
- *     },
- *     isValid,
- *     hasErrors,
- * }
+ * Configuration-driven signup validation.
  *
  * -----------------------------------------------------------------------------
  */
 
 export function useSignupValidation({
+
     username,
     email,
     password,
     confirmPassword,
+
+    config = DEFAULT_SIGNUP_VALIDATION_CONFIG,
+
 }) {
 
     const errors = useMemo(() => {
@@ -42,24 +35,37 @@ export function useSignupValidation({
          * ---------------------------------------------------------------------
          */
 
-        if (!username?.trim()) {
+        const usernameConfig =
+            config.username;
 
-            nextErrors.username =
-                "Username is required";
+        const trimmedUsername =
+            username?.trim() ?? "";
 
-        } else if (
-            username.trim().length < 3
+        if (
+            usernameConfig.required &&
+            !trimmedUsername
         ) {
 
             nextErrors.username =
-                "Username must be at least 3 characters";
+                usernameConfig.messages.required;
 
         } else if (
-            username.length > 50
+            trimmedUsername &&
+            trimmedUsername.length <
+            usernameConfig.minLength
         ) {
 
             nextErrors.username =
-                "Username cannot exceed 50 characters";
+                usernameConfig.messages.minLength;
+
+        } else if (
+            trimmedUsername &&
+            trimmedUsername.length >
+            usernameConfig.maxLength
+        ) {
+
+            nextErrors.username =
+                usernameConfig.messages.maxLength;
         }
 
         /**
@@ -68,20 +74,27 @@ export function useSignupValidation({
          * ---------------------------------------------------------------------
          */
 
-        const emailRegex =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailConfig =
+            config.email;
 
-        if (!email?.trim()) {
+        const trimmedEmail =
+            email?.trim() ?? "";
 
-            nextErrors.email =
-                "Email is required";
-
-        } else if (
-            !emailRegex.test(email)
+        if (
+            emailConfig.required &&
+            !trimmedEmail
         ) {
 
             nextErrors.email =
-                "Please enter a valid email address";
+                emailConfig.messages.required;
+
+        } else if (
+            trimmedEmail &&
+            !emailConfig.regex.test(trimmedEmail)
+        ) {
+
+            nextErrors.email =
+                emailConfig.messages.invalid;
         }
 
         /**
@@ -90,17 +103,65 @@ export function useSignupValidation({
          * ---------------------------------------------------------------------
          */
 
-        if (!password) {
+        const passwordConfig =
+            config.password;
 
-            nextErrors.password =
-                "Password is required";
-
-        } else if (
-            password.length < 8
+        if (
+            passwordConfig.required &&
+            !password
         ) {
 
             nextErrors.password =
-                "Password must be at least 8 characters";
+                passwordConfig.messages.required;
+
+        } else if (
+            password
+        ) {
+
+            if (
+                password.length <
+                passwordConfig.minLength
+            ) {
+
+                nextErrors.password =
+                    passwordConfig.messages.minLength;
+            }
+
+            else if (
+                passwordConfig.requireUppercase &&
+                !/[A-Z]/.test(password)
+            ) {
+
+                nextErrors.password =
+                    passwordConfig.messages.uppercase;
+            }
+
+            else if (
+                passwordConfig.requireLowercase &&
+                !/[a-z]/.test(password)
+            ) {
+
+                nextErrors.password =
+                    passwordConfig.messages.lowercase;
+            }
+
+            else if (
+                passwordConfig.requireNumber &&
+                !/\d/.test(password)
+            ) {
+
+                nextErrors.password =
+                    passwordConfig.messages.number;
+            }
+
+            else if (
+                passwordConfig.requireSpecialCharacter &&
+                !/[!@#$%^&*(),.?":{}|<>]/.test(password)
+            ) {
+
+                nextErrors.password =
+                    passwordConfig.messages.specialCharacter;
+            }
         }
 
         /**
@@ -109,21 +170,29 @@ export function useSignupValidation({
          * ---------------------------------------------------------------------
          */
 
+        const confirmConfig =
+            config.confirmPassword;
+
         if (
-            confirmPassword !== undefined
+            confirmConfig.enabled
         ) {
 
-            if (!confirmPassword) {
+            if (
+                confirmConfig.required &&
+                !confirmPassword
+            ) {
 
                 nextErrors.confirmPassword =
-                    "Please confirm your password";
+                    confirmConfig.messages.required;
+            }
 
-            } else if (
+            else if (
+                confirmPassword &&
                 password !== confirmPassword
             ) {
 
                 nextErrors.confirmPassword =
-                    "Passwords do not match";
+                    confirmConfig.messages.mismatch;
             }
         }
 
@@ -134,6 +203,7 @@ export function useSignupValidation({
         email,
         password,
         confirmPassword,
+        config,
     ]);
 
     const hasErrors =
