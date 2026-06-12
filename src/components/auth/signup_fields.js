@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Spinner from '../ui/loaders/spinning_wheel';
 
 /**
@@ -32,7 +32,16 @@ export function SignupFields({
     error,
     loading,
     oauthProviders = [],
+    validationErrors = {},
+    canSubmit = () => true,
 }) {
+    const [touched, setTouched] = useState({
+        username: false,
+        email: false,
+        password: false,
+        confirmPassword: false,
+    });
+
     return (
         <>
             {/* Username */}
@@ -41,12 +50,26 @@ export function SignupFields({
                 <div className="control has-icons-left">
                     <input
                         type="text"
-                        className="input"
+                        className={`input ${touched.username && validationErrors.username
+                                ? "is-danger"
+                                : ""
+                            }`}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        onBlur={() =>
+                            setTouched(prev => ({
+                                ...prev,
+                                username: true,
+                            }))
+                        }
                         required
                         autoComplete="username"
                     />
+                    {touched.username && validationErrors.username && (
+                        <p className="help is-danger">
+                            {validationErrors.username}
+                        </p>
+                    )}
                     <span className="icon is-small is-left">
                         <i className="fa fa-user" />
                     </span>
@@ -59,12 +82,26 @@ export function SignupFields({
                 <div className="control has-icons-left">
                     <input
                         type="email"
-                        className="input"
+                        className={`input ${touched.email && validationErrors.email
+                            ? "is-danger"
+                            : ""
+                            }`}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        onBlur={() =>
+                            setTouched(prev => ({
+                                ...prev,
+                                email: true,
+                            }))
+                        }
                         required
                         autoComplete="email"
                     />
+                    {touched.email && validationErrors.email && (
+                        <p className="help is-danger">
+                            {validationErrors.email}
+                        </p>
+                    )}
                     <span className="icon is-small is-left">
                         <i className="fa fa-envelope" />
                     </span>
@@ -77,12 +114,26 @@ export function SignupFields({
                 <div className="control has-icons-left">
                     <input
                         type="password"
-                        className="input"
+                        className={`input ${touched.password && validationErrors.password
+                            ? "is-danger"
+                            : ""
+                            }`}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        onBlur={() =>
+                            setTouched(prev => ({
+                                ...prev,
+                                password: true,
+                            }))
+                        }
                         required
                         autoComplete="new-password"
                     />
+                    {touched.password && validationErrors.password && (
+                        <p className="help is-danger">
+                            {validationErrors.password}
+                        </p>
+                    )}
                     <span className="icon is-small is-left">
                         <i className="fa fa-lock" />
                     </span>
@@ -96,12 +147,26 @@ export function SignupFields({
                     <div className="control has-icons-left">
                         <input
                             type="password"
-                            className="input"
+                            className={`input ${touched.confirmPassword && validationErrors.confirmPassword
+                                ? "is-danger"
+                                : ""
+                                }`}
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
+                            onBlur={() =>
+                                setTouched(prev => ({
+                                    ...prev,
+                                    confirmPassword: true,
+                                }))
+                            }
                             required
                             autoComplete="new-password"
                         />
+                        {touched.confirmPassword && validationErrors.confirmPassword && (
+                            <p className="help is-danger">
+                                {validationErrors.confirmPassword}
+                            </p>
+                        )}
                         <span className="icon is-small is-left">
                             <i className="fa fa-lock" />
                         </span>
@@ -122,7 +187,7 @@ export function SignupFields({
                     <button
                         type="submit"
                         className="button is-success is-fullwidth"
-                        disabled={loading}
+                        disabled={!canSubmit || loading}
                     >
                         {loading ? (
                             <Spinner size="16px" thickness="2px" color="#fff" />

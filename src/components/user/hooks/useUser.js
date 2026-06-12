@@ -7,9 +7,9 @@ import {
 
 import {
     getUserApi,
-} from "../../api/modules/user/user-api";
+} from "../../../api/modules/user/user-api";
 
-import logger from "../../logger";
+import logger from "../../../logger";
 
 /**
  * -----------------------------------------------------------------------------

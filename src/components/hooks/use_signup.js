@@ -1,6 +1,8 @@
 import { useCallback, useState } from 'react';
 import { getApi } from '../../api/client/api';
 import qs from 'qs';
+import { useCreateUser } from '../user/hooks/useCreateUser';
+import logger from '../../logger';
 
 /**
  * Custom React hook to handle user signup with form-encoded credentials.
@@ -16,54 +18,65 @@ import qs from 'qs';
  *   error: string | null
  * }}
  */
-export function useSignup({ onSignup, redirectTo = null, navigate = null } = {}) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+export function useSignup({
+    onSignup,
+    redirectTo = null,
+    navigate = null
+} = {}) {
 
-    /**
-     * Handles user signup request to the backend.
-     * 
-     * - Sends data as `application/x-www-form-urlencoded`
-     * - Handles redirection or reload on success
-     * 
-     * @param {string} username - Desired username
-     * @param {string} email - Email address
-     * @param {string} password - Desired password
-     */
-    const signup = useCallback(async (username, email, password) => {
-        setLoading(true);
-        setError(null);
+    const {
+        createUser,
+        loading,
+        error,
+    } = useCreateUser();
 
-        try {
-            const api = getApi();
+    const signup = useCallback(
+        async (
+            username,
+            email,
+            password
+        ) => {
 
-            const res = await api.post(
-                '/auth/signup', // Endpoint must match backend // TODO: this should not be hard coded, it should be past as param.
-                qs.stringify({ username, email, password }),
-                {
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    withCredentials: true
-                }
-            );
+            const session =
+                await createUser({
+                    username,
+                    email,
+                    password,
+                });
 
-            if (res.status === 200 || res.status === 201) {
-                if (onSignup) onSignup();
-
-                if (redirectTo) {
-                    navigate ? navigate(redirectTo) : window.location.href = redirectTo;
-                } else {
-                    window.location.reload();
-                }
-            } else {
-                setError('Signup failed. Please try again.');
+            if (!session.success) {
+                logger.error(
+                    "[useSignup] signup() failed",
+                    {
+                        error: session.error,
+                    }
+                );
+                return;
             }
-        } catch (err) {
-            setError(err.response?.data?.message || 'Signup failed.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }, [onSignup, redirectTo, navigate]);
+
+            onSignup?.(session.data);
+
+            if (redirectTo) {
+
+                navigate
+                    ? navigate(redirectTo)
+                    : window.location.assign(
+                        redirectTo
+                    );
+
+                return;
+            }
+
+            window.location.reload();
+
+        },
+        [
+            createUser,
+            onSignup,
+            redirectTo,
+            navigate,
+        ]
+    );
 
     return { signup, loading, error };
 }

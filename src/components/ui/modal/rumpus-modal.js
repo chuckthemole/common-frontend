@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Modal from "react-modal";
 import Draggable from "react-draggable";
+import logger from "../../../logger";
 
 export const BackdropMode = Object.freeze({
     DIM: "dim",           // greyed out
@@ -178,6 +179,7 @@ export default function RumpusModal({
                     borderRadius: "6px",
                 },
             }}
+
             contentElement={
                 draggable
                     ? (props, children) => (

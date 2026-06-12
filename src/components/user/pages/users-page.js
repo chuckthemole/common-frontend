@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 
-import { useUsers } from "../useUsers";
+import { useUsers } from "../hooks/useUsers";
 
 import logger from "../../../logger";
 

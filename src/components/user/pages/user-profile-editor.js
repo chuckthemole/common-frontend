@@ -7,7 +7,7 @@ import React, {
 import PropTypes from "prop-types";
 
 import useCurrentUser from "../current-user/useCurrentUser";
-import { useUser } from "../useUser";
+import { useUser } from "../hooks/useUser";
 
 import logger, {
     useScopedLogger,

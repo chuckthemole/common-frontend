@@ -5,9 +5,9 @@ import { EMPTY } from "../common";
 import Spinner from "../ui/loaders/spinning_wheel";
 import { useAuth } from "../auth";
 import { useSignup } from "../hooks/use_signup";
-import { SignupFields } from "../auth/signup_fields";
 import { RumpusModal } from "../ui/modal";
 import { useRumpusModal } from "../ui/modal/use-rumpus-modal";
+import { SignupFields, useSignupValidation } from "../auth";
 
 /**
  * SignupTrigger
@@ -30,7 +30,18 @@ export default function SignupTrigger({
     // --- Form state ---
     const [username, setUsername] = useState(EMPTY);
     const [password, setPassword] = useState(EMPTY);
+    const [email, setEmail] = useState(EMPTY);
     const [confirmPassword, setConfirmPassword] = useState(EMPTY);
+
+    const {
+        errors,
+        isValid,
+    } = useSignupValidation({
+        username,
+        email,
+        password,
+        confirmPassword,
+    });
 
     const navigate = useNavigate();
     const { isLoading, isAuthenticated, refreshAuth } = useAuth();
@@ -51,6 +62,7 @@ export default function SignupTrigger({
     const clearInput = () => {
         setUsername(EMPTY);
         setPassword(EMPTY);
+        setEmail(EMPTY);
         setConfirmPassword(EMPTY);
     };
 
@@ -79,7 +91,7 @@ export default function SignupTrigger({
     // --- Form submit ---
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await signup(username, password, confirmPassword);
+        await signup(username, email, password);
     };
 
     if (isLoading || isAuthenticated === undefined) {
@@ -145,14 +157,18 @@ export default function SignupTrigger({
                     <form onSubmit={handleSubmit} className="">
                         <SignupFields
                             username={username}
+                            email={email}
                             password={password}
                             confirmPassword={confirmPassword}
                             setUsername={setUsername}
                             setPassword={setPassword}
+                            setEmail={setEmail}
                             setConfirmPassword={setConfirmPassword}
                             error={error}
                             loading={loading}
                             oauthProviders={oauthProviders}
+                            validationErrors={errors}
+                            canSubmit={isValid}
                         />
                     </form>
                 </RumpusModal>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { getUserApi } from "../../api/modules/user/user-api";
-import logger from "../../logger";
+import { getUserApi } from "../../../api/modules/user/user-api";
+import logger from "../../../logger";
 
 /**
  * query shape:
