@@ -7,7 +7,7 @@ import { useAuth } from "../auth";
 import { useSignup } from "../hooks/use_signup";
 import { RumpusModal } from "../ui/modal";
 import { useRumpusModal } from "../ui/modal/use-rumpus-modal";
-import { SignupFields, useSignupValidation } from "../auth";
+import UserCreationForm from "../user/forms/user-creation-form";
 
 /**
  * SignupTrigger
@@ -27,46 +27,56 @@ export default function SignupTrigger({
     onOpen,
     onClose,
 }) {
-    // --- Form state ---
-    const [username, setUsername] = useState(EMPTY);
-    const [password, setPassword] = useState(EMPTY);
-    const [email, setEmail] = useState(EMPTY);
-    const [confirmPassword, setConfirmPassword] = useState(EMPTY);
 
-    const {
-        errors,
-        isValid,
-    } = useSignupValidation({
-        username,
-        email,
-        password,
-        confirmPassword,
-    });
-
+    /**
+     * Navigation hook for redirecting the user.
+     */
     const navigate = useNavigate();
-    const { isLoading, isAuthenticated, refreshAuth } = useAuth();
+
+    /**
+     * Authentication hook for managing the user's authentication state.
+     */
+    const {
+        isLoading: isAuthLoading,
+        isAuthenticated,
+        refreshAuth,
+    } = useAuth();
+
+    /**
+     * RumpusModal hook for managing the modal state.
+     */
     const { activeModal, openModal, closeModal } = useRumpusModal();
+
+    /**
+     * Modal ID for the signup trigger.
+     */
     const modalId = "signup-trigger-modal";
+
+    /**
+     * Whether the modal is open.
+     */
     const isOpen = activeModal === modalId;
 
+    /**
+     * Reset input for the form.
+     */
+    const [resetInput, setResetInput] = useState(0);
+
+    /**
+     * Signup hook for handling the signup process.
+     */
     const { signup, loading, error } = useSignup({
         redirectTo,
         navigate,
         onSignup: () => {
             refreshAuth();
             closeModal(modalId);
-            clearInput();
         },
     });
 
-    const clearInput = () => {
-        setUsername(EMPTY);
-        setPassword(EMPTY);
-        setEmail(EMPTY);
-        setConfirmPassword(EMPTY);
-    };
-
-    // --- Trigger behavior ---
+    /**
+     * Handle the click event on the trigger.
+     */
     const handleTriggerClick = (e) => {
         if (disabled) {
             e.preventDefault();
@@ -82,24 +92,38 @@ export default function SignupTrigger({
         }
     };
 
+    /**
+     * Handle the close event for the modal.
+     */
     const handleClose = () => {
         closeModal(modalId);
-        clearInput();
+        setResetInput(prev => prev + 1);
         onClose?.();
     };
 
-    // --- Form submit ---
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        await signup(username, email, password);
+    /**
+     * Handle the submit event for the form.
+     */
+    const handleSubmit = async (data) => {
+        const { username, email, password } = data;
+
+        try {
+            await signup(username, email, password);
+            return true;
+        } catch (err) {
+            return false;
+        }
     };
 
-    if (isLoading || isAuthenticated === undefined) {
+    if (isAuthLoading || isAuthenticated === undefined) {
         return <Spinner size="20px" thickness="2px" color="#333" />;
     }
 
     if (isAuthenticated) return null;
 
+    /**
+     * Render the trigger element based on its type.
+     */
     const renderTrigger = () => {
         const commonProps = { onClick: handleTriggerClick, "aria-disabled": disabled };
 
@@ -154,23 +178,13 @@ export default function SignupTrigger({
                     maxWidth="480px"
                     draggable
                 >
-                    <form onSubmit={handleSubmit} className="">
-                        <SignupFields
-                            username={username}
-                            email={email}
-                            password={password}
-                            confirmPassword={confirmPassword}
-                            setUsername={setUsername}
-                            setPassword={setPassword}
-                            setEmail={setEmail}
-                            setConfirmPassword={setConfirmPassword}
-                            error={error}
-                            loading={loading}
-                            oauthProviders={oauthProviders}
-                            validationErrors={errors}
-                            canSubmit={isValid}
-                        />
-                    </form>
+                    <UserCreationForm
+                        loading={loading}
+                        error={error}
+                        oauthProviders={oauthProviders}
+                        onSubmit={handleSubmit}
+                        resetKey={resetInput}
+                    />
                 </RumpusModal>
             )}
         </>
