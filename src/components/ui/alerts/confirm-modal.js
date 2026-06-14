@@ -22,6 +22,7 @@ export default function ConfirmModal({
     danger = false,
     onConfirm,
     onCancel,
+    variant = "confirm",
     maxWidth = "420px",
     draggable = false
 }) {
@@ -55,21 +56,35 @@ export default function ConfirmModal({
                 </div>
 
                 <div className="buttons is-right">
-                    <button
-                        type="button"
-                        className="button is-light"
-                        onClick={handleCancel}
-                    >
-                        {cancelText}
-                    </button>
 
-                    <button
-                        type="button"
-                        className={`button ${danger ? "is-danger" : "is-primary"}`}
-                        onClick={handleConfirm}
-                    >
-                        {confirmText}
-                    </button>
+                    {variant === "confirm" ? (
+                        <>
+                            <button
+                                type="button"
+                                className="button is-light"
+                                onClick={handleCancel}
+                            >
+                                {cancelText}
+                            </button>
+
+                            <button
+                                type="button"
+                                className={`button ${danger ? "is-danger" : "is-primary"}`}
+                                onClick={handleConfirm}
+                            >
+                                {confirmText}
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            type="button"
+                            className="button is-primary"
+                            onClick={handleCancel}
+                        >
+                            OK
+                        </button>
+                    )}
+
                 </div>
             </div>
         </RumpusModal>

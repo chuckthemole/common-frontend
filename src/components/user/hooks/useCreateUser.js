@@ -174,5 +174,6 @@ export function useCreateUser() {
         createUser,
         loading,
         error,
+        resetError: () => setError(null),
     };
 }

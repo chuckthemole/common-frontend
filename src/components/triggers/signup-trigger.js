@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { EMPTY } from "../common";
 import Spinner from "../ui/loaders/spinning_wheel";
 import { useAuth } from "../auth";
 import { useSignup } from "../hooks/use_signup";
@@ -113,7 +112,7 @@ export default function SignupTrigger({
                     triggerClassName={triggerClassName}
                     disabled={disabled}
                     onOpen={onOpen}
-                    onClose={onClose}
+                    onClose={handleClose}
                 >
                     <UserCreationForm
                         loading={loading}
