@@ -25,6 +25,7 @@ import {
 import { CHIP_COLOR_CONFIG } from "./chip-color.config";
 import UserProfileEditor from "./user-profile-editor";
 import { formatTimestamp, TimestampFormat } from "../../../utils";
+import SignupTrigger from "../../triggers/signup_trigger";
 
 /**
  * -----------------------------------------------------------------------------
@@ -437,27 +438,24 @@ export default function UsersPage() {
                     <div className="level-right">
 
                         <div className="level-item">
+<span>test</span>
+                            <SignupTrigger
+                                triggerLabel={
+                                    <>
+                                        <span className="icon">
 
-                            <button
-                                className="
-                                    button
-                                    is-primary
-                                "
-                            >
-                                <span className="icon">
+                                            <FontAwesomeIcon
+                                                icon={faPlus}
+                                            />
 
-                                    <FontAwesomeIcon
-                                        icon={faPlus}
-                                    />
+                                        </span>
 
-                                </span>
-
-                                <span>
-                                    Add User
-                                </span>
-
-                            </button>
-
+                                        <span>
+                                            Add User
+                                        </span>
+                                    </>
+                                }
+                            />
                         </div>
 
                     </div>

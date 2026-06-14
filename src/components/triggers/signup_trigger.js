@@ -5,9 +5,8 @@ import { EMPTY } from "../common";
 import Spinner from "../ui/loaders/spinning_wheel";
 import { useAuth } from "../auth";
 import { useSignup } from "../hooks/use_signup";
-import { RumpusModal } from "../ui/modal";
-import { useRumpusModal } from "../ui/modal/use-rumpus-modal";
 import UserCreationForm from "../user/forms/user-creation-form";
+import ModalTrigger from "./modal-trigger";
 
 /**
  * SignupTrigger
@@ -43,19 +42,9 @@ export default function SignupTrigger({
     } = useAuth();
 
     /**
-     * RumpusModal hook for managing the modal state.
-     */
-    const { activeModal, openModal, closeModal } = useRumpusModal();
-
-    /**
      * Modal ID for the signup trigger.
      */
     const modalId = "signup-trigger-modal";
-
-    /**
-     * Whether the modal is open.
-     */
-    const isOpen = activeModal === modalId;
 
     /**
      * Reset input for the form.
@@ -70,7 +59,6 @@ export default function SignupTrigger({
         navigate,
         onSignup: () => {
             refreshAuth();
-            closeModal(modalId);
         },
     });
 
@@ -82,21 +70,13 @@ export default function SignupTrigger({
             e.preventDefault();
             return;
         }
-
-        if (mode === "modal") {
-            e.preventDefault();
-            openModal(modalId);
-            onOpen?.();
-        } else {
-            navigate(signupRoute);
-        }
+        navigate(signupRoute);
     };
 
     /**
-     * Handle the close event for the modal.
+     * Handle the close event.
      */
     const handleClose = () => {
-        closeModal(modalId);
         setResetInput(prev => prev + 1);
         onClose?.();
     };
@@ -121,62 +101,19 @@ export default function SignupTrigger({
 
     if (isAuthenticated) return null;
 
-    /**
-     * Render the trigger element based on its type.
-     */
-    const renderTrigger = () => {
-        const commonProps = { onClick: handleTriggerClick, "aria-disabled": disabled };
+    const returnComponent = () => {
+        if (mode === "modal") {
+            return (
 
-        switch (triggerType) {
-            case "link":
-                return (
-                    <a
-                        href={mode === "redirect" ? signupRoute : "#"}
-                        className={triggerClassName || "navbar-item"}
-                        {...commonProps}
-                    >
-                        {triggerLabel}
-                    </a>
-                );
-
-            case "text":
-                return (
-                    <span
-                        role="button"
-                        tabIndex={0}
-                        className={triggerClassName}
-                        {...commonProps}
-                    >
-                        {triggerLabel}
-                    </span>
-                );
-
-            case "button":
-            default:
-                return (
-                    <button
-                        type="button"
-                        className={triggerClassName || "button is-primary"}
-                        disabled={disabled}
-                        {...commonProps}
-                    >
-                        {triggerLabel}
-                    </button>
-                );
-        }
-    };
-
-    return (
-        <>
-            {renderTrigger()}
-
-            {mode === "modal" && (
-                <RumpusModal
-                    isOpen={isOpen}
-                    onRequestClose={handleClose}
+                <ModalTrigger
+                    modalId={modalId}
                     title="Sign Up"
-                    maxWidth="480px"
-                    draggable
+                    triggerType={triggerType}
+                    triggerLabel={triggerLabel}
+                    triggerClassName={triggerClassName}
+                    disabled={disabled}
+                    onOpen={onOpen}
+                    onClose={onClose}
                 >
                     <UserCreationForm
                         loading={loading}
@@ -185,8 +122,23 @@ export default function SignupTrigger({
                         onSubmit={handleSubmit}
                         resetKey={resetInput}
                     />
-                </RumpusModal>
-            )}
-        </>
+                </ModalTrigger>
+            );
+        } else { // TODO: Implement the non-modal case, I have not tested it yet.
+            return (
+                <button
+                    type="button"
+                    className={triggerClassName || "button is-primary"}
+                    disabled={disabled}
+                    onClick={(e) => handleTriggerClick(e)}
+                >
+                    {triggerLabel}
+                </button>
+            );
+        }
+    };
+
+    return (
+        returnComponent()
     );
 }
