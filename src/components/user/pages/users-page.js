@@ -25,7 +25,7 @@ import {
 import { CHIP_COLOR_CONFIG } from "./chip-color.config";
 import UserProfileEditor from "./user-profile-editor";
 import { formatTimestamp, TimestampFormat } from "../../../utils";
-import SignupTrigger from "../../triggers/signup_trigger";
+import SignupTrigger from "../../triggers/signup-trigger";
 
 /**
  * -----------------------------------------------------------------------------
