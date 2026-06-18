@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { getUserApi } from "../../../api/modules/user/user-api";
 import logger from "../../../logger";
 
@@ -27,9 +27,8 @@ export function useUsers(query = {}) {
     const cancelRef = useRef(false);
     const userApi = getUserApi();
 
-    useEffect(() => {
+    const fetchUsers = useCallback(() => {
 
-        cancelRef.current = false;
         setLoading(true);
         setError(null);
 
@@ -40,7 +39,7 @@ export function useUsers(query = {}) {
             size,
         });
 
-        userApi.getAllUsers({
+        return userApi.getAllUsers({
             params: {
                 sort,
                 direction,
@@ -55,21 +54,13 @@ export function useUsers(query = {}) {
                     return;
                 }
 
-                logger.debug("[useUsers] success", {
-                    count: Array.isArray(data) ? data.length : 0,
-                });
-
                 setUsers(data ?? []);
             })
             .catch((err) => {
 
                 if (cancelRef.current) return;
 
-                logger.error("[useUsers] failed", {
-                    message: err?.message,
-                    status: err?.status,
-                });
-
+                logger.error("[useUsers] failed", err);
                 setError(err);
             })
             .finally(() => {
@@ -79,16 +70,25 @@ export function useUsers(query = {}) {
                 setLoading(false);
             });
 
+    }, [userApi, sort, direction, page, size]);
+
+    useEffect(() => {
+
+        cancelRef.current = false;
+
+        fetchUsers();
+
         return () => {
             cancelRef.current = true;
         };
 
-    }, [sort, direction, page, size]);
+    }, [fetchUsers]);
 
     return {
         users,
         loading,
         error,
+        refresh: fetchUsers,
         query: {
             sort,
             direction,

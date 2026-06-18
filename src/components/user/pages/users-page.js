@@ -12,6 +12,7 @@ import {
     faPen,
     faPlus,
     faTrash,
+    faRotateRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { useSort } from "../../hooks/use-sort";
 import {
@@ -46,6 +47,7 @@ export default function UsersPage() {
         users,
         loading,
         error,
+        refresh,
     } = useUsers({
         sort: sortConfig.key,
         direction: sortConfig.direction.toUpperCase(),
@@ -436,6 +438,22 @@ export default function UsersPage() {
                     </div>
 
                     <div className="level-right">
+
+                        <div className="level-item">
+                            <button
+                                className="button is-light"
+                                onClick={refresh}
+                                disabled={loading}
+                            >
+                                <span className="icon">
+                                    <FontAwesomeIcon icon={faRotateRight} />
+                                </span>
+
+                                <span>
+                                    Refresh Users
+                                </span>
+                            </button>
+                        </div>
 
                         <div className="level-item">
                             <UserCreationTrigger
