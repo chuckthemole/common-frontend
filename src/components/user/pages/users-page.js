@@ -47,7 +47,7 @@ export default function UsersPage() {
         users,
         loading,
         error,
-        refresh,
+        refresh: refreshUsers,
     } = useUsers({
         sort: sortConfig.key,
         direction: sortConfig.direction.toUpperCase(),
@@ -442,7 +442,7 @@ export default function UsersPage() {
                         <div className="level-item">
                             <button
                                 className="button is-light"
-                                onClick={refresh}
+                                onClick={refreshUsers}
                                 disabled={loading}
                             >
                                 <span className="icon">
