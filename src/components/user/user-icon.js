@@ -21,7 +21,7 @@ export default function UserIcon() {
         get_user_info_path: basePathCurrentUserInfo
     });
 
-    const is_user_authenticated = isCurrentUserAuthenticated();
+    const is_user_authenticated = isCurrentUserAuthenticated(); // TODO: should this be using current user provider?
 
     /**
      * Resolve CurrentUserInfo path once base_path is available

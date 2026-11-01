@@ -9,6 +9,8 @@ import {
 } from "../design-control";
 import { RumpusModalProvider, ToastProvider } from "../ui";
 import { LocalPersistence } from "../../persistence";
+import { AuthRolesProvider } from "../auth/authority-roles";
+import { RolesProvider } from "../auth/authority-roles";
 
 /**
  * Provider registry using wrappers
@@ -85,8 +87,37 @@ export const PROVIDER_REGISTRY = {
 
     auth: [
         ({ children }) => (
-            <AuthProvider>{children}</AuthProvider>
+            // TODO: looking at AuthProvier, it looks like a user's auth.
+            // so maybe we should move down to user?
+            <AuthProvider>
+                {children}
+            </AuthProvider>
         ),
+        ({ children, config }) => {
+            const authConfig = config.auth || {};
+            const rolesConfig = authConfig.roles || {};
+
+            return (
+                <RolesProvider
+                    endpoints={rolesConfig.endpoints}
+                >
+                    {children}
+                </RolesProvider>
+            );
+        },
+        ({ children, config }) => {
+            const authConfig = config.auth || {};
+            const rolesConfig = authConfig.roles || {};
+
+            return (
+                <AuthRolesProvider
+                    // userId={rolesConfig.userId || null}
+                    endpoints={rolesConfig.endpoints}
+                >
+                    {children}
+                </AuthRolesProvider>
+            );
+        },
     ],
 
     user: [
