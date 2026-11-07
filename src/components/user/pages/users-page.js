@@ -27,6 +27,7 @@ import { CHIP_COLOR_CONFIG } from "./chip-color.config";
 import UserProfileEditor from "./user-profile-editor";
 import { formatTimestamp, TimestampFormat } from "../../../utils";
 import UserCreationTrigger from "../triggers/user-creation-trigger";
+import useRolesDefinitions from "../../auth/authority-roles/user-roles-definitions/useRolesDefinitions";
 
 /**
  * -----------------------------------------------------------------------------
@@ -63,6 +64,17 @@ export default function UsersPage() {
             error,
         }
     );
+
+    const {
+        roles: roleDefinitions = [],
+        rolesLoading,
+        rolesError,
+    } = useRolesDefinitions();
+
+    const availableRoles = roleDefinitions.map((role) => ({
+        value: role.authority,
+        label: role.authority,
+    }));
 
     const { activeModal, openModal, closeModal } = useRumpusModal();
     const userProfileEditorModalId = "user-profile-editor-modal";
@@ -233,6 +245,8 @@ export default function UsersPage() {
                                                     addable
                                                     removable
                                                     placeholder="Add role..."
+                                                    addLabel="Add"
+                                                    options={availableRoles}
                                                     // assignColors
                                                     // colorPalette={CHIP_COLOR_PALETTE}
                                                     colorMap={CHIP_COLOR_CONFIG.roles}
@@ -241,6 +255,15 @@ export default function UsersPage() {
                                                             label: role,
                                                         }))
                                                     }
+                                                    onAdd={(role) => {
+                                                        logger.debug(
+                                                            "[UsersPage] role selected",
+                                                            {
+                                                                username: user.username,
+                                                                authority: role,
+                                                            }
+                                                        );
+                                                    }}
                                                 />
                                             ) : (
                                                 "—"

@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getStablePaletteColor } from "../../../utils";
 import { DEFAULT_PALETTE } from "./color-palettes";
+import { SingleSelector } from "../../dashboard-elements";
 
 /**
  * -----------------------------------------------------------------------------
@@ -53,6 +54,7 @@ import { DEFAULT_PALETTE } from "./color-palettes";
  */
 export default function ChipInput({
     items = [],
+    options = null,
     placeholder = "Add item...",
     addLabel = "Add",
     editable = false,
@@ -127,8 +129,8 @@ export default function ChipInput({
             const shouldAssignColors =
                 assignColors || Object.keys(colorMap || {}).length > 0;
 
-            const normalizedLabel =
-                normalized.label.toLowerCase();
+            const normalizedLabel = String(normalized.label ?? normalized.value ?? "")
+                .toLowerCase();
 
             const configuredColor =
                 normalizedColorMap[normalizedLabel];
@@ -159,6 +161,36 @@ export default function ChipInput({
         colorMap,
     ]);
 
+    const availableOptions = useMemo(() => {
+        const selectedValues = new Set(
+            normalizedItems.map((item) => String(item.value).toLowerCase())
+        );
+
+        return (options ?? [])
+            .filter((option) => option != null)
+            .map((option) => {
+                const value =
+                    typeof option === "string"
+                        ? option
+                        : option.value ?? option.authority ?? option.label;
+
+                const label =
+                    typeof option === "string"
+                        ? option
+                        : option.label ?? option.authority ?? option.value;
+
+                return {
+                    value: value == null ? "" : String(value),
+                    label: label == null ? "" : String(label),
+                };
+            })
+            .filter((option) =>
+                option.value.trim() &&
+                option.label.trim() &&
+                !selectedValues.has(option.value.toLowerCase())
+            );
+    }, [options, normalizedItems]);
+
     /**
      * -------------------------------------------------------------------------
      * Add
@@ -182,6 +214,16 @@ export default function ChipInput({
             return;
         }
 
+        // In dropdown mode, only allow currently available options.
+        if (
+            Array.isArray(options) &&
+            !availableOptions.some(
+                (option) => option.value === trimmed
+            )
+        ) {
+            return;
+        }
+
         onAdd?.(trimmed);
 
         setDraftValue("");
@@ -192,6 +234,8 @@ export default function ChipInput({
         editable,
         addable,
         draftValue,
+        options,
+        availableOptions,
         onAdd,
     ]);
 
@@ -360,8 +404,8 @@ export default function ChipInput({
             }
 
             {/* -----------------------------------------------------------------
-                ADD INPUT
-            ------------------------------------------------------------------ */}
+    ADD INPUT
+------------------------------------------------------------------ */}
 
             {
                 editable &&
@@ -369,21 +413,43 @@ export default function ChipInput({
                 !readonly && (
                     <div className="chip-input-add">
 
-                        <input
-                            type="text"
-                            value={draftValue}
-                            placeholder={placeholder}
-                            disabled={disabled}
-                            onChange={(e) =>
-                                setDraftValue(e.target.value)
-                            }
-                            onKeyDown={handleKeyDown}
-                        />
+                        {Array.isArray(options) ? (
+
+                            <SingleSelector
+                                options={availableOptions}
+                                value={draftValue}
+                                onChange={setDraftValue}
+                                placeholder={placeholder}
+                                searchable
+                                disabled={disabled || availableOptions.length === 0}
+                            />
+
+                        ) : (
+
+                            <input
+                                type="text"
+                                value={draftValue}
+                                placeholder={placeholder}
+                                disabled={disabled}
+                                onChange={(e) =>
+                                    setDraftValue(e.target.value)
+                                }
+                                onKeyDown={handleKeyDown}
+                            />
+
+                        )}
 
                         <button
                             type="button"
                             onClick={handleAdd}
-                            disabled={disabled}
+                            disabled={
+                                disabled ||
+                                !draftValue ||
+                                (Array.isArray(options) &&
+                                    !availableOptions.some(
+                                        (option) => option.value === draftValue
+                                    ))
+                            }
                         >
 
                             <FontAwesomeIcon
@@ -399,14 +465,21 @@ export default function ChipInput({
                     </div>
                 )
             }
-
         </div>
     );
 }
 
 ChipInput.propTypes = {
     items: PropTypes.array,
-
+    options: PropTypes.arrayOf(
+        PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.shape({
+                label: PropTypes.string,
+                value: PropTypes.string,
+            }),
+        ])
+    ),
     placeholder: PropTypes.string,
     addLabel: PropTypes.string,
 
