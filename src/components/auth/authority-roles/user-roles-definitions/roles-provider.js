@@ -482,6 +482,142 @@ export default function RolesProvider({
     );
 
     /**
+ * Delete a role definition by its authority name.
+ *
+ * Uses the configured listRoles endpoint:
+ * DELETE /admin/authority-roles/{authority}
+ *
+ * @param {string} authority
+ *        Authority name, e.g. ROLE_DEVELOPER
+ *
+ * @returns {Promise<void>}
+ */
+    const deleteRole = useCallback(
+        async (authority) => {
+
+            SCOPED_LOGGER.debug(
+                "[deleteRole] Starting role deletion.",
+                {
+                    authority,
+                    endpoint: endpoints?.listRoles,
+                }
+            );
+
+            /**
+             * Validate authority.
+             */
+            if (
+                typeof authority !== "string" ||
+                !authority.trim()
+            ) {
+                throw new Error(
+                    "deleteRole requires a valid authority name."
+                );
+            }
+
+            /**
+             * Validate endpoint.
+             */
+            if (
+                typeof endpoints?.listRoles !== "string" ||
+                !endpoints.listRoles.trim()
+            ) {
+                throw new Error(
+                    "RolesProvider: endpoints.listRoles is not configured."
+                );
+            }
+
+            setMutationLoading(true);
+            setMutationError(null);
+
+            try {
+
+                const api = getApi();
+
+                if (!api || typeof api.delete !== "function") {
+                    throw new Error(
+                        "RolesProvider: getApi() did not return a valid API client."
+                    );
+                }
+
+                const encodedAuthority = encodeURIComponent(
+                    authority.trim()
+                );
+
+                const url = `${endpoints.listRoles.replace(/\/+$/, "")}/${encodedAuthority}`;
+
+                SCOPED_LOGGER.debug(
+                    "[deleteRole] Sending DELETE request.",
+                    {
+                        url,
+                        authority,
+                        baseURL: api.defaults?.baseURL,
+                    }
+                );
+
+                const response = await api.delete(url);
+
+                SCOPED_LOGGER.debug(
+                    "[deleteRole] Role definition deleted.",
+                    {
+                        authority,
+                        status: response?.status,
+                        statusText: response?.statusText,
+                    }
+                );
+
+                /**
+                 * Refresh role definitions after successful deletion.
+                 */
+                try {
+
+                    SCOPED_LOGGER.debug(
+                        "[deleteRole] Refreshing role definitions."
+                    );
+
+                    await refreshRoles();
+
+                } catch (refreshError) {
+
+                    SCOPED_LOGGER.warn(
+                        "[deleteRole] Role deleted, but definitions could not be refreshed.",
+                        refreshError
+                    );
+
+                }
+
+                return response?.data;
+
+            } catch (error) {
+
+                setMutationError(error);
+
+                logApiError(
+                    SCOPED_LOGGER,
+                    "[deleteRole] Failed to delete role definition.",
+                    error
+                );
+
+                throw error;
+
+            } finally {
+
+                setMutationLoading(false);
+
+                SCOPED_LOGGER.debug(
+                    "[deleteRole] Mutation finished."
+                );
+
+            }
+        },
+        [
+            endpoints?.listRoles,
+            refreshRoles,
+            SCOPED_LOGGER,
+        ]
+    );
+
+    /**
      * Automatically retrieve definitions when the provider mounts.
      */
     useEffect(() => {
@@ -549,6 +685,7 @@ export default function RolesProvider({
 
             // Mutations
             createRole,
+            deleteRole,
         }),
         [
             roles,
@@ -558,6 +695,7 @@ export default function RolesProvider({
             mutationError,
             refreshRoles,
             createRole,
+            deleteRole,
         ]
     );
 

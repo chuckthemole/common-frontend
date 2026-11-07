@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faPlus,
     faRotateRight,
+    faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 
 import { useSort } from "../../../hooks/use-sort";
@@ -115,6 +116,7 @@ export default function RolesDashboard() {
         mutationError,
         refreshRoles,
         createRole,
+        deleteRole,
     } = useRolesDefinitions();
 
     const isLoading = rolesLoading ?? loading ?? false;
@@ -141,6 +143,10 @@ export default function RolesDashboard() {
     const [createError, setCreateError] = useState("");
     const [isCreatingRole, setIsCreatingRole] = useState(false);
 
+    const [selectedRole, setSelectedRole] = useState(null);
+    const [isDeletingRole, setIsDeletingRole] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
+
 
     /**
      * -------------------------------------------------------------------------
@@ -154,6 +160,11 @@ export default function RolesDashboard() {
 
     const createRoleModalIsOpen =
         activeModal === createRoleModalId;
+
+    const deleteRoleModalId = "delete-role-modal";
+
+    const deleteRoleModalIsOpen =
+        activeModal === deleteRoleModalId;
 
 
     /**
@@ -308,6 +319,87 @@ export default function RolesDashboard() {
         }
     };
 
+    const handleOpenDeleteRole = (role) => {
+
+        logger.debug(
+            "[RolesDashboard] delete role clicked",
+            role
+        );
+
+        setSelectedRole(role);
+        setDeleteError("");
+
+        openModal(deleteRoleModalId);
+    };
+
+
+    const handleCloseDeleteRole = () => {
+
+        logger.debug("[RolesDashboard] close delete role modal");
+
+        if (isDeletingRole) {
+            return;
+        }
+
+        setSelectedRole(null);
+        setDeleteError("");
+
+        closeModal(deleteRoleModalId);
+    };
+
+
+    const handleDeleteRole = async () => {
+
+        if (!selectedRole?.authority) {
+            setDeleteError("No role was selected.");
+            return;
+        }
+
+        const authority = selectedRole.authority;
+
+        logger.debug(
+            "[RolesDashboard] deleting role",
+            { authority }
+        );
+
+        try {
+
+            setIsDeletingRole(true);
+            setDeleteError("");
+
+            await deleteRole(authority);
+
+            logger.info(
+                "[RolesDashboard] role deleted successfully",
+                { authority }
+            );
+
+            setSelectedRole(null);
+            closeModal(deleteRoleModalId);
+
+            // Refresh in case deleteRole does not refresh automatically.
+            await refreshRoles?.();
+
+        } catch (error) {
+
+            logger.error(
+                "[RolesDashboard] failed to delete role",
+                error
+            );
+
+            setDeleteError(
+                getErrorMessage(
+                    error,
+                    "Failed to delete role."
+                )
+            );
+
+        } finally {
+
+            setIsDeletingRole(false);
+
+        }
+    };
 
     /**
      * -------------------------------------------------------------------------
@@ -347,6 +439,7 @@ export default function RolesDashboard() {
             </th>
 
             <th>Type</th>
+            <th>Delete</th>
         </tr>
     );
 
@@ -385,7 +478,7 @@ export default function RolesDashboard() {
 
                         <tr>
                             <td
-                                colSpan={5}
+                                colSpan={6}
                                 className="has-text-centered"
                             >
                                 {search.trim()
@@ -453,6 +546,26 @@ export default function RolesDashboard() {
                                     <span className="tag is-light">
                                         Application role
                                     </span>
+                                </td>
+
+                                {/* DELETE */}
+
+                                <td>
+                                    <Tooltip text="Delete role">
+                                        <button
+                                            className="button is-small is-danger is-light"
+                                            onClick={() =>
+                                                handleOpenDeleteRole(role)
+                                            }
+                                            disabled={mutationLoading || isDeletingRole}
+                                        >
+                                            <span className="icon">
+                                                <FontAwesomeIcon
+                                                    icon={faTrash}
+                                                />
+                                            </span>
+                                        </button>
+                                    </Tooltip>
                                 </td>
 
                             </tr>
@@ -746,6 +859,74 @@ export default function RolesDashboard() {
                     </div>
 
                 </form>
+
+            </RumpusModal>
+
+            <RumpusModal
+                isOpen={deleteRoleModalIsOpen}
+                onRequestClose={handleCloseDeleteRole}
+                title="Delete Application Role"
+                draggable
+                maxWidth="500px"
+            >
+
+                <div className="content">
+
+                    <p>
+                        Are you sure you want to delete this application role?
+                    </p>
+
+                    {selectedRole && (
+                        <p>
+                            <strong>
+                                <code>{selectedRole.authority}</code>
+                            </strong>
+                        </p>
+                    )}
+
+                    <p className="has-text-grey">
+                        This action cannot be undone.
+                    </p>
+
+                </div>
+
+                {deleteError && (
+                    <div
+                        className="notification is-danger is-light"
+                        role="alert"
+                    >
+                        {deleteError}
+                    </div>
+                )}
+
+                <div className="field is-grouped is-justify-content-flex-end">
+
+                    <div className="control">
+                        <button
+                            type="button"
+                            className="button is-light"
+                            onClick={handleCloseDeleteRole}
+                            disabled={isDeletingRole}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+
+                    <div className="control">
+                        <button
+                            type="button"
+                            className="button is-danger"
+                            onClick={handleDeleteRole}
+                            disabled={isDeletingRole || !selectedRole}
+                        >
+                            {isDeletingRole
+                                ? "Deleting..."
+                                : "Delete Role"
+                            }
+                        </button>
+                    </div>
+
+                </div>
 
             </RumpusModal>
 
