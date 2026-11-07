@@ -281,7 +281,7 @@ export default function RolesDashboard() {
 
             setIsCreatingRole(true);
 
-            await createRole(roleName);
+            await createRole({ authority: roleName });
 
             logger.info(
                 "[RolesDashboard] role created successfully",

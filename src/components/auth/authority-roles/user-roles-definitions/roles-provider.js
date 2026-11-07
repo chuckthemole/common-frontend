@@ -357,14 +357,43 @@ export default function RolesProvider({
                 }
             );
 
-            if (
-                !roleData ||
-                typeof roleData !== "object" ||
-                Array.isArray(roleData)
-            ) {
-                throw new Error(
-                    "createRole requires a role definition object."
+            if (!roleData) {
+                SCOPED_LOGGER.debug(
+                    "[createRole] Validation failed: roleData is missing or falsy.",
+                    {
+                        roleData,
+                        type: typeof roleData,
+                    }
                 );
+
+                throw new Error("createRole requires roleData.");
+            }
+
+            if (typeof roleData !== "object") {
+                SCOPED_LOGGER.debug(
+                    "[createRole] Validation failed: roleData must be an object.",
+                    {
+                        roleData,
+                        type: typeof roleData,
+                        isArray: Array.isArray(roleData),
+                    }
+                );
+
+                throw new Error(
+                    `createRole requires a role definition object. Received: ${typeof roleData}.`
+                );
+            }
+
+            if (Array.isArray(roleData)) {
+                SCOPED_LOGGER.debug(
+                    "[createRole] Validation failed: roleData cannot be an array.",
+                    {
+                        roleData,
+                        type: typeof roleData,
+                    }
+                );
+
+                throw new Error("createRole requires a single role definition object.");
             }
 
             if (
