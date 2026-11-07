@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 
 import useRolesDefinitions from "./useRolesDefinitions";
@@ -17,10 +16,12 @@ import { useSort } from "../../../hooks/use-sort";
 
 import {
     ComponentLoading,
+    ConfirmModal,
     RumpusModal,
     Tooltip,
     TruncatedCell,
     useRumpusModal,
+    useToast,
 } from "../../../ui";
 
 
@@ -34,8 +35,8 @@ import {
  * Normalize role names consistently before comparing or saving.
  *
  * Examples:
- * "Role Admin"    -> "ROLE_ADMIN"
- * "role_developer" -> "ROLE_DEVELOPER"
+ * "Role Admin"       -> "ROLE_ADMIN"
+ * "role_developer"   -> "ROLE_DEVELOPER"
  */
 const normalizeRole = (role) =>
     role.trim().toUpperCase().replace(/\s+/g, "_");
@@ -43,14 +44,34 @@ const normalizeRole = (role) =>
 
 /**
  * Extract a readable message from an API or application error.
+ *
+ * Supports common Axios response structures and ordinary Error objects.
  */
-const getErrorMessage = (error, fallback = "An unexpected error occurred.") => {
+const getErrorMessage = (
+    error,
+    fallback = "An unexpected error occurred."
+) => {
     if (!error) {
         return fallback;
     }
 
     if (typeof error === "string") {
         return error;
+    }
+
+    const responseData = error.response?.data;
+
+    if (typeof responseData === "string") {
+        return responseData;
+    }
+
+    const responseMessage =
+        responseData?.message ??
+        responseData?.detail ??
+        responseData?.error;
+
+    if (typeof responseMessage === "string" && responseMessage.trim()) {
+        return responseMessage;
     }
 
     return error.message || fallback;
@@ -144,27 +165,22 @@ export default function RolesDashboard() {
     const [isCreatingRole, setIsCreatingRole] = useState(false);
 
     const [selectedRole, setSelectedRole] = useState(null);
-    const [isDeletingRole, setIsDeletingRole] = useState(false);
-    const [deleteError, setDeleteError] = useState("");
 
 
     /**
      * -------------------------------------------------------------------------
-     * Modal
+     * Modal and Notifications
      * -------------------------------------------------------------------------
      */
 
     const { activeModal, openModal, closeModal } = useRumpusModal();
 
+    const toast = useToast();
+
     const createRoleModalId = "create-role-modal";
 
     const createRoleModalIsOpen =
         activeModal === createRoleModalId;
-
-    const deleteRoleModalId = "delete-role-modal";
-
-    const deleteRoleModalIsOpen =
-        activeModal === deleteRoleModalId;
 
 
     /**
@@ -319,39 +335,43 @@ export default function RolesDashboard() {
         }
     };
 
+
+    /**
+     * Open the shared confirmation modal for the selected role.
+     */
     const handleOpenDeleteRole = (role) => {
 
-        logger.debug(
-            "[RolesDashboard] delete role clicked",
-            role
-        );
-
-        setSelectedRole(role);
-        setDeleteError("");
-
-        openModal(deleteRoleModalId);
-    };
-
-
-    const handleCloseDeleteRole = () => {
-
-        logger.debug("[RolesDashboard] close delete role modal");
-
-        if (isDeletingRole) {
+        if (!role?.authority) {
+            logger.warn(
+                "[RolesDashboard] cannot delete role: invalid role",
+                role
+            );
             return;
         }
 
-        setSelectedRole(null);
-        setDeleteError("");
+        logger.debug(
+            "[RolesDashboard] delete role clicked",
+            { authority: role.authority }
+        );
 
-        closeModal(deleteRoleModalId);
+        setSelectedRole(role);
+
+        openModal("deleteRoleModal");
     };
 
 
+    /**
+     * Delete the selected role after confirmation.
+     *
+     * The provider handles refreshing the role definitions after deletion.
+     * Keep the selected role if deletion fails so the user can retry or cancel.
+     */
     const handleDeleteRole = async () => {
 
         if (!selectedRole?.authority) {
-            setDeleteError("No role was selected.");
+            logger.warn(
+                "[RolesDashboard] cannot delete role: no role selected"
+            );
             return;
         }
 
@@ -364,9 +384,6 @@ export default function RolesDashboard() {
 
         try {
 
-            setIsDeletingRole(true);
-            setDeleteError("");
-
             await deleteRole(authority);
 
             logger.info(
@@ -375,10 +392,14 @@ export default function RolesDashboard() {
             );
 
             setSelectedRole(null);
-            closeModal(deleteRoleModalId);
 
-            // Refresh in case deleteRole does not refresh automatically.
-            await refreshRoles?.();
+            toast.success(
+                `Role ${authority} deleted successfully.`,
+                {
+                    position: "bottom-center",
+                    width: "full",
+                }
+            );
 
         } catch (error) {
 
@@ -387,19 +408,18 @@ export default function RolesDashboard() {
                 error
             );
 
-            setDeleteError(
-                getErrorMessage(
-                    error,
-                    "Failed to delete role."
-                )
+            toast.error(
+                getErrorMessage(error, "Failed to delete role."),
+                {
+                    position: "bottom-center",
+                    width: "full",
+                }
             );
 
-        } finally {
-
-            setIsDeletingRole(false);
-
+            // Keep selectedRole so the user can retry or cancel.
         }
     };
+
 
     /**
      * -------------------------------------------------------------------------
@@ -548,16 +568,19 @@ export default function RolesDashboard() {
                                     </span>
                                 </td>
 
+
                                 {/* DELETE */}
 
                                 <td>
                                     <Tooltip text="Delete role">
                                         <button
+                                            type="button"
                                             className="button is-small is-danger is-light"
                                             onClick={() =>
                                                 handleOpenDeleteRole(role)
                                             }
-                                            disabled={mutationLoading || isDeletingRole}
+                                            disabled={mutationLoading}
+                                            aria-label={`Delete ${role.authority}`}
                                         >
                                             <span className="icon">
                                                 <FontAwesomeIcon
@@ -647,6 +670,7 @@ export default function RolesDashboard() {
                         <div className="level-item">
 
                             <button
+                                type="button"
                                 className="button is-light"
                                 onClick={handleRefreshRoles}
                                 disabled={isLoading}
@@ -668,8 +692,10 @@ export default function RolesDashboard() {
                         <div className="level-item">
 
                             <button
+                                type="button"
                                 className="button is-primary"
                                 onClick={handleOpenCreateRole}
+                                disabled={mutationLoading}
                             >
                                 <span className="icon">
                                     <FontAwesomeIcon
@@ -732,6 +758,7 @@ export default function RolesDashboard() {
                         {rolesErrorMessage}
 
                         <button
+                            type="button"
                             className="button is-small is-danger is-light ml-3"
                             onClick={handleRefreshRoles}
                             disabled={isLoading}
@@ -739,14 +766,6 @@ export default function RolesDashboard() {
                             Retry
                         </button>
 
-                    </div>
-
-                )}
-
-                {mutationError && (
-
-                    <div className="notification is-danger is-light">
-                        {mutationErrorMessage}
                     </div>
 
                 )}
@@ -862,73 +881,24 @@ export default function RolesDashboard() {
 
             </RumpusModal>
 
-            <RumpusModal
-                isOpen={deleteRoleModalIsOpen}
-                onRequestClose={handleCloseDeleteRole}
-                title="Delete Application Role"
-                draggable
-                maxWidth="500px"
-            >
 
-                <div className="content">
+            {/* -----------------------------------------------------------------
+                DELETE ROLE CONFIRMATION
+            ------------------------------------------------------------------ */}
 
-                    <p>
-                        Are you sure you want to delete this application role?
-                    </p>
-
-                    {selectedRole && (
-                        <p>
-                            <strong>
-                                <code>{selectedRole.authority}</code>
-                            </strong>
-                        </p>
-                    )}
-
-                    <p className="has-text-grey">
-                        This action cannot be undone.
-                    </p>
-
-                </div>
-
-                {deleteError && (
-                    <div
-                        className="notification is-danger is-light"
-                        role="alert"
-                    >
-                        {deleteError}
-                    </div>
-                )}
-
-                <div className="field is-grouped is-justify-content-flex-end">
-
-                    <div className="control">
-                        <button
-                            type="button"
-                            className="button is-light"
-                            onClick={handleCloseDeleteRole}
-                            disabled={isDeletingRole}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-
-                    <div className="control">
-                        <button
-                            type="button"
-                            className="button is-danger"
-                            onClick={handleDeleteRole}
-                            disabled={isDeletingRole || !selectedRole}
-                        >
-                            {isDeletingRole
-                                ? "Deleting..."
-                                : "Delete Role"
-                            }
-                        </button>
-                    </div>
-
-                </div>
-
-            </RumpusModal>
+            <ConfirmModal
+                modalId="deleteRoleModal"
+                title="Delete Application Role?"
+                message={
+                    selectedRole
+                        ? `Are you sure you want to permanently delete ${selectedRole.authority}?`
+                        : "Are you sure you want to delete this application role?"
+                }
+                confirmText="Delete Role"
+                cancelText="Cancel"
+                danger
+                onConfirm={handleDeleteRole}
+            />
 
         </>
 
