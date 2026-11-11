@@ -125,6 +125,28 @@ export default function UsersPage() {
          */
     };
 
+    const handleAddRoleToUser = (userId, role) => {
+
+        logger.debug(
+            "[UsersPage] add role to user clicked",
+            {
+                userId,
+                role,
+            }
+        );
+    }
+
+    const handleRemoveRoleFromUser = (userId, role) => {
+
+        logger.debug(
+            "[UsersPage] remove role from user clicked",
+            {
+                userId,
+                role,
+            }
+        );
+    }
+
     /**
      * -------------------------------------------------------------------------
      * Error
@@ -256,13 +278,10 @@ export default function UsersPage() {
                                                         }))
                                                     }
                                                     onAdd={(role) => {
-                                                        logger.debug(
-                                                            "[UsersPage] role selected",
-                                                            {
-                                                                username: user.username,
-                                                                authority: role,
-                                                            }
-                                                        );
+                                                        handleAddRoleToUser(user.username, role);
+                                                    }}
+                                                    onRemove={(role) => {
+                                                        handleRemoveRoleFromUser(user.id, role);
                                                     }}
                                                 />
                                             ) : (
@@ -278,9 +297,16 @@ export default function UsersPage() {
                                         }
                                     >
 
-                                        {
-                                            formatTimestamp(user.createdAt, TimestampFormat.ISO)
-                                        }
+                                        <Tooltip
+                                            copyable
+                                            rotatable
+                                            copyText={formatTimestamp(user.createdAt, TimestampFormat.ISO)}
+                                            text={formatTimestamp(user.createdAt, TimestampFormat.ISO)}
+                                        >
+                                            <TruncatedCell
+                                                value={formatTimestamp(user.createdAt, TimestampFormat.ISO)}
+                                            />
+                                        </Tooltip>
 
                                     </td>
 
