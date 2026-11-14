@@ -28,6 +28,7 @@ import UserProfileEditor from "./user-profile-editor";
 import { formatTimestamp, TimestampFormat } from "../../../utils";
 import UserCreationTrigger from "../triggers/user-creation-trigger";
 import useRolesDefinitions from "../../auth/authority-roles/user-roles-definitions/useRolesDefinitions";
+import { useRolesAssignment } from "../../auth/authority-roles";
 
 /**
  * -----------------------------------------------------------------------------
@@ -53,6 +54,13 @@ export default function UsersPage() {
         sort: sortConfig.key,
         direction: sortConfig.direction.toUpperCase(),
     });
+
+    const {
+        grantRole,
+        revokeRole,
+        loading: assignmentsLoading,
+        assignmentsError,
+    } = useRolesAssignment();
 
     logger.debug(
         "[UsersPage] render",
@@ -126,18 +134,43 @@ export default function UsersPage() {
     };
 
     const handleAddRoleToUser = (userId, role) => {
-
         logger.debug(
             "[UsersPage] add role to user clicked",
             {
                 userId,
                 role,
+                authority: role,
             }
         );
-    }
+
+        grantRole({
+            targetUserId: userId,
+            authority: role,
+            expiresAt: null,
+        })
+            .then((result) => {
+                logger.debug(
+                    "[UsersPage] role added successfully",
+                    {
+                        userId,
+                        role,
+                        result,
+                    }
+                );
+            })
+            .catch((error) => {
+                logger.error(
+                    "[UsersPage] failed to add role",
+                    {
+                        userId,
+                        role,
+                        error,
+                    }
+                );
+            });
+    };
 
     const handleRemoveRoleFromUser = (userId, role) => {
-
         logger.debug(
             "[UsersPage] remove role from user clicked",
             {
@@ -145,7 +178,32 @@ export default function UsersPage() {
                 role,
             }
         );
-    }
+
+        revokeRole({
+            targetUserId: userId,
+            authority: role,
+        })
+            .then((result) => {
+                logger.debug(
+                    "[UsersPage] role revoked successfully",
+                    {
+                        userId,
+                        role,
+                        result,
+                    }
+                );
+            })
+            .catch((error) => {
+                logger.error(
+                    "[UsersPage] failed to revoke role",
+                    {
+                        userId,
+                        role,
+                        error,
+                    }
+                );
+            });
+    };
 
     /**
      * -------------------------------------------------------------------------
@@ -278,10 +336,10 @@ export default function UsersPage() {
                                                         }))
                                                     }
                                                     onAdd={(role) => {
-                                                        handleAddRoleToUser(user.username, role);
+                                                        handleAddRoleToUser(user.id, role);
                                                     }}
                                                     onRemove={(role) => {
-                                                        handleRemoveRoleFromUser(user.id, role);
+                                                        handleRemoveRoleFromUser(user.id, role.value);
                                                     }}
                                                 />
                                             ) : (

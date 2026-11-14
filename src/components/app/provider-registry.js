@@ -9,7 +9,7 @@ import {
 } from "../design-control";
 import { RumpusModalProvider, ToastProvider } from "../ui";
 import { LocalPersistence } from "../../persistence";
-import { AuthRolesProvider } from "../auth/authority-roles";
+import { RolesAssignmentProvider } from "../auth/authority-roles";
 import { RolesProvider } from "../auth/authority-roles";
 
 /**
@@ -107,15 +107,15 @@ export const PROVIDER_REGISTRY = {
         },
         ({ children, config }) => {
             const authConfig = config.auth || {};
-            const rolesConfig = authConfig.roles || {};
+            const rolesConfig = authConfig.roles_assignments || {};
 
             return (
-                <AuthRolesProvider
+                <RolesAssignmentProvider
                     // userId={rolesConfig.userId || null}
                     endpoints={rolesConfig.endpoints}
                 >
                     {children}
-                </AuthRolesProvider>
+                </RolesAssignmentProvider>
             );
         },
     ],
